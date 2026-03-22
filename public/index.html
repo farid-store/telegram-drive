@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Cloud Storage</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 500px; margin: auto; }
+        .upload-box { border: 2px dashed #ccc; padding: 20px; text-align: center; }
+        button { margin-top: 10px; padding: 10px 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h2>Upload ke Telegram Drive</h2>
+    <div class="upload-box">
+        <input type="file" id="fileInput" />
+        <button onclick="uploadFile()">Upload File</button>
+    </div>
+    <p id="status"></p>
+
+    <script>
+        async function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const statusText = document.getElementById('status');
+            
+            if (fileInput.files.length === 0) {
+                return alert("Pilih file dulu!");
+            }
+
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append("file", file);
+
+            statusText.innerText = "Mengunggah...";
+
+            try {
+                // Mengirim file ke backend Vercel kita
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    statusText.innerText = "Berhasil diupload! File ID: " + result.file_id;
+                } else {
+                    statusText.innerText = "Gagal: " + result.error;
+                }
+            } catch (err) {
+                statusText.innerText = "Terjadi kesalahan sistem.";
+            }
+        }
+    </script>
+</body>
+</html>
