@@ -1,0 +1,11 @@
+{
+  "name": "telegram-drive",
+  "version": "1.0.0",
+  "description": "Cloud storage menggunakan Telegram API",
+  "main": "api/upload.js",
+  "dependencies": {
+    "form-data": "^4.0.0",
+    "formidable": "^3.5.1",
+    "node-fetch": "^2.7.0"
+  }
+}
