@@ -248,7 +248,7 @@ footer a{color:var(--t2);text-decoration:none}
 </div>
 <div id="ts"></div>
 <footer>
-  <p>VaultDL - Farid Store&middot; API by <a href="https://api.ryzumi.net" target="_blank">api.ryzumi.net</a></p>
+  <p>VaultDL &middot; API by <a href="https://api.ryzumi.net" target="_blank">api.ryzumi.net</a></p>
   <p style="margin-top:5px;opacity:.5">Untuk keperluan pribadi. Hormati hak cipta konten creator.</p>
 </footer>
 <script>
@@ -369,36 +369,63 @@ function getQCls(v){
   if(/kb|kbps/.test(s))return'q-audio';
   return'q-low';
 }
+
+/* =====================================================
+   PENCARIAN — Telah diperbarui untuk shortlink FB
+===================================================== */
 async function doSearch(){
   let url=$('url-input').value.trim();
   if(!isUrl(url)||busy)return;
 
-  // === PEMETAAN & PEMBERSIHAN URL FACEBOOK (Mencegah HTTP 500) ===
+  // Cek apakah URL mengandung format tautan pendek (share/r, share/v, atau fb.watch)
+  if (url.includes('/share/r/') || url.includes('/share/v/') || url.includes('fb.watch/')) {
+    setZ(`
+      <div class="ec" style="flex-direction:column; background:rgba(255,176,64,.07); border-color:rgba(255,176,64,.22); animation:up .25s ease;">
+        <div style="display:flex; gap:12px; align-items:center;">
+          <div class="ei">💡</div>
+          <div>
+            <div class="et" style="color:var(--am); font-size:1rem;">Tautan Pendek Terdeteksi</div>
+            <div class="es" style="color:var(--t2);">Tautan <b>Share</b> Facebook menyembunyikan ID asli video sehingga tidak bisa langsung diproses.</div>
+          </div>
+        </div>
+        
+        <div style="margin-top:16px; padding:16px; background:var(--s2); border-radius:8px; border:1px solid var(--b2);">
+          <div style="font-size:.85rem; font-weight:600; color:var(--tx); margin-bottom:8px;">Langkah mendapat video ini:</div>
+          <ol style="margin-left:20px; font-size:.75rem; color:var(--t2); line-height:1.7;">
+            <li>Klik tombol kuning di bawah untuk membuka video di tab baru.</li>
+            <li>Tunggu sampai video memutar dan perhatikan URL di atas (address bar).</li>
+            <li>URL akan berubah menjadi panjang (memuat kata <i>/reel/</i> atau <i>/watch/</i>).</li>
+            <li>Salin URL panjang tersebut dan paste kembali ke halaman ini.</li>
+          </ol>
+        </div>
+
+        <button onclick="window.open('${url}', '_blank')" style="margin-top:16px; display:flex; align-items:center; justify-content:center; gap:8px; background:var(--am); color:#000; border:none; padding:14px; border-radius:8px; font-family:'Space Grotesk',sans-serif; font-size:.85rem; font-weight:700; cursor:pointer; transition:.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+          ↗ Buka Video di Tab Baru
+        </button>
+      </div>
+    `);
+    
+    // Matikan status loading pada tombol cari
+    $('btn-s').disabled=false;
+    $('btn-s').classList.remove('loading');
+    return; // Hentikan eksekusi
+  }
+
+  // Hapus parameter tracking agar stabil
   try {
     let uObj = new URL(url);
-    // Menghapus parameter tracking
     uObj.searchParams.delete('mibextid');
     uObj.searchParams.delete('si');
     uObj.searchParams.delete('fbclid');
-    let cleanUrl = uObj.href;
-    
-    // Konversi URL Share Mobile ke Format Desktop yang didukung API
-    if (cleanUrl.includes('/share/r/')) {
-      cleanUrl = cleanUrl.replace('/share/r/', '/reel/');
-    } else if (cleanUrl.includes('/share/v/')) {
-      cleanUrl = cleanUrl.replace('/share/v/', '/watch/?v=');
-    }
-    url = cleanUrl;
-  } catch(e) {
-    console.log("Gagal membersihkan URL", e);
-  }
-  // =============================================================
+    url = uObj.href;
+  } catch(e) {}
 
   busy=true;
   const p=getP(url);
   const btn=$('btn-s');
   btn.disabled=true;btn.classList.add('loading');
   setZ(`<div class="lc"><div class="lsp"></div><p>Mengambil format dari ${esc(p.n)}...</p><small>api.ryzumi.net</small></div>`);
+  
   try{
     const res=await fetch(`${API}?url=${encodeURIComponent(url)}`,{headers:{accept:'application/json'}});
     if(!res.ok){
@@ -416,6 +443,7 @@ async function doSearch(){
     busy=false;btn.disabled=false;btn.classList.remove('loading');
   }
 }
+
 function renderResult(data,url,p){
   const title=data.title||'Video';
   const thumb=data.thumbnail||'';
@@ -460,7 +488,6 @@ function fmtRow(m){
   const ext=(m.extension||'').toUpperCase();
   const rawPre=(m.quality||'').replace(/\([^)]+\)/,'').trim();
   const info=(rawPre&&rawPre.toLowerCase()!==m.extension)?rawPre:'';
-  // Encode URL as base64 for safe HTML attribute storage
   const b64=btoa(unescape(encodeURIComponent(m.url)));
   return `<div class="fi">
   <div class="fl">
@@ -481,7 +508,7 @@ function fmtRow(m){
 }
 
 /* =====================================================
-   DOWNLOAD — Telah diperbarui untuk mendukung Facebook
+   DOWNLOAD — Mendukung video FB di inline player
 ===================================================== */
 async function doDownload(btn,b64,ext){
   if(btn.disabled)return;
@@ -497,12 +524,10 @@ async function doDownload(btn,b64,ext){
 
   const fname=`VaultDL_${Date.now()}.${ext||'mp4'}`;
 
-  // Cek apakah YouTube atau Facebook (berdasarkan CDN)
   const isYT = url.includes('googlevideo.com');
   const isFB = url.includes('fbcdn.net') || url.includes('scontent');
 
   if(isYT || isFB){
-    // YOUTUBE & FACEBOOK: embed inline video player
     if(dt)dt.textContent='▶ Putar';
     btn.style.cssText='background:var(--gn);border-color:var(--gn);color:#fff';
     showYTPlayer(url, fname);
@@ -511,7 +536,6 @@ async function doDownload(btn,b64,ext){
     return;
   }
 
-  // PLATFORM LAIN — fetch blob
   try{
     const r=await fetch(url,{mode:'cors',cache:'no-store'});
     if(!r.ok)throw new Error(`HTTP ${r.status}`);
@@ -531,7 +555,6 @@ async function doDownload(btn,b64,ext){
     console.log('[VaultDL] blob failed:',e.message);
   }
 
-  // Fallback: anchor download
   const af=document.createElement('a');
   af.href=url;af.download=fname;af.target='_blank';af.rel='noopener';af.style.display='none';
   document.body.appendChild(af);af.click();document.body.removeChild(af);
@@ -549,7 +572,6 @@ async function doDownload(btn,b64,ext){
 }
 
 function showYTPlayer(url, fname){
-  // Hapus player lama jika ada
   const old = document.getElementById('yt-player');
   if(old) old.remove();
 
@@ -557,7 +579,6 @@ function showYTPlayer(url, fname){
   wrap.id = 'yt-player';
   wrap.style.cssText = 'background:var(--s1);border:1px solid rgba(79,142,255,.25);border-radius:12px;padding:14px;margin-bottom:12px;animation:up .25s ease';
 
-  // Encode url untuk inline onclick (escape single quotes)
   const safeUrl = url.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
 
   wrap.innerHTML = `
