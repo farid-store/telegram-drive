@@ -127,9 +127,9 @@ h1 em{font-style:normal;background:linear-gradient(135deg,var(--bl),var(--vi));-
 .fe{font-size:.68rem;font-weight:600;color:var(--t2);text-transform:uppercase;flex-shrink:0}
 .fnfo{font-size:.68rem;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-.dlb{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;background:var(--bg1);border:1px solid rgba(79,142,255,.3);border-radius:7px;color:var(--bl2);font-family:'Space Grotesk',sans-serif;font-size:.73rem;font-weight:600;text-decoration:none;transition:.15s;white-space:nowrap;flex-shrink:0; cursor:pointer;}
+.dlb{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;background:var(--bg1);border:1px solid rgba(79,142,255,.3);border-radius:7px;color:var(--bl2);font-family:'Space Grotesk',sans-serif;font-size:.73rem;font-weight:600;text-decoration:none;transition:all .2s;white-space:nowrap;flex-shrink:0;cursor:pointer;min-width:100px;justify-content:center}
 .dlb:hover{background:var(--bl);border-color:var(--bl);color:#fff;transform:translateY(-1px)}
-.dlb.downloading{pointer-events:none;transform:none;}
+.dlb.busy{pointer-events:none;opacity:.8}
 .dlb svg{flex-shrink:0}
 
 .ni{padding:14px;text-align:center;font-size:.78rem;color:var(--t2)}
@@ -506,8 +506,8 @@ function renderResult(data,url,p){
     ?`<img src="${esc(thumb)}" alt="" loading="lazy" onerror="this.parentElement.innerHTML='<div class=vth-ph>🎬</div>'">`
     :`<div class="vth-ph">🎬</div>`;
 
-  const vrows=sorted.length?sorted.map(fmtRow).join(''):`<div class="ni">Tidak ada format video</div>`;
-  const arows=audios.length?audios.map(fmtRow).join(''):`<div class="ni">Tidak ada format audio</div>`;
+  const vrows=sorted.length?sorted.map(m=>fmtRow(m,title)).join(''):`<div class="ni">Tidak ada format video</div>`;
+  const arows=audios.length?audios.map(m=>fmtRow(m,title)).join(''):`<div class="ni">Tidak ada format audio</div>`;
 
   const audioTab=audios.length
     ?`<button class="ft" onclick="swTab('audio',this)">🎵 Audio <span class="tc">${audios.length}</span></button>`:'';
@@ -546,13 +546,15 @@ function swTab(tab,btn){
   document.getElementById('fg-'+tab)?.classList.add('on');
 }
 
-/* ── PERUBAHAN DI SINI ── */
-function fmtRow(m){
+function fmtRow(m, titleRef){
   const {label,cls}=parseQ(m.quality,m.extension);
   const ext=(m.extension||'').toUpperCase();
-  // Extra info: codec or quality prefix without parentheses
   const rawPre=(m.quality||'').replace(/\([^)]+\)/,'').trim();
   const info=(rawPre&&rawPre.toLowerCase()!==m.extension)?rawPre:'';
+
+  // Encode URL ke base64 agar aman di dalam HTML attribute
+  const encodedUrl = btoa(unescape(encodeURIComponent(m.url)));
+  const safeTitle  = esc((titleRef||'VaultDL').slice(0,60));
 
   return `<div class="fi">
   <div class="fl">
@@ -560,79 +562,108 @@ function fmtRow(m){
     <span class="fe">${esc(ext)}</span>
     ${info?`<span class="fnfo">${esc(info)}</span>`:''}
   </div>
-  <a href="javascript:void(0)" data-url="${esc(m.url)}" data-ext="${esc(ext)}" class="dlb" onclick="onDl(event,this)">
+  <button class="dlb" data-url="${encodedUrl}" data-ext="${ext.toLowerCase()}" data-title="${safeTitle}" onclick="onDl(this)">
     <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v7.5M3 6.5 6 10l3-3.5M1 11h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    <span class="dl-txt">Download</span>
-  </a>
+    <span>Download</span>
+  </button>
 </div>`;
 }
 
-async function onDl(e, btn) {
-  e.preventDefault();
-  
-  // Cegah klik berulang saat masih loading
-  if (btn.classList.contains('downloading')) return;
-
-  const url = btn.getAttribute('data-url');
-  const ext = btn.getAttribute('data-ext').toLowerCase() || 'mp4';
-  const txtSpan = btn.querySelector('.dl-txt');
-  const originalText = txtSpan.innerText;
-
-  // Ubah status jadi loading
-  btn.classList.add('downloading');
-  btn.style.cssText = 'background:var(--am);border-color:var(--am);color:#fff';
-  txtSpan.innerText = 'Proses...';
-
+// Deteksi apakah URL butuh proxy server (YouTube CDN signed URL)
+// googlevideo.com = YouTube CDN, butuh header khusus → pakai /api/dl proxy
+// Platform lain (tikwm, cdninstagram, twimg, redd.it, dll) = direct download
+function needsProxy(url) {
   try {
-    // 1. Coba ambil data sebagai Blob untuk bypass preview
-    const response = await fetch(url);
-    if (!response.ok) throw new Error('Network error');
+    const h = new URL(url).hostname;
+    return h.includes('googlevideo.com') || h.includes('youtube.com');
+  } catch { return false; }
+}
 
-    const blob = await response.blob();
-    const blobUrl = window.URL.createObjectURL(blob);
+async function onDl(btn) {
+  if (btn.classList.contains('busy')) return;
 
-    // 2. Buat elemen <a> virtual untuk men-trigger download lokal
+  const encodedUrl = btn.getAttribute('data-url');
+  const ext        = btn.getAttribute('data-ext') || 'mp4';
+  const title      = btn.getAttribute('data-title') || 'VaultDL';
+  const txtEl      = btn.querySelector('span');
+  const origTxt    = txtEl.textContent;
+
+  // Decode URL dari base64
+  let url;
+  try { url = decodeURIComponent(escape(atob(encodedUrl))); }
+  catch { toast('URL tidak valid', 'error'); return; }
+
+  btn.classList.add('busy');
+  txtEl.textContent = 'Memproses…';
+  btn.style.cssText = 'background:var(--am);border-color:var(--am);color:#fff;cursor:wait';
+
+  const filename = `${title.slice(0,40).replace(/[^a-z0-9]/gi,'_')}.${ext}`;
+
+  if (needsProxy(url)) {
+    // ── YOUTUBE & platform butuh server proxy ──
+    // Gunakan /api/dl yang stream file dengan header yang benar
+    txtEl.textContent = 'Mengunduh via server…';
+
+    const proxyUrl = `/api/dl?url=${encodeURIComponent(url)}&name=${encodeURIComponent(filename)}`;
+
+    // Trigger download lewat invisible anchor ke proxy endpoint
     const a = document.createElement('a');
+    a.href = proxyUrl;
+    a.download = filename;
     a.style.display = 'none';
-    a.href = blobUrl;
-    a.download = `VaultDL_${Date.now()}.${ext}`;
     document.body.appendChild(a);
     a.click();
-    
-    // Bersihkan memori
     document.body.removeChild(a);
-    window.URL.revokeObjectURL(blobUrl);
 
     btn.style.cssText = 'background:var(--gn);border-color:var(--gn);color:#fff';
-    txtSpan.innerText = 'Selesai';
-    toast('Download otomatis dimulai!', 'success');
+    txtEl.textContent = '✓ Dimulai';
+    toast('Download YouTube dimulai lewat server!', 'success');
 
-  } catch (err) {
-    // 3. Fallback jika terkena CORS Block (Keamanan bawaan browser)
-    console.warn('Fetch terblokir CORS, menggunakan fallback window.open.');
-    
-    const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
-    
-    // Cek jika browser memblokir pop-up
-    if(!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
-        toast('Gagal: Pop-up diblokir oleh browser!', 'error');
-        btn.style.cssText = 'background:var(--rd);border-color:var(--rd);color:#fff';
-        txtSpan.innerText = 'Diblokir';
-    } else {
-        toast('Dibuka di tab baru (Klik kanan/titik 3 -> Download/Simpan)', 'info');
-        btn.style.cssText = 'background:var(--bl);border-color:var(--bl);color:#fff';
-        txtSpan.innerText = 'Dibuka';
+  } else {
+    // ── Platform lain (TikTok, Instagram, dll) — coba fetch blob dulu ──
+    txtEl.textContent = 'Mengunduh…';
+    try {
+      const resp = await fetch(url, { mode: 'cors' });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+      const blob    = await resp.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a       = document.createElement('a');
+      a.href     = blobUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 8000);
+
+      btn.style.cssText = 'background:var(--gn);border-color:var(--gn);color:#fff';
+      txtEl.textContent = '✓ Selesai';
+      toast('Download berhasil!', 'success');
+
+    } catch (err) {
+      // Fallback: anchor direct download (untuk CDN yang punya CORS tapi blob gagal)
+      console.log('[VaultDL] blob failed, trying anchor:', err.message);
+      const a = document.createElement('a');
+      a.href     = url;
+      a.download = filename;
+      a.target   = '_blank';
+      a.rel      = 'noopener noreferrer';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      btn.style.cssText = 'background:var(--gn);border-color:var(--gn);color:#fff';
+      txtEl.textContent = '✓ Dimulai';
+      toast('Download dimulai!', 'success');
     }
   }
 
-  // Kembalikan tombol ke semula setelah 3.5 detik
   setTimeout(() => {
     btn.style.cssText = '';
-    txtSpan.innerText = originalText;
-    btn.classList.remove('downloading');
+    txtEl.textContent = origTxt;
+    btn.classList.remove('busy');
   }, 3500);
 }
-/* ── AKHIR PERUBAHAN ── */
 
 function showErr(title,sub=''){
   setZ(`<div class="ec"><div class="ei">⚠</div><div><div class="et">${esc(title)}</div>${sub?`<div class="es">${esc(sub)}</div>`:''}</div></div>`);
