@@ -379,9 +379,6 @@ function getQCls(v){
   return'q-low';
 }
 
-/* =====================================================
-   PENCARIAN — Telah diperbarui untuk shortlink FB 
-===================================================== */
 async function doSearch(){
   let url=$('url-input').value.trim();
   if(!isUrl(url)||busy)return;
@@ -428,7 +425,7 @@ async function doSearch(){
     return;
   }
 
-  // Hapus parameter tracking (untuk link normal FB agar API stabil)
+  // Hapus parameter tracking agar API stabil
   try {
     let uObj = new URL(url);
     uObj.searchParams.delete('mibextid');
@@ -526,9 +523,6 @@ function fmtRow(m){
 </div>`;
 }
 
-/* =====================================================
-   DOWNLOAD — Mendukung video YT, FB, dan TW (Twitter)
-===================================================== */
 async function doDownload(btn,b64,ext){
   if(btn.disabled)return;
   btn.disabled=true;
@@ -544,7 +538,7 @@ async function doDownload(btn,b64,ext){
     toast('URL tidak valid','error');reset();return;
   }
 
-  // Pembersih URL Twitter: Hapus parameter "?tag=" yang sering bikin error download
+  // Pembersih URL Twitter
   try {
     let uObj = new URL(url);
     if (uObj.hostname.includes('twimg.com')) {
@@ -555,13 +549,11 @@ async function doDownload(btn,b64,ext){
 
   const fname=`VaultDL_${Date.now()}.${ext||'mp4'}`;
 
-  // Deteksi CDN Platform
   const isYT = url.includes('googlevideo.com');
   const isFB = url.includes('fbcdn.net') || url.includes('scontent');
   const isTW = url.includes('twimg.com');
 
   if(isYT || isFB || isTW){
-    // Putar di Inline Player untuk YT, FB, & Twitter
     if(dt)dt.textContent='▶ Putar';
     btn.style.cssText='background:var(--gn);border-color:var(--gn);color:#fff';
     showYTPlayer(url, fname);
@@ -617,23 +609,32 @@ function showYTPlayer(url, fname){
 
   wrap.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <span style="font-size:.78rem;font-weight:600;color:var(--bl2)">▶ Preview — klik kanan/tahan video untuk simpan</span>
+      <span style="font-size:.78rem;font-weight:600;color:var(--bl2)">▶ Preview Video</span>
       <button onclick="document.getElementById('yt-player').remove()"
         style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:1rem;padding:2px 6px;line-height:1">✕</button>
     </div>
-    <video src="${url}" controls preload="metadata" controlslist="nodownload"
+    
+    <video src="${url}" controls preload="metadata" referrerpolicy="no-referrer"
       style="width:100%;max-height:340px;border-radius:8px;background:#000;display:block"
       oncontextmenu="return true"></video>
+      
     <div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <span style="font-size:.72rem;color:var(--t2);flex:1;line-height:1.55">
-        💡 <strong style="color:var(--am)">PC:</strong> Klik kanan video → <em>Simpan video sebagai</em> &nbsp;·&nbsp;
-        <strong style="color:var(--am)">HP:</strong> Tahan lama video → Download
+        💡 <strong style="color:var(--am)">Download:</strong> Klik titik tiga (⋮) pada video, atau klik tombol Tab Baru.
       </span>
+      
+      <a href="${url}" target="_blank"
+        style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:var(--am);border:1px solid var(--am);border-radius:7px;color:#000;font-size:.72rem;font-weight:700;cursor:pointer;text-decoration:none;font-family:'Space Grotesk',sans-serif;flex-shrink:0"
+        onmouseover="this.style.transform='translateY(-1px)'"
+        onmouseout="this.style.transform='none'">
+        ↗ Tab Baru
+      </a>
+
       <button onclick="ytCopy('${safeUrl}',this)"
         style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:var(--bg1);border:1px solid rgba(79,142,255,.3);border-radius:7px;color:var(--bl2);font-size:.72rem;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;flex-shrink:0"
         onmouseover="this.style.background='var(--bl)';this.style.color='#fff'"
         onmouseout="this.style.background='var(--bg1)';this.style.color='var(--bl2)'">
-        📋 Salin Link
+        📋 Salin
       </button>
     </div>
   `;
@@ -692,7 +693,6 @@ function showErr(title,sub=''){
   setZ(`<div class="ec"><div class="ei">⚠</div><div><div class="et">${esc(title)}</div>${sub?`<div class="es">${esc(sub)}</div>`:''}</div></div>`);
 }
 
-/* HISTORY */
 function saveHist(url,p,title){
   hist=hist.filter(h=>h.url!==url);
   hist.unshift({url,title,pn:p.n,pc:p.c,pb:p.bg,pi:p.ic,ts:Date.now()});
