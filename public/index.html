@@ -5,148 +5,216 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>VaultDL — Video Downloader</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --ink:#0a0a0f;--ink2:#111118;--ink3:#1a1a24;--ink4:#22222e;
-  --line:rgba(255,255,255,0.06);--line2:rgba(255,255,255,0.12);
-  --txt:#f2f2fa;--txt2:rgba(242,242,250,0.55);--txt3:rgba(242,242,250,0.28);
-  --blue:#4f8eff;--blue2:#8ab4ff;--bg:rgba(79,142,255,0.13);--bg2:rgba(79,142,255,0.06);
-  --green:#00d68f;--rose:#ff4d6d;--amber:#ffb347;--violet:#a78bfa;
+  --bg:#08080e;--s1:#10101a;--s2:#181826;--s3:#201e30;
+  --b1:rgba(255,255,255,.06);--b2:rgba(255,255,255,.11);
+  --tx:#eeeef8;--t2:rgba(238,238,248,.52);--t3:rgba(238,238,248,.28);
+  --bl:#5b8fff;--bl2:#93b8ff;--bg1:rgba(91,143,255,.13);--bg2:rgba(91,143,255,.06);
+  --gn:#00d48a;--rd:#ff4d6d;--am:#ffb040;--vi:#b48aff;
   --r:12px;--r2:8px;
 }
-body{font-family:'Space Grotesk',sans-serif;background:var(--ink);color:var(--txt);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
-.amb{position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 55% 35% at 15% 0%,rgba(79,142,255,.07) 0%,transparent 70%),radial-gradient(ellipse 40% 50% at 85% 90%,rgba(167,139,250,.05) 0%,transparent 70%)}
-.gbg{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse 90% 90% at 50% 50%,black 0%,transparent 100%)}
-nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:54px;background:rgba(10,10,15,.82);backdrop-filter:blur(20px);border-bottom:1px solid var(--line)}
-.wm{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:1rem;letter-spacing:-.02em}
-.wm b{color:var(--blue)}
-.nc{font-size:.67rem;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--bg);border:1px solid rgba(79,142,255,.2);color:var(--blue2)}
-.pg{position:relative;z-index:1;max-width:740px;margin:0 auto;padding:56px 1.5rem 80px}
-.hero{text-align:center;margin-bottom:36px}
-.ey{display:inline-flex;align-items:center;gap:7px;font-size:.68rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--blue2);margin-bottom:18px}
-.liv{width:6px;height:6px;border-radius:50%;background:var(--green);animation:bl 2s infinite}
+body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+
+/* ambient */
+.amb{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 60% 40% at 10% 0%,rgba(91,143,255,.06) 0%,transparent 70%),
+             radial-gradient(ellipse 45% 55% at 90% 95%,rgba(180,138,255,.04) 0%,transparent 70%)}
+.grid{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(var(--b1) 1px,transparent 1px),linear-gradient(90deg,var(--b1) 1px,transparent 1px);
+  background-size:56px 56px;mask-image:radial-gradient(ellipse 85% 85% at 50% 50%,black,transparent)}
+
+/* nav */
+nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;
+  padding:0 1.75rem;height:52px;background:rgba(8,8,14,.82);backdrop-filter:blur(20px);border-bottom:1px solid var(--b1)}
+.logo{font-family:'JetBrains Mono',monospace;font-size:.98rem;font-weight:600;letter-spacing:-.02em}
+.logo i{color:var(--bl);font-style:normal}
+.nbadge{font-size:.65rem;font-weight:600;padding:3px 9px;border-radius:20px;
+  background:var(--bg1);border:1px solid rgba(91,143,255,.22);color:var(--bl2)}
+
+/* page */
+.pg{position:relative;z-index:1;max-width:720px;margin:0 auto;padding:52px 1.25rem 72px}
+
+/* hero */
+.hero{text-align:center;margin-bottom:32px}
+.ey{display:inline-flex;align-items:center;gap:7px;font-size:.67rem;font-weight:600;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--bl2);margin-bottom:16px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--gn);animation:bl 2s infinite}
 @keyframes bl{0%,100%{opacity:1}50%{opacity:.2}}
-h1{font-size:clamp(2rem,5.5vw,3.5rem);font-weight:700;line-height:1.07;letter-spacing:-.04em;margin-bottom:12px}
-h1 mark{background:linear-gradient(135deg,var(--blue),var(--violet));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-style:normal}
-.sub{font-size:.94rem;color:var(--txt2);line-height:1.65;max-width:440px;margin:0 auto}
-.plts{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin:18px 0 32px}
-.pt{font-size:.68rem;font-weight:600;padding:3px 9px;border-radius:5px;border:1px solid var(--line2);background:var(--ink2);color:var(--txt2);cursor:default;transition:.15s}
-.pt:hover{border-color:var(--blue);color:var(--txt);background:var(--bg2)}
-.ic{background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r);padding:18px;margin-bottom:14px;position:relative;overflow:hidden}
-.ic::after{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:160px;height:1px;background:linear-gradient(90deg,transparent,var(--blue),transparent)}
-.sb{display:flex;gap:8px}
-.uf{flex:1;background:var(--ink);border:1px solid var(--line2);border-radius:var(--r2);padding:12px 14px;font-family:'Space Grotesk',sans-serif;font-size:.88rem;color:var(--txt);outline:none;transition:.18s}
-.uf::placeholder{color:var(--txt3)}
-.uf:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--bg)}
-.bgo{background:var(--blue);color:#fff;border:none;border-radius:var(--r2);padding:12px 20px;font-family:'Space Grotesk',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:.18s}
-.bgo:hover{background:#6ba3ff;transform:translateY(-1px)}
-.bgo:disabled{opacity:.4;cursor:not-allowed;transform:none}
-.hr{display:flex;gap:5px;margin-top:10px;flex-wrap:wrap}
-.hb{font-size:.7rem;padding:4px 10px;border-radius:5px;border:1px solid var(--line);background:transparent;color:var(--txt3);cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:.14s}
-.hb:hover{border-color:var(--line2);color:var(--txt2);background:var(--ink3)}
-#zone{margin-bottom:14px}
-.ls{background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r);padding:32px;text-align:center}
-.sp{width:30px;height:30px;border:2px solid var(--line2);border-top-color:var(--blue);border-radius:50%;animation:rot .65s linear infinite;margin:0 auto 12px}
+h1{font-size:clamp(1.9rem,5vw,3.2rem);font-weight:700;line-height:1.07;letter-spacing:-.04em;margin-bottom:11px}
+h1 em{font-style:normal;background:linear-gradient(135deg,var(--bl),var(--vi));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sub{font-size:.92rem;color:var(--t2);line-height:1.65;max-width:420px;margin:0 auto}
+
+/* platforms */
+.plts{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin:16px 0 28px}
+.pt{font-size:.67rem;font-weight:600;padding:3px 9px;border-radius:5px;
+  border:1px solid var(--b2);background:var(--s1);color:var(--t2);cursor:default;transition:.15s}
+.pt:hover{border-color:var(--bl);color:var(--tx)}
+
+/* input card */
+.ic{background:var(--s1);border:1px solid var(--b2);border-radius:var(--r);
+  padding:16px;margin-bottom:14px;position:relative;overflow:hidden}
+.ic::after{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:160px;height:1px;background:linear-gradient(90deg,transparent,var(--bl),transparent)}
+.sb{display:flex;gap:7px}
+.uf{flex:1;background:var(--bg);border:1px solid var(--b2);border-radius:var(--r2);
+  padding:12px 13px;font-family:'Space Grotesk',sans-serif;font-size:.87rem;color:var(--tx);outline:none;transition:.18s}
+.uf::placeholder{color:var(--t3)}
+.uf:focus{border-color:var(--bl);box-shadow:0 0 0 3px var(--bg1)}
+.bgo{background:var(--bl);color:#fff;border:none;border-radius:var(--r2);
+  padding:12px 18px;font-family:'Space Grotesk',sans-serif;font-size:.87rem;font-weight:700;
+  cursor:pointer;white-space:nowrap;transition:.18s;display:flex;align-items:center;gap:6px}
+.bgo:hover{background:#7aa8ff;transform:translateY(-1px)}
+.bgo:disabled{opacity:.38;cursor:not-allowed;transform:none}
+.hr{display:flex;gap:5px;margin-top:9px;flex-wrap:wrap}
+.hb{font-size:.68rem;padding:4px 10px;border-radius:5px;border:1px solid var(--b1);
+  background:transparent;color:var(--t3);cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:.14s}
+.hb:hover{border-color:var(--b2);color:var(--t2);background:var(--s2)}
+
+/* zone */
+#zone{margin-bottom:12px}
+
+/* states */
+.ls{background:var(--s1);border:1px solid var(--b2);border-radius:var(--r);padding:28px;text-align:center}
+.sp{width:28px;height:28px;border:2px solid var(--b2);border-top-color:var(--bl);
+  border-radius:50%;animation:rot .6s linear infinite;margin:0 auto 10px}
 @keyframes rot{to{transform:rotate(360deg)}}
-.ls p{font-size:.85rem;color:var(--txt2)}
-.pv{background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r);overflow:hidden;animation:up .22s ease both}
+.ls p{font-size:.83rem;color:var(--t2)}
+.ls small{font-size:.72rem;color:var(--t3);margin-top:4px;display:block}
+
+.err{background:rgba(255,77,109,.06);border:1px solid rgba(255,77,109,.2);
+  border-radius:var(--r);padding:14px 16px;display:flex;gap:10px;align-items:flex-start;animation:up .2s ease}
+.err-ico{font-size:1.1rem;flex-shrink:0}
+.err-title{font-size:.85rem;font-weight:600;color:rgba(255,77,109,.95)}
+.err-sub{font-size:.72rem;color:var(--t2);margin-top:3px;line-height:1.5}
+
 @keyframes up{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
-.pvt{display:flex}
-.tc{position:relative;flex-shrink:0;width:210px;background:var(--ink3)}
-.tc img{width:210px;height:126px;object-fit:cover;display:block}
-.tcp{width:210px;height:126px;display:flex;align-items:center;justify-content:center;background:var(--ink3);font-size:2rem}
-.pflg{position:absolute;top:8px;left:8px;font-size:.62rem;font-weight:700;padding:2px 7px;border-radius:4px}
-.mc{flex:1;padding:14px 15px;display:flex;flex-direction:column;gap:7px;min-width:0}
-.mt{font-size:.92rem;font-weight:600;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.ma{font-size:.72rem;color:var(--txt2)}
-.mu{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dlp{border-top:1px solid var(--line);background:var(--ink3);padding:14px 15px}
-.dlpl{font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:10px}
-.fgd{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:5px;margin-bottom:10px}
-.fb{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 8px;background:var(--ink2);border:1px solid var(--line2);border-radius:7px;cursor:pointer;transition:.15s;font-family:'Space Grotesk',sans-serif;position:relative;overflow:hidden}
-.fb:hover{border-color:var(--blue);background:var(--bg2)}
-.fb.active{border-color:var(--blue);background:var(--bg);box-shadow:0 0 0 1px var(--blue) inset}
-.fb.ld::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--blue),var(--violet));animation:sh 1s ease infinite}
-@keyframes sh{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
-.fq{font-size:.8rem;font-weight:700;font-family:'JetBrains Mono',monospace}
-.fs{font-size:.62rem;color:var(--txt2)}
-.sr{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:7px;font-size:.77rem;margin-top:6px}
-.isp{width:12px;height:12px;border:1.5px solid rgba(79,142,255,.3);border-top-color:var(--blue);border-radius:50%;animation:rot .55s linear infinite;flex-shrink:0}
-.ok{background:rgba(0,214,143,.07);border:1px solid rgba(0,214,143,.2);color:var(--green)}
-.pr{background:var(--bg);border:1px solid rgba(79,142,255,.18);color:var(--blue2)}
-.er{background:rgba(255,77,109,.07);border:1px solid rgba(255,77,109,.18);color:var(--rose)}
-.dl{display:flex;align-items:center;gap:10px;padding:12px 14px;background:rgba(0,214,143,.07);border:1px solid rgba(0,214,143,.2);border-radius:8px;text-decoration:none;font-weight:600;font-size:.84rem;transition:.18s;margin-top:7px;cursor:pointer;color:inherit}
-.dl:hover{background:rgba(0,214,143,.14);border-color:rgba(0,214,143,.4)}
-.dic{width:30px;height:30px;border-radius:6px;background:rgba(0,214,143,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.di{flex:1;min-width:0}
-.dn{font-size:.8rem;font-weight:600;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dh{font-size:.65rem;color:var(--txt3);margin-top:2px}
-.da{font-size:1rem;color:var(--green);flex-shrink:0}
-.fb2{display:flex;align-items:center;gap:9px;padding:11px 13px;background:rgba(255,179,71,.06);border:1px solid rgba(255,179,71,.18);border-radius:8px;text-decoration:none;font-size:.8rem;color:var(--amber);font-weight:600;transition:.15s;margin-top:7px}
-.fb2:hover{background:rgba(255,179,71,.12)}
-.pgd{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:5px;margin-top:8px}
-.pi{border-radius:6px;overflow:hidden;border:1px solid var(--line);text-decoration:none;display:block;transition:.15s}
-.pi:hover{border-color:var(--blue)}
-.pi img{width:100%;aspect-ratio:1;object-fit:cover;display:block}
-.pni{width:100%;aspect-ratio:1;background:var(--ink4);display:flex;align-items:center;justify-content:center;font-size:1.3rem}
-.pl{padding:4px 5px;font-size:.6rem;color:var(--txt3);text-align:center}
-.tip{background:var(--bg2);border:1px solid rgba(79,142,255,.1);border-radius:7px;padding:9px 12px;font-size:.71rem;color:var(--txt2);margin-top:8px;line-height:1.55}
-.tip a{color:var(--blue2);font-weight:600;text-decoration:none}
-.tip a:hover{text-decoration:underline}
-.sec{margin-top:40px}
-.sh{font-size:.63rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:12px;display:flex;align-items:center;gap:8px}
-.sh::after{content:'';flex:1;height:1px;background:var(--line)}
-.fg{display:grid;grid-template-columns:repeat(auto-fill,minmax(162px,1fr));gap:7px}
-.fc{background:var(--ink2);border:1px solid var(--line);border-radius:10px;padding:13px;transition:.18s}
-.fc:hover{border-color:var(--line2)}
-.fi{font-size:1.1rem;margin-bottom:7px}
-.fc h4{font-size:.78rem;font-weight:600;margin-bottom:3px}
-.fc p{font-size:.68rem;color:var(--txt2);line-height:1.5}
+
+/* preview card */
+.pv{background:var(--s1);border:1px solid var(--b2);border-radius:var(--r);overflow:hidden;animation:up .22s ease}
+
+.pvhead{display:flex;gap:0}
+.timg{position:relative;flex-shrink:0;width:200px;background:var(--s2)}
+.timg img{width:200px;height:122px;object-fit:cover;display:block}
+.tph{width:200px;height:122px;display:flex;align-items:center;justify-content:center;background:var(--s2);font-size:2rem}
+.pf{position:absolute;top:7px;left:7px;font-size:.6rem;font-weight:700;
+  padding:2px 7px;border-radius:4px;backdrop-filter:blur(4px)}
+
+.pmeta{flex:1;padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.ptitle{font-size:.9rem;font-weight:600;line-height:1.3;
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.psource{font-size:.7rem;color:var(--t2)}
+.purl{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--t3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* format list */
+.flist{border-top:1px solid var(--b1)}
+
+/* tab row for video/audio */
+.ftabs{display:flex;border-bottom:1px solid var(--b1)}
+.ftab{flex:1;padding:9px;background:none;border:none;font-family:'Space Grotesk',sans-serif;
+  font-size:.75rem;font-weight:600;color:var(--t2);cursor:pointer;transition:.15s;
+  border-bottom:2px solid transparent;margin-bottom:-1px}
+.ftab.on{color:var(--tx);border-bottom-color:var(--bl)}
+.ftab:hover:not(.on){color:var(--tx)}
+
+.fgroup{display:none;padding:8px}
+.fgroup.on{display:block}
+
+/* format item */
+.fi{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:9px 10px;border-radius:8px;transition:.14s;cursor:default}
+.fi:hover{background:var(--s2)}
+.fi-l{display:flex;align-items:center;gap:9px}
+.fq{font-family:'JetBrains Mono',monospace;font-size:.75rem;font-weight:600;
+  min-width:72px;padding:3px 8px;border-radius:5px;text-align:center;white-space:nowrap}
+.fext{font-size:.7rem;color:var(--t2)}
+
+/* quality badge colors */
+.q2160{background:rgba(34,210,238,.1);color:#22d6ee;border:1px solid rgba(34,210,238,.2)}
+.q1440{background:rgba(91,143,255,.1);color:var(--bl2);border:1px solid rgba(91,143,255,.2)}
+.q1080{background:rgba(180,138,255,.1);color:var(--vi);border:1px solid rgba(180,138,255,.2)}
+.q720{background:rgba(0,212,138,.1);color:var(--gn);border:1px solid rgba(0,212,138,.2)}
+.q480{background:rgba(255,176,64,.1);color:var(--am);border:1px solid rgba(255,176,64,.2)}
+.qlow{background:rgba(238,238,248,.06);color:var(--t2);border:1px solid var(--b2)}
+.qaudio{background:rgba(238,238,248,.05);color:var(--t3);border:1px solid var(--b1)}
+
+/* download button */
+.bdl{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;
+  background:var(--bg1);border:1px solid rgba(91,143,255,.28);border-radius:7px;
+  color:var(--bl2);font-family:'Space Grotesk',sans-serif;font-size:.75rem;font-weight:600;
+  text-decoration:none;transition:.15s;white-space:nowrap;cursor:pointer}
+.bdl:hover{background:var(--bl);border-color:var(--bl);color:#fff}
+.bdl svg{flex-shrink:0}
+
+/* section */
+.sec{margin-top:36px}
+.sh{font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;
+  color:var(--t3);margin-bottom:11px;display:flex;align-items:center;gap:8px}
+.sh::after{content:'';flex:1;height:1px;background:var(--b1)}
+
+/* features */
+.fg{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:7px}
+.fc{background:var(--s1);border:1px solid var(--b1);border-radius:10px;padding:12px;transition:.18s}
+.fc:hover{border-color:var(--b2)}
+.fci{font-size:1rem;margin-bottom:6px}
+.fc h4{font-size:.76rem;font-weight:600;margin-bottom:2px}
+.fc p{font-size:.67rem;color:var(--t2);line-height:1.5}
+
+/* history */
 .hl{display:flex;flex-direction:column;gap:5px}
-.hi{display:flex;align-items:center;gap:9px;background:var(--ink2);border:1px solid var(--line);border-radius:8px;padding:9px 12px;cursor:pointer;transition:.15s}
-.hi:hover{border-color:var(--line2)}
-.hic{width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:700;flex-shrink:0}
-.htt{flex:1;font-size:.76rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hm{font-size:.64rem;color:var(--txt3);flex-shrink:0}
-.hd{width:5px;height:5px;border-radius:50%;background:var(--green);flex-shrink:0}
-.he{text-align:center;padding:20px;font-size:.76rem;color:var(--txt3)}
-#ts{position:fixed;bottom:18px;right:18px;z-index:999;display:flex;flex-direction:column;gap:5px}
-.to{display:flex;align-items:center;gap:8px;background:var(--ink3);border:1px solid var(--line2);border-radius:7px;padding:9px 13px;font-size:.76rem;animation:up .2s ease;max-width:270px}
+.hi{display:flex;align-items:center;gap:9px;background:var(--s1);border:1px solid var(--b1);
+  border-radius:8px;padding:9px 11px;cursor:pointer;transition:.14s}
+.hi:hover{border-color:var(--b2)}
+.hic{width:22px;height:22px;border-radius:5px;display:flex;align-items:center;
+  justify-content:center;font-size:.6rem;font-weight:700;flex-shrink:0}
+.htt{flex:1;font-size:.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hm{font-size:.63rem;color:var(--t3);flex-shrink:0}
+.hdot{width:5px;height:5px;border-radius:50%;background:var(--gn);flex-shrink:0}
+.hem{text-align:center;padding:18px;font-size:.75rem;color:var(--t3)}
+
+/* toast */
+#ts{position:fixed;bottom:16px;right:16px;z-index:999;display:flex;flex-direction:column;gap:5px}
+.to{display:flex;align-items:center;gap:8px;background:var(--s2);border:1px solid var(--b2);
+  border-radius:7px;padding:9px 12px;font-size:.75rem;animation:up .2s ease;max-width:260px}
 .td{width:5px;height:5px;border-radius:50%;flex-shrink:0}
-footer{position:relative;z-index:1;border-top:1px solid var(--line);text-align:center;padding:22px;font-size:.7rem;color:var(--txt3)}
-footer a{color:var(--txt2);text-decoration:none}
-footer a:hover{color:var(--txt)}
-@media(max-width:520px){
-  .pvt{flex-direction:column}
-  .tc,.tc img,.tcp{width:100%;height:170px}
-  .fgd{grid-template-columns:repeat(3,1fr)}
+
+footer{position:relative;z-index:1;border-top:1px solid var(--b1);text-align:center;
+  padding:20px;font-size:.68rem;color:var(--t3)}
+footer a{color:var(--t2);text-decoration:none}
+footer a:hover{color:var(--tx)}
+
+@media(max-width:500px){
+  .pvhead{flex-direction:column}
+  .timg,.timg img,.tph{width:100%;height:160px}
   nav{padding:0 1rem}
-  .pg{padding:36px 1rem 60px}
+  .pg{padding:36px 1rem 56px}
 }
 </style>
 </head>
 <body>
-<div class="amb"></div><div class="gbg"></div>
+<div class="amb"></div>
+<div class="grid"></div>
 
 <nav>
-  <div class="wm">vault<b>dl</b></div>
-  <div class="nc">browser-native · no proxy</div>
+  <div class="logo">vault<i>dl</i></div>
+  <div class="nbadge">Powered by Ryzumi</div>
 </nav>
 
 <div class="pg">
   <div class="hero">
-    <div class="ey"><div class="liv"></div>Download langsung dari browser</div>
-    <h1>Simpan video dari<br/><mark>platform apapun</mark></h1>
-    <p class="sub">YouTube · TikTok · Instagram · Twitter/X · Reddit · Vimeo · dan 500+ lainnya. Gratis, tanpa watermark.</p>
+    <div class="ey"><div class="dot"></div>500+ Platform Didukung</div>
+    <h1>Download video dari<br/><em>mana saja</em></h1>
+    <p class="sub">YouTube · TikTok · Instagram · Twitter/X · Facebook · Reddit · Vimeo dan masih banyak lagi. Gratis, cepat, tanpa watermark.</p>
   </div>
 
   <div class="plts">
     <span class="pt">YouTube</span><span class="pt">TikTok</span><span class="pt">Instagram</span>
     <span class="pt">Twitter/X</span><span class="pt">Facebook</span><span class="pt">Reddit</span>
-    <span class="pt">Vimeo</span><span class="pt">SoundCloud</span><span class="pt">Twitch</span>
-    <span class="pt">Bilibili</span><span class="pt">Pinterest</span><span class="pt">+500 lainnya</span>
+    <span class="pt">Vimeo</span><span class="pt">SoundCloud</span><span class="pt">Dailymotion</span>
+    <span class="pt">+500 lainnya</span>
   </div>
 
   <div class="ic">
@@ -154,7 +222,10 @@ footer a:hover{color:var(--txt)}
       <input class="uf" id="uf" type="url" placeholder="Paste URL video di sini..."
         autocomplete="off" spellcheck="false"
         oninput="onIn()" onkeydown="if(event.key==='Enter')go()"/>
-      <button class="bgo" id="bgo" onclick="go()" disabled>Preview ↗</button>
+      <button class="bgo" id="bgo" onclick="go()" disabled>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="white" stroke-width="1.5"/><path d="M5 7h4M7 5l2 2-2 2" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Cari
+      </button>
     </div>
     <div class="hr">
       <button class="hb" onclick="paste()">📋 Paste</button>
@@ -170,210 +241,286 @@ footer a:hover{color:var(--txt)}
   <div class="sec">
     <div class="sh">Cara Kerja</div>
     <div class="fg">
-      <div class="fc"><div class="fi">🌐</div><h4>Browser-Native</h4><p>Request langsung dari browser — tidak lewat proxy server</p></div>
-      <div class="fc"><div class="fi">🚫</div><h4>No Watermark</h4><p>TikTok, Instagram, Facebook bersih tanpa logo</p></div>
-      <div class="fc"><div class="fi">📊</div><h4>Multi Format</h4><p>4K, 1080p, 720p, 480p, MP3, FLAC, OGG</p></div>
-      <div class="fc"><div class="fi">⚡</div><h4>Instant Preview</h4><p>Thumbnail & info muncul sebelum download</p></div>
-      <div class="fc"><div class="fi">🔒</div><h4>Zero Log</h4><p>URL tidak pernah disimpan di server manapun</p></div>
-      <div class="fc"><div class="fi">🔄</div><h4>Auto Fallback</h4><p>Coba beberapa Cobalt instance otomatis</p></div>
+      <div class="fc"><div class="fci">🔍</div><h4>Paste & Cari</h4><p>Tempel URL video, klik Cari, langsung dapat semua format</p></div>
+      <div class="fc"><div class="fci">📊</div><h4>Semua Kualitas</h4><p>Dari 4K hingga 144p, MP4/WebM, plus audio M4A & Opus</p></div>
+      <div class="fc"><div class="fci">🚫</div><h4>No Watermark</h4><p>TikTok, Instagram, Facebook — bersih tanpa logo</p></div>
+      <div class="fc"><div class="fci">⚡</div><h4>Langsung Download</h4><p>Klik tombol format yang diinginkan, download langsung mulai</p></div>
+      <div class="fc"><div class="fci">🔒</div><h4>Privasi Aman</h4><p>URL kamu tidak disimpan di server manapun</p></div>
+      <div class="fc"><div class="fci">📱</div><h4>Mobile Friendly</h4><p>Bekerja sempurna di HP dan desktop</p></div>
     </div>
   </div>
 
   <div class="sec">
     <div class="sh">Riwayat</div>
     <div class="hl" id="hl"></div>
-    <div class="he" id="he">Belum ada riwayat</div>
+    <div class="hem" id="hem">Belum ada riwayat</div>
   </div>
 </div>
 
 <div id="ts"></div>
+
 <footer>
-  <p>VaultDL · Powered by <a href="https://cobalt.tools" target="_blank">Cobalt</a> · <a href="https://noembed.com" target="_blank">noembed</a></p>
-  <p style="margin-top:4px;opacity:.6">Hanya untuk keperluan pribadi. Patuhi hak cipta konten.</p>
+  <p>VaultDL · API by <a href="https://api.ryzumi.net" target="_blank">api.ryzumi.net</a></p>
+  <p style="margin-top:4px;opacity:.55">Hanya untuk keperluan pribadi. Patuhi hak cipta konten.</p>
 </footer>
 
 <script>
-/* ══════════════════════════════════════════
-   CONFIG — instance dicoba berurutan dari BROWSER
-   ══════════════════════════════════════════ */
-const INST=[
-  'https://cobalt.seelen.app',
-  'https://cobalt.ult.dev',
-  'https://co.blt.lol',
-  'https://cobalt-api.devol.it',
-  'https://dwnld.nichind.dev',
-  'https://cobalt.api.bots.gg',
-];
-const PM={
-  'youtube.com':{n:'YouTube',c:'#ff0000',bg:'rgba(255,0,0,.12)',ic:'YT'},
-  'youtu.be':{n:'YouTube',c:'#ff0000',bg:'rgba(255,0,0,.12)',ic:'YT'},
-  'tiktok.com':{n:'TikTok',c:'#ff2d55',bg:'rgba(255,45,85,.12)',ic:'TT'},
-  'instagram.com':{n:'Instagram',c:'#e1306c',bg:'rgba(225,48,108,.12)',ic:'IG'},
-  'facebook.com':{n:'Facebook',c:'#1877f2',bg:'rgba(24,119,242,.12)',ic:'FB'},
-  'fb.watch':{n:'Facebook',c:'#1877f2',bg:'rgba(24,119,242,.12)',ic:'FB'},
-  'twitter.com':{n:'Twitter',c:'#1d9bf0',bg:'rgba(29,155,240,.12)',ic:'TW'},
-  'x.com':{n:'Twitter',c:'#1d9bf0',bg:'rgba(29,155,240,.12)',ic:'TW'},
-  'reddit.com':{n:'Reddit',c:'#ff4500',bg:'rgba(255,69,0,.12)',ic:'RD'},
-  'vimeo.com':{n:'Vimeo',c:'#1ab7ea',bg:'rgba(26,183,234,.12)',ic:'VM'},
-  'twitch.tv':{n:'Twitch',c:'#9147ff',bg:'rgba(145,71,255,.12)',ic:'TV'},
-  'soundcloud.com':{n:'SoundCloud',c:'#ff5500',bg:'rgba(255,85,0,.12)',ic:'SC'},
-  'bilibili.com':{n:'Bilibili',c:'#00a1d6',bg:'rgba(0,161,214,.12)',ic:'BL'},
-  'pinterest.com':{n:'Pinterest',c:'#e60023',bg:'rgba(230,0,35,.12)',ic:'PT'},
+/* ═══════════════════════════════════════
+   PLATFORM MAP
+═══════════════════════════════════════ */
+const PM = {
+  'youtube.com':    {n:'YouTube',  c:'#ff3333',bg:'rgba(255,51,51,.15)',  ic:'YT'},
+  'youtu.be':       {n:'YouTube',  c:'#ff3333',bg:'rgba(255,51,51,.15)',  ic:'YT'},
+  'tiktok.com':     {n:'TikTok',  c:'#ff2d55',bg:'rgba(255,45,85,.15)',  ic:'TT'},
+  'instagram.com':  {n:'Instagram',c:'#e1306c',bg:'rgba(225,48,108,.15)',ic:'IG'},
+  'facebook.com':   {n:'Facebook', c:'#1877f2',bg:'rgba(24,119,242,.15)',ic:'FB'},
+  'fb.watch':       {n:'Facebook', c:'#1877f2',bg:'rgba(24,119,242,.15)',ic:'FB'},
+  'twitter.com':    {n:'Twitter',  c:'#1d9bf0',bg:'rgba(29,155,240,.15)',ic:'TW'},
+  'x.com':          {n:'Twitter',  c:'#1d9bf0',bg:'rgba(29,155,240,.15)',ic:'TW'},
+  'reddit.com':     {n:'Reddit',   c:'#ff4500',bg:'rgba(255,69,0,.15)',  ic:'RD'},
+  'vimeo.com':      {n:'Vimeo',   c:'#1ab7ea',bg:'rgba(26,183,234,.15)',ic:'VM'},
+  'twitch.tv':      {n:'Twitch',  c:'#9147ff',bg:'rgba(145,71,255,.15)',ic:'TV'},
+  'soundcloud.com': {n:'SoundCloud',c:'#ff5500',bg:'rgba(255,85,0,.15)',ic:'SC'},
+  'bilibili.com':   {n:'Bilibili',c:'#00a1d6',bg:'rgba(0,161,214,.15)', ic:'BL'},
+  'dailymotion.com':{n:'Dailymotion',c:'#0066dc',bg:'rgba(0,102,220,.15)',ic:'DM'},
+  'pinterest.com':  {n:'Pinterest',c:'#e60023',bg:'rgba(230,0,35,.15)', ic:'PT'},
 };
-const FMTS=[
-  {q:'max',lb:'Best',sb:'Auto',ao:false,af:'',ab:''},
-  {q:'2160',lb:'4K',sb:'2160p',ao:false,af:'',ab:''},
-  {q:'1080',lb:'FHD',sb:'1080p',ao:false,af:'',ab:''},
-  {q:'720',lb:'HD',sb:'720p',ao:false,af:'',ab:''},
-  {q:'480',lb:'SD',sb:'480p',ao:false,af:'',ab:''},
-  {q:'360',lb:'360p',sb:'360p',ao:false,af:'',ab:''},
-  {q:'',lb:'MP3',sb:'320kbps',ao:true,af:'mp3',ab:'320'},
-  {q:'',lb:'FLAC',sb:'Lossless',ao:true,af:'flac',ab:''},
-  {q:'',lb:'OGG',sb:'256kbps',ao:true,af:'ogg',ab:'256'},
-];
 
-/* STATE */
-let hist=JSON.parse(localStorage.getItem('vdl3')||'[]');
-let curUrl='',curP=null,curMeta={},busy=false;
+/* ═══════════════════════════════════════
+   STATE
+═══════════════════════════════════════ */
+let hist = JSON.parse(localStorage.getItem('vdl4') || '[]');
+let busy = false;
 
-/* UTILS */
-const isUrl=s=>{try{new URL(s);return true}catch{return false}};
-const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-const setZ=h=>document.getElementById('zone').innerHTML=h;
-const $=id=>document.getElementById(id);
-function getP(url){try{const h=new URL(url).hostname.replace('www.','');for(const[d,i]of Object.entries(PM))if(h.includes(d))return i;}catch{}return{n:'Video',c:'#4f8eff',bg:'rgba(79,142,255,.12)',ic:'▶'};}
-function ago(ts){const d=Date.now()-ts;if(d<60000)return'baru saja';if(d<3600000)return~~(d/60000)+' mnt';if(d<86400000)return~~(d/3600000)+' jam';return~~(d/86400000)+' hari';}
-function urlTitle(url){try{const u=new URL(url);const v=u.searchParams.get('v');if(v)return'YouTube Video';const p=u.pathname.split('/').filter(Boolean);return p[p.length-1]?.replace(/[-_]/g,' ')||'Video';}catch{return'Video'}}
-function toast(m,t='info'){const c={success:'var(--green)',error:'var(--rose)',info:'var(--blue2)',warn:'var(--amber)'};const el=document.createElement('div');el.className='to';el.innerHTML=`<div class="td" style="background:${c[t]||c.info}"></div><span>${esc(m)}</span>`;$('ts').appendChild(el);setTimeout(()=>el.remove(),4000);}
+/* ═══════════════════════════════════════
+   UTILS
+═══════════════════════════════════════ */
+const isUrl = s => { try { new URL(s); return true } catch { return false } };
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const $ = id => document.getElementById(id);
+const setZ = h => $('zone').innerHTML = h;
 
-/* INPUT */
-function onIn(){$('bgo').disabled=!isUrl($('uf').value.trim())}
-async function paste(){try{const t=await navigator.clipboard.readText();if(isUrl(t)){$('uf').value=t;onIn();toast('URL ditempel','success')}else toast('Bukan URL valid','warn');}catch{toast('Tempel manual','warn')}}
-const DEMOS={yt:'https://www.youtube.com/watch?v=dQw4w9WgXcQ',tt:'https://www.tiktok.com/@charlidamelio/video/7016895862693821701',ig:'https://www.instagram.com/p/CvZ8rlYNpqF/'};
-function demo(k){$('uf').value=DEMOS[k];onIn()}
-function clr(){$('uf').value='';$('bgo').disabled=true;setZ('');curUrl='';curP=null}
-
-/* PREVIEW */
-async function go(){
-  const url=$('uf').value.trim();
-  if(!isUrl(url)||busy)return;
-  curUrl=url;curP=getP(url);curMeta={};busy=true;
-  setZ('<div class="ls"><div class="sp"></div><p>Mengambil info video…</p></div>');
-  try{
-    const r=await fetch(`https://noembed.com/embed?url=${encodeURIComponent(url)}`);
-    const d=await r.json();
-    curMeta=d.title?{title:d.title,author:d.author_name||null,thumb:d.thumbnail_url||null}:{title:urlTitle(url),author:null,thumb:null};
-  }catch{curMeta={title:urlTitle(url),author:null,thumb:null}}
-  renderPV();busy=false;
-  toast('Preview siap — pilih format','success');
+function getP(url) {
+  try {
+    const h = new URL(url).hostname.replace('www.', '');
+    for (const [d, i] of Object.entries(PM)) if (h.includes(d)) return i;
+  } catch {}
+  return { n: 'Video', c: '#5b8fff', bg: 'rgba(91,143,255,.15)', ic: '▶' };
 }
 
-/* RENDER */
-function renderPV(){
-  const p=curP,m=curMeta,cu=`https://cobalt.tools/#${encodeURIComponent(curUrl)}`;
-  const th=m.thumb?`<img src="${esc(m.thumb)}" alt="" onerror="this.parentElement.innerHTML='<div class=tcp>🎬</div>'">`:`<div class="tcp">🎬</div>`;
-  const fg=FMTS.map((f,i)=>`<button class="fb" id="f${i}" onclick="dl(${i})"><span class="fq">${esc(f.lb)}</span><span class="fs">${esc(f.sb)}</span></button>`).join('');
-  setZ(`<div class="pv">
-  <div class="pvt">
-    <div class="tc">${th}<div class="pflg" style="background:${p.bg};color:${p.c}">${esc(p.n)}</div></div>
-    <div class="mc">
-      <div class="mt">${esc(m.title||'Video')}</div>
-      ${m.author?`<div class="ma">oleh ${esc(m.author)}</div>`:''}
-      <div class="mu">${esc(curUrl)}</div>
+function ago(ts) {
+  const d = Date.now() - ts;
+  if (d < 60000) return 'baru saja';
+  if (d < 3600000) return ~~(d/60000) + ' mnt';
+  if (d < 86400000) return ~~(d/3600000) + ' jam';
+  return ~~(d/86400000) + ' hari';
+}
+
+function toast(m, t = 'info') {
+  const c = { success: 'var(--gn)', error: 'var(--rd)', info: 'var(--bl2)', warn: 'var(--am)' };
+  const el = document.createElement('div');
+  el.className = 'to';
+  el.innerHTML = `<div class="td" style="background:${c[t]||c.info}"></div><span>${esc(m)}</span>`;
+  $('ts').appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+/* ═══════════════════════════════════════
+   INPUT
+═══════════════════════════════════════ */
+function onIn() { $('bgo').disabled = !isUrl($('uf').value.trim()) }
+
+async function paste() {
+  try {
+    const t = await navigator.clipboard.readText();
+    if (isUrl(t)) { $('uf').value = t; onIn(); toast('URL ditempel', 'success'); }
+    else toast('Bukan URL valid', 'warn');
+  } catch { toast('Tempel manual ya', 'warn'); }
+}
+
+const DEMOS = {
+  yt: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+  tt: 'https://www.tiktok.com/@charlidamelio/video/7016895862693821701',
+  ig: 'https://www.instagram.com/p/CvZ8rlYNpqF/',
+};
+function demo(k) { $('uf').value = DEMOS[k]; onIn(); }
+function clr() { $('uf').value = ''; $('bgo').disabled = true; setZ(''); }
+
+/* ═══════════════════════════════════════
+   MAIN: FETCH VIA /api/get PROXY
+═══════════════════════════════════════ */
+async function go() {
+  const url = $('uf').value.trim();
+  if (!isUrl(url) || busy) return;
+  busy = true;
+
+  const p = getP(url);
+  setZ(`<div class="ls"><div class="sp"></div><p>Mengambil info video…</p><small>Menghubungi api.ryzumi.net</small></div>`);
+
+  try {
+    const res = await fetch(`/api/get?url=${encodeURIComponent(url)}`);
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      showErr('Gagal mengambil video', data.error || data.detail || 'URL mungkin tidak didukung atau video privat');
+      busy = false; return;
+    }
+
+    if (!data.medias || !data.medias.length) {
+      showErr('Tidak ada format tersedia', 'Video mungkin privat, dihapus, atau platform tidak didukung');
+      busy = false; return;
+    }
+
+    renderResult(data, url, p);
+    addHist(url, p, data.title || 'Video');
+    toast('Format tersedia — pilih untuk download!', 'success');
+
+  } catch (err) {
+    showErr('Koneksi gagal', err.message);
+  }
+
+  busy = false;
+}
+
+/* ═══════════════════════════════════════
+   RENDER RESULT
+   Parse medias[] dari Ryzumi:
+   { url, type, quality, extension, thumbnail }
+   quality contoh: "mp4 (1080p)", "m4a (131kb/s)", "opus (49kb/s)"
+═══════════════════════════════════════ */
+function renderResult(data, url, p) {
+  const title = data.title || 'Video';
+  const thumb = data.thumbnail || '';
+
+  // Pisah video dan audio
+  const videos = data.medias.filter(m => m.type === 'video');
+  const audios = data.medias.filter(m => m.type === 'audio');
+
+  // Prioritaskan mp4 dulu (lebih kompatibel), lalu webm
+  const sortedVideos = [
+    ...videos.filter(m => m.extension === 'mp4'),
+    ...videos.filter(m => m.extension !== 'mp4'),
+  ];
+
+  const thumbHtml = thumb
+    ? `<img src="${esc(thumb)}" alt="" onerror="this.parentElement.innerHTML='<div class=tph>🎬</div>'">`
+    : `<div class="tph">🎬</div>`;
+
+  const videoRows = sortedVideos.map(m => fmtRow(m)).join('');
+  const audioRows = audios.map(m => fmtRow(m)).join('');
+
+  setZ(`
+<div class="pv">
+  <div class="pvhead">
+    <div class="timg">
+      ${thumbHtml}
+      <div class="pf" style="background:${p.bg};color:${p.c}">${esc(p.n)}</div>
+    </div>
+    <div class="pmeta">
+      <div class="ptitle">${esc(title)}</div>
+      ${data.source ? `<div class="psource">sumber: ${esc(data.source)}</div>` : ''}
+      <div class="purl">${esc(url)}</div>
     </div>
   </div>
-  <div class="dlp">
-    <div class="dlpl">Pilih Format & Kualitas</div>
-    <div class="fgd">${fg}</div>
-    <div id="sa"></div>
-    <div class="tip">💡 Klik format → tunggu → klik tombol hijau untuk download. Jika semua gagal: <a href="${cu}" target="_blank" rel="noopener">buka cobalt.tools ↗</a></div>
+  <div class="flist">
+    <div class="ftabs">
+      <button class="ftab on" onclick="switchTab('video',this)">🎬 Video (${sortedVideos.length})</button>
+      ${audios.length ? `<button class="ftab" onclick="switchTab('audio',this)">🎵 Audio (${audios.length})</button>` : ''}
+    </div>
+    <div class="fgroup on" id="fg-video">${videoRows || '<div style="padding:14px;text-align:center;font-size:.8rem;color:var(--t2)">Tidak ada format video</div>'}</div>
+    ${audios.length ? `<div class="fgroup" id="fg-audio">${audioRows}</div>` : ''}
   </div>
 </div>`);
 }
 
-/* DOWNLOAD — browser langsung fetch Cobalt */
-async function dl(idx){
-  if(busy)return;
-  const fmt=FMTS[idx];busy=true;
-  document.querySelectorAll('.fb').forEach(b=>b.classList.remove('active'));
-  $(`f${idx}`)?.classList.add('active','ld');
-  const sa=$('sa');
-  const setS=h=>{if(sa)sa.innerHTML=h};
-
-  const pl={url:curUrl,filenameStyle:'pretty',tiktokFullAudio:true};
-  if(fmt.ao){pl.downloadMode='audio';pl.audioFormat=fmt.af||'mp3';if(fmt.ab)pl.audioBitrate=fmt.ab;}
-  else{pl.downloadMode='auto';pl.videoQuality=fmt.q||'max';pl.youtubeVideoCodec='h264';}
-
-  let lastErr='',result=null;
-
-  for(const inst of INST){
-    const host=new URL(inst).hostname;
-    setS(`<div class="sr pr"><div class="isp"></div><span>Mencoba <b>${esc(host)}</b>…</span></div>`);
-    try{
-      const ctrl=new AbortController();
-      const tid=setTimeout(()=>ctrl.abort(),9000);
-      const res=await fetch(inst+'/',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','Accept':'application/json'},
-        body:JSON.stringify(pl),
-        signal:ctrl.signal,
-      });
-      clearTimeout(tid);
-      if(!res.ok){lastErr=`HTTP ${res.status}`;continue}
-      const data=await res.json();
-      if(data.status==='error'){
-        lastErr=data.error?.code||'error';
-        if(lastErr.includes('unavailable')||lastErr.includes('age')||lastErr.includes('login'))break;
-        continue;
-      }
-      result=data;break;
-    }catch(e){lastErr=e.name==='AbortError'?'timeout':e.message;continue}
-  }
-
-  $(`f${idx}`)?.classList.remove('ld');
-
-  if(!result){
-    const cu=`https://cobalt.tools/#${encodeURIComponent(curUrl)}`;
-    setS(`<div class="sr er">⚠ Semua instance tidak merespons (${esc(lastErr)})</div>
-      <a href="${cu}" target="_blank" rel="noopener" class="fb2">
-        <span>🌐</span><span>Buka di cobalt.tools langsung ↗</span>
-      </a>`);
-    toast('Coba cobalt.tools langsung','warn');busy=false;return;
-  }
-
-  if(result.status==='picker'&&result.picker){
-    const items=result.picker;
-    const g=items.map((it,i)=>`<a href="${esc(it.url)}" target="_blank" rel="noopener" download class="pi">${it.thumb?`<img src="${esc(it.thumb)}" onerror="this.outerHTML='<div class=pni>${it.type==='video'?'🎬':'🖼'}</div>'">`:`<div class="pni">${it.type==='video'?'🎬':'🖼'}</div>`}<div class="pl">${it.type==='video'?'Video':'Foto'} ${i+1}</div></a>`).join('');
-    setS(`<div class="sr ok">✓ ${items.length} media — klik untuk download</div><div class="pgd">${g}</div>${result.audio?`<a href="${esc(result.audio)}" target="_blank" download class="dl" style="margin-top:6px"><div class="dic">🎵</div><div class="di"><div class="dn">Download Audio Terpisah</div></div><div class="da">↓</div></a>`:''}`);
-    toast(`${items.length} media siap!`,'success');
-    addH(curUrl,curP,curMeta.title||'Video',fmt.lb);busy=false;return;
-  }
-
-  const dlUrl=result.url;
-  if(!dlUrl){setS('<div class="sr er">⚠ Response tidak valid</div>');toast('Response tidak valid','error');busy=false;return;}
-  const fn=result.filename||`vaultdl_${fmt.lb}_${Date.now()}.mp4`;
-  const short=fn.length>40?fn.slice(0,40)+'…':fn;
-
-  setS(`<div class="sr ok">✓ Link ${esc(fmt.lb)} siap</div>
-    <a href="${esc(dlUrl)}" target="_blank" rel="noopener" download="${esc(fn)}" class="dl">
-      <div class="dic"><svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 2v8M4 7.5 7.5 11 11 7.5M2 13h11" stroke="var(--green)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      <div class="di"><div class="dn">↓ Download ${esc(fmt.lb)}</div><div class="dh">${esc(short)}</div></div>
-      <div class="da">↓</div>
-    </a>`);
-  toast(`${fmt.lb} siap — klik tombol hijau!`,'success');
-  addH(curUrl,curP,curMeta.title||'Video',fmt.lb);busy=false;
+function switchTab(tab, btn) {
+  document.querySelectorAll('.ftab').forEach(b => b.classList.remove('on'));
+  document.querySelectorAll('.fgroup').forEach(g => g.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('fg-' + tab)?.classList.add('on');
 }
 
-/* HISTORY */
-function addH(url,p,title,q){hist.unshift({url,title,q,pn:p.n,pc:p.c,pb:p.bg,pi:p.ic,ts:Date.now()});if(hist.length>20)hist.pop();localStorage.setItem('vdl3',JSON.stringify(hist));renderH();}
-function renderH(){const l=$('hl'),e=$('he');if(!hist.length){l.innerHTML='';e.style.display='block';return}e.style.display='none';l.innerHTML=hist.map(h=>`<div class="hi" onclick="reuse('${encodeURIComponent(h.url)}')"><div class="hic" style="background:${h.pb};color:${h.pc}">${esc(h.pi)}</div><div class="htt">${esc(h.title)}</div><div class="hm">${esc(h.q)} · ${ago(h.ts)}</div><div class="hd"></div></div>`).join('');}
-function reuse(enc){$('uf').value=decodeURIComponent(enc);onIn();window.scrollTo({top:0,behavior:'smooth'});toast('URL dimuat','info');}
+function fmtRow(m) {
+  // Parse quality string: "mp4 (1080p)" → "1080p", "m4a (131kb/s)" → "131kb/s"
+  const qMatch = m.quality.match(/\(([^)]+)\)/);
+  const qLabel = qMatch ? qMatch[1] : m.quality;
+  const qClass = getQClass(qLabel);
+  const extLabel = m.extension.toUpperCase();
 
-/* INIT */
-document.addEventListener('DOMContentLoaded',()=>{
-  renderH();
-  document.body.addEventListener('dragover',e=>e.preventDefault());
-  document.body.addEventListener('drop',e=>{e.preventDefault();const t=e.dataTransfer.getData('text');if(t&&isUrl(t)){$('uf').value=t;onIn();toast('URL dari drag & drop','success')}});
+  const dlBtn = `<a href="${esc(m.url)}" download target="_blank" rel="noopener" class="bdl">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v7M3 5.5 6 9l3-3.5M1 11h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    ${esc(extLabel)}
+  </a>`;
+
+  return `<div class="fi">
+    <div class="fi-l">
+      <span class="fq ${qClass}">${esc(qLabel)}</span>
+      <span class="fext">${esc(m.quality.split(' (')[0].toUpperCase())}</span>
+    </div>
+    ${dlBtn}
+  </div>`;
+}
+
+function getQClass(q) {
+  if (q.includes('2160') || q.includes('4K')) return 'q2160';
+  if (q.includes('1440')) return 'q1440';
+  if (q.includes('1080')) return 'q1080';
+  if (q.includes('720'))  return 'q720';
+  if (q.includes('480'))  return 'q480';
+  if (q.includes('360') || q.includes('240') || q.includes('144')) return 'qlow';
+  return 'qaudio'; // audio formats
+}
+
+function showErr(title, sub) {
+  setZ(`<div class="err"><div class="err-ico">⚠</div><div>
+    <div class="err-title">${esc(title)}</div>
+    ${sub ? `<div class="err-sub">${esc(sub)}</div>` : ''}
+  </div></div>`);
+}
+
+/* ═══════════════════════════════════════
+   HISTORY
+═══════════════════════════════════════ */
+function addHist(url, p, title) {
+  // Hapus duplikat URL yang sama
+  hist = hist.filter(h => h.url !== url);
+  hist.unshift({ url, title, pn: p.n, pc: p.c, pb: p.bg, pi: p.ic, ts: Date.now() });
+  if (hist.length > 20) hist.pop();
+  localStorage.setItem('vdl4', JSON.stringify(hist));
+  renderHist();
+}
+
+function renderHist() {
+  const l = $('hl'), e = $('hem');
+  if (!hist.length) { l.innerHTML = ''; e.style.display = 'block'; return; }
+  e.style.display = 'none';
+  l.innerHTML = hist.map(h => `
+    <div class="hi" onclick="reuse('${encodeURIComponent(h.url)}')">
+      <div class="hic" style="background:${h.pb};color:${h.pc}">${esc(h.pi)}</div>
+      <div class="htt">${esc(h.title)}</div>
+      <div class="hm">${ago(h.ts)}</div>
+      <div class="hdot"></div>
+    </div>`).join('');
+}
+
+function reuse(enc) {
+  $('uf').value = decodeURIComponent(enc);
+  onIn();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  toast('URL dimuat dari riwayat', 'info');
+}
+
+/* ═══════════════════════════════════════
+   INIT
+═══════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  renderHist();
+  document.body.addEventListener('dragover', e => e.preventDefault());
+  document.body.addEventListener('drop', e => {
+    e.preventDefault();
+    const t = e.dataTransfer.getData('text');
+    if (t && isUrl(t)) { $('uf').value = t; onIn(); toast('URL dari drag & drop', 'success'); }
+  });
 });
 </script>
 </body>
