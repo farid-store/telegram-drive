@@ -481,16 +481,24 @@ async function doDownload(btn,b64,ext){
   const isYT = url.includes('googlevideo.com');
 
   if(isYT){
-    // YOUTUBE: URL terikat ke IP browser user — tidak bisa diproxy.
-    // Buka tab baru + tampilkan panduan cara simpan.
-    const a=document.createElement('a');
-    a.href=url;a.target='_blank';a.rel='noopener noreferrer';a.style.display='none';
-    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    // YOUTUBE: URL googlevideo.com di-proxy via /api/dl (Vercel Edge)
+    // URL terikat ke IP server Ryzumi HK, bukan IP user — jadi proxy dari Vercel bisa
+    if(dt)dt.textContent='⬇ Downloading...';
+    btn.style.cssText='background:var(--am);border-color:var(--am);color:#fff;cursor:wait';
+
+    const proxyUrl = `/api/dl?url=${encodeURIComponent(url)}&name=${encodeURIComponent(fname)}`;
+    const a = document.createElement('a');
+    a.href = proxyUrl;
+    a.download = fname;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
     btn.style.cssText='background:var(--gn);border-color:var(--gn);color:#fff';
-    if(dt)dt.textContent='↗ Buka Tab';
-    showGuide('yt');
-    toast('Tab YouTube dibuka — ikuti panduan cara simpan di bawah','info');
-    setTimeout(reset,4000);
+    if(dt)dt.textContent='✓ Downloading';
+    toast('Download YouTube dimulai lewat server!','success');
+    setTimeout(reset, 4000);
     return;
   }
 
@@ -536,26 +544,11 @@ function showGuide(type='other'){
   if(old)old.remove();
   const g=document.createElement('div');
   g.id='dl-guide';g.className='guide';
-
-  if(type==='yt'){
-    g.innerHTML=`<button class="guide-close" onclick="this.parentElement.remove()">✕</button>
-<span class="guide-title">📺 Cara simpan video YouTube</span>
-<div style="color:var(--t2);line-height:1.75">
-<strong>🖥 PC / Laptop:</strong><br>
-Tab sudah terbuka → klik kanan pada video → pilih <strong>"Simpan video sebagai..."</strong> / <strong>"Save video as..."</strong><br><br>
-<strong>📱 HP Android / iOS:</strong><br>
-Salin link (tombol 📋) → buka di aplikasi <strong>1DM / IDM+ / Shortcuts (iOS)</strong><br><br>
-<strong>⚡ Cara paling mudah:</strong><br>
-Klik 📋 di sebelah tombol → paste link ke <strong>IDM, Internet Download Manager, atau VLC</strong>
-</div>`;
-  } else {
-    g.innerHTML=`<button class="guide-close" onclick="this.parentElement.remove()">✕</button>
+  g.innerHTML=`<button class="guide-close" onclick="this.parentElement.remove()">✕</button>
 <span class="guide-title">💡 Tip: Jika download tidak otomatis</span>
 <div style="color:var(--t2);line-height:1.75">
 Klik 📋 di sebelah tombol → salin link → paste di browser address bar atau <strong>IDM / download manager</strong>
 </div>`;
-  }
-
   const z=$('zone');
   z.insertBefore(g,z.firstChild);
 }
