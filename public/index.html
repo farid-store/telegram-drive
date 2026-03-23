@@ -144,18 +144,6 @@ h1 em{font-style:normal;background:linear-gradient(135deg,var(--bl),var(--vi));-
 #ts{position:fixed;bottom:18px;right:18px;z-index:999;display:flex;flex-direction:column;gap:6px}
 .to{display:flex;align-items:center;gap:8px;background:var(--s2);border:1px solid var(--b2);border-radius:9px;padding:10px 14px;font-size:.76rem;animation:up .22s ease;max-width:300px;box-shadow:0 4px 20px rgba(0,0,0,.3)}
 .td{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-
-/* Inline media player */
-.media-player-wrap{background:var(--s1);border:1px solid rgba(79,142,255,.25);border-radius:12px;padding:14px;margin-bottom:12px;animation:up .25s ease}
-.media-player-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.media-player-title{font-size:.78rem;font-weight:600;color:var(--bl2)}
-.media-player-close{background:none;border:none;color:var(--t3);cursor:pointer;font-size:1rem;padding:2px 6px;line-height:1}
-.media-player-close:hover{color:var(--rd)}
-.media-player-hint{margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.media-player-hint-text{font-size:.72rem;color:var(--t2);flex:1;line-height:1.55}
-.media-player-copy-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:var(--bg1);border:1px solid rgba(79,142,255,.3);border-radius:7px;color:var(--bl2);font-size:.72rem;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;flex-shrink:0;transition:.15s}
-.media-player-copy-btn:hover{background:var(--bl);border-color:var(--bl);color:#fff}
-
 footer{position:relative;z-index:1;border-top:1px solid var(--b1);text-align:center;padding:22px;font-size:.7rem;color:var(--t3)}
 footer a{color:var(--t2);text-decoration:none}
 @media(max-width:540px){
@@ -300,7 +288,6 @@ const PLAT={
   'weibo.com':{n:'Weibo',c:'#e6162d',bg:'rgba(230,22,45,.15)',ic:'WB'},
   'kwai.com':{n:'Kwai',c:'#ffcc00',bg:'rgba(255,204,0,.15)',ic:'KW'},
 };
-
 const QLABELS={
   'hd_no_watermark':{label:'HD No WM',cls:'q-hd'},
   'no_watermark':{label:'No WM',cls:'q-nowm'},
@@ -315,12 +302,7 @@ const QLABELS={
   'low':{label:'Low',cls:'q-low'},
   'original':{label:'Original',cls:'q-best'},
 };
-
-// Domain .net sudah tidak aktif — gunakan .vip
-const API_LIST=[
-  'https://api.ryzumi.vip/api/downloader/all-in-one',
-  'https://api.ryzumi.net/api/downloader/all-in-one',
-];
+const API='https://api.ryzumi.net/api/downloader/all-in-one';
 const DEMOS={
   yt:'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
   tt:'https://www.tiktok.com/@voidlane.cjo/video/7608076678421662994',
@@ -329,15 +311,12 @@ const DEMOS={
   fb:'https://www.facebook.com/watch/?v=766882641177003',
   rd:'https://www.reddit.com/r/videos/comments/zl90mz/',
 };
-
 let hist=JSON.parse(localStorage.getItem('vdl9')||'[]');
 let busy=false;
-
 const isUrl=s=>{try{new URL(s);return true}catch{return false}};
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const $=id=>document.getElementById(id);
 const setZ=h=>$('zone').innerHTML=h;
-
 function getP(url){
   try{
     const h=new URL(url).hostname.replace('www.','');
@@ -346,62 +325,6 @@ function getP(url){
   }catch{}
   return{n:'Video',c:'#4f8eff',bg:'rgba(79,142,255,.15)',ic:'▶'};
 }
-
-/**
- * Deteksi apakah URL media adalah dari TikTok CDN
- * (sudah bisa blob download langsung — tidak perlu diubah)
- */
-function isTikTokCDN(url){
-  try{
-    const h=new URL(url).hostname;
-    return h.includes('tiktok') || h.includes('muscdn') || h.includes('ttwcdn') || h.includes('snssdk');
-  }catch{return false}
-}
-
-/**
- * Deteksi apakah URL media adalah dari YouTube CDN
- */
-function isYouTubeCDN(url){
-  try{
-    const h=new URL(url).hostname;
-    return h.includes('googlevideo.com') || h.includes('youtube.com/videoplayback');
-  }catch{return false}
-}
-
-/**
- * Platform yang URLnya bisa dimuat sebagai <video> / <audio> (CORS friendly dari API)
- * Strategi: tampilkan player inline → klik kanan simpan
- *
- * CATATAN: Instagram CDN (cdninstagram, fbcdn) & Facebook CDN, Twitter CDN, Reddit CDN,
- * Vimeo CDN (vimeocdn), dll — semua tidak mengizinkan fetch() blob dari domain lain.
- * Solusi terbaik adalah tampilkan inline video player sehingga user bisa klik kanan → simpan.
- */
-function needsPlayerFallback(url){
-  // TikTok bisa blob — jangan masukkan
-  if(isTikTokCDN(url)) return false;
-  // YouTube punya player sendiri
-  if(isYouTubeCDN(url)) return false;
-  return true;
-}
-
-/**
- * Coba fetch blob. Jika CORS block / error → return null
- */
-async function tryFetchBlob(url){
-  try{
-    const controller=new AbortController();
-    const timeout=setTimeout(()=>controller.abort(),12000);
-    const r=await fetch(url,{mode:'cors',cache:'no-store',signal:controller.signal});
-    clearTimeout(timeout);
-    if(!r.ok) return null;
-    const blob=await r.blob();
-    if(blob.size<500) return null;
-    return blob;
-  }catch{
-    return null;
-  }
-}
-
 function ago(ts){
   const d=Date.now()-ts;
   if(d<60000)return'baru saja';
@@ -409,7 +332,6 @@ function ago(ts){
   if(d<86400000)return~~(d/3600000)+' jam lalu';
   return~~(d/86400000)+' hari lalu';
 }
-
 function toast(m,t='info'){
   const c={success:'var(--gn)',error:'var(--rd)',info:'var(--bl2)',warn:'var(--am)'};
   const el=document.createElement('div');
@@ -418,7 +340,6 @@ function toast(m,t='info'){
   $('ts').appendChild(el);
   setTimeout(()=>el.remove(),5000);
 }
-
 function onIn(){$('btn-s').disabled=!isUrl($('url-input').value.trim())}
 async function doPaste(){
   try{
@@ -429,7 +350,6 @@ async function doPaste(){
 }
 function setDemo(k){$('url-input').value=DEMOS[k]||'';onIn()}
 function doClear(){$('url-input').value='';$('btn-s').disabled=true;setZ('')}
-
 function parseQ(q,ext){
   const lq=(q||'').toLowerCase();
   if(QLABELS[lq])return QLABELS[lq];
@@ -449,7 +369,6 @@ function getQCls(v){
   if(/kb|kbps/.test(s))return'q-audio';
   return'q-low';
 }
-
 async function doSearch(){
   const url=$('url-input').value.trim();
   if(!isUrl(url)||busy)return;
@@ -457,40 +376,24 @@ async function doSearch(){
   const p=getP(url);
   const btn=$('btn-s');
   btn.disabled=true;btn.classList.add('loading');
-  setZ(`<div class="lc"><div class="lsp"></div><p>Mengambil format dari ${esc(p.n)}...</p><small>api.ryzumi.vip</small></div>`);
-
-  let lastErr='';
-  for(const apiBase of API_LIST){
-    try{
-      const controller=new AbortController();
-      const tid=setTimeout(()=>controller.abort(),15000);
-      const res=await fetch(`${apiBase}?url=${encodeURIComponent(url)}`,{
-        headers:{accept:'application/json'},
-        signal:controller.signal
-      });
-      clearTimeout(tid);
-      if(res.status===404){showErr('Video tidak ditemukan','URL salah atau video telah dihapus');busy=false;btn.disabled=false;btn.classList.remove('loading');return}
-      if(res.status===403){showErr('Video privat atau terblokir','Coba video lain yang bersifat publik');busy=false;btn.disabled=false;btn.classList.remove('loading');return}
-      if(!res.ok){lastErr=`HTTP ${res.status} dari ${new URL(apiBase).hostname}`;continue}
-      const data=await res.json();
-      if(!data.medias?.length){showErr('Tidak ada format tersedia','Video privat atau platform tidak didukung');busy=false;btn.disabled=false;btn.classList.remove('loading');return}
-      renderResult(data,url,p);
-      saveHist(url,p,data.title||'Video');
-      toast(`${data.medias.length} format tersedia!`,'success');
-      busy=false;btn.disabled=false;btn.classList.remove('loading');
+  setZ(`<div class="lc"><div class="lsp"></div><p>Mengambil format dari ${esc(p.n)}...</p><small>api.ryzumi.net</small></div>`);
+  try{
+    const res=await fetch(`${API}?url=${encodeURIComponent(url)}`,{headers:{accept:'application/json'}});
+    if(!res.ok){
+      showErr(`Gagal: HTTP ${res.status}`,res.status===404?'Video tidak ditemukan':res.status===403?'Video privat':'Coba lagi');
       return;
-    }catch(err){
-      lastErr=err.name==='AbortError'?'Timeout':'Koneksi gagal';
     }
+    const data=await res.json();
+    if(!data.medias?.length){showErr('Tidak ada format tersedia','Video privat atau platform tidak didukung');return}
+    renderResult(data,url,p);
+    saveHist(url,p,data.title||'Video');
+    toast(`${data.medias.length} format tersedia!`,'success');
+  }catch(err){
+    showErr('Koneksi gagal','Coba matikan ad-blocker dan refresh');
+  }finally{
+    busy=false;btn.disabled=false;btn.classList.remove('loading');
   }
-
-  showErr(
-    lastErr||'Server tidak merespons',
-    'API sedang down atau maintenance. Coba lagi beberapa saat — atau cek status di api.ryzumi.vip'
-  );
-  busy=false;btn.disabled=false;btn.classList.remove('loading');
 }
-
 function renderResult(data,url,p){
   const title=data.title||'Video';
   const thumb=data.thumbnail||'';
@@ -524,21 +427,19 @@ function renderResult(data,url,p){
   </div>
 </div>`);
 }
-
 function swTab(tab,btn){
   document.querySelectorAll('.ft').forEach(b=>b.classList.remove('on'));
   document.querySelectorAll('.fg').forEach(g=>g.classList.remove('on'));
   btn.classList.add('on');
   document.getElementById('fg-'+tab)?.classList.add('on');
 }
-
 function fmtRow(m){
   const{label,cls}=parseQ(m.quality,m.extension);
   const ext=(m.extension||'').toUpperCase();
   const rawPre=(m.quality||'').replace(/\([^)]+\)/,'').trim();
   const info=(rawPre&&rawPre.toLowerCase()!==m.extension)?rawPre:'';
+  // Encode URL as base64 for safe HTML attribute storage
   const b64=btoa(unescape(encodeURIComponent(m.url)));
-  const isAudio=(m.type==='audio');
   return `<div class="fi">
   <div class="fl">
     <span class="qb2 ${cls}">${esc(label)}</span>
@@ -546,7 +447,7 @@ function fmtRow(m){
     ${info?`<span class="fnfo">${esc(info)}</span>`:''}
   </div>
   <div style="display:flex;gap:5px;align-items:center;flex-shrink:0">
-    <button class="dlb" onclick="doDownload(this,'${b64}','${ext.toLowerCase()}',${isAudio})">
+    <button class="dlb" onclick="doDownload(this,'${b64}','${ext.toLowerCase()}')">
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v7.5M3 6.5 6 10l3-3.5M1 11h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       <span class="dt">Download</span>
     </button>
@@ -558,17 +459,12 @@ function fmtRow(m){
 }
 
 /* =====================================================
-   STRATEGI DOWNLOAD:
-
-   1. TikTok CDN  → fetch() blob (bisa CORS) → createObjectURL → auto download ✅
-   2. YouTube CDN → inline <video> player → klik kanan simpan ✅
-   3. AUDIO (semua) → fetch() blob dulu, jika gagal → inline <audio> player ✅
-   4. Platform lain (IG, FB, Twitter, Reddit, Vimeo, dll):
-      - Coba fetch() blob dulu (kadang bisa)
-      - Jika gagal → inline <video> player (klik kanan simpan) ✅
-      - Tombol 📋 Copy Link selalu tersedia untuk IDM/downloader
+   DOWNLOAD — 2 strategi:
+   1. fetch() blob → createObjectURL (TikTok, IG, Vimeo, dll)
+   2. <a download> direct → browser download panel (YouTube)
+   + tombol Copy Link untuk IDM / download manager
 ===================================================== */
-async function doDownload(btn, b64, ext, isAudio=false){
+async function doDownload(btn,b64,ext){
   if(btn.disabled)return;
   btn.disabled=true;
   const dt=btn.querySelector('.dt');
@@ -582,150 +478,124 @@ async function doDownload(btn, b64, ext, isAudio=false){
 
   const fname=`VaultDL_${Date.now()}.${ext||'mp4'}`;
 
+  const isYT = url.includes('googlevideo.com');
+
+  if(isYT){
+    // YOUTUBE: embed inline video player langsung di halaman.
+    // User tinggal klik kanan pada video → "Simpan video sebagai..."
+    // Ini cara paling smooth — tidak perlu buka tab baru, tidak perlu IDM.
+    if(dt)dt.textContent='▶ Putar';
+    btn.style.cssText='background:var(--gn);border-color:var(--gn);color:#fff';
+    showYTPlayer(url, fname);
+    toast('Video siap — klik kanan pada video → Simpan video sebagai...', 'info');
+    setTimeout(reset, 3000);
+    return;
+  }
+
+  // PLATFORM LAIN (TikTok, Instagram, Vimeo, dll) — fetch blob
+  try{
+    const r=await fetch(url,{mode:'cors',cache:'no-store'});
+    if(!r.ok)throw new Error(`HTTP ${r.status}`);
+    const blob=await r.blob();
+    if(blob.size<500)throw new Error('Empty');
+    const bu=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=bu;a.download=fname;a.style.display='none';
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(bu),20000);
+    btn.style.cssText='background:var(--gn);border-color:var(--gn);color:#fff';
+    if(dt)dt.textContent='✓ Selesai';
+    toast('Download berhasil! Cek folder unduhan kamu.','success');
+    setTimeout(reset,3000);
+    return;
+  }catch(e){
+    console.log('[VaultDL] blob failed:',e.message);
+  }
+
+  // Fallback: anchor download
+  const af=document.createElement('a');
+  af.href=url;af.download=fname;af.target='_blank';af.rel='noopener';af.style.display='none';
+  document.body.appendChild(af);af.click();document.body.removeChild(af);
+  btn.style.cssText='background:var(--gn);border-color:var(--gn);color:#fff';
+  if(dt)dt.textContent='↗ Dibuka';
+  showGuide('other');
+  toast('Link dibuka — atau gunakan 📋 salin link ke download manager','info');
+  setTimeout(reset,4000);
+
   function reset(){
     btn.style.cssText='';
     if(dt)dt.textContent=orig;
     btn.disabled=false;
   }
-
-  // ── 1. TikTok CDN → blob download langsung ────────────────────────────────
-  if(isTikTokCDN(url)){
-    const blob=await tryFetchBlob(url);
-    if(blob){
-      triggerBlobDownload(blob, fname);
-      btn.style.cssText='background:var(--gn);border-color:var(--gn);color:#fff';
-      if(dt)dt.textContent='✓ Selesai';
-      toast('Download berhasil! Cek folder unduhan kamu.','success');
-      setTimeout(reset, 3000);
-    }else{
-      // Fallback: player inline
-      showInlinePlayer(url, fname, false);
-      btn.style.cssText='background:var(--vi);border-color:var(--vi);color:#fff';
-      if(dt)dt.textContent='▶ Putar';
-      toast('Klik kanan video → Simpan video sebagai...','info');
-      setTimeout(reset, 3000);
-    }
-    return;
-  }
-
-  // ── 2. YouTube CDN → player inline selalu ────────────────────────────────
-  if(isYouTubeCDN(url)){
-    showInlinePlayer(url, fname, false);
-    btn.style.cssText='background:var(--gn);border-color:var(--gn);color:#fff';
-    if(dt)dt.textContent='▶ Putar';
-    toast('Video siap — klik kanan pada video → Simpan video sebagai...','info');
-    setTimeout(reset, 3000);
-    return;
-  }
-
-  // ── 3. Audio (semua platform) ─────────────────────────────────────────────
-  if(isAudio){
-    if(dt)dt.textContent='⏳ Unduh...';
-    const blob=await tryFetchBlob(url);
-    if(blob){
-      triggerBlobDownload(blob, fname);
-      btn.style.cssText='background:var(--gn);border-color:var(--gn);color:#fff';
-      if(dt)dt.textContent='✓ Selesai';
-      toast('Audio berhasil diunduh!','success');
-      setTimeout(reset, 3000);
-    }else{
-      // Tampilkan audio player inline
-      showInlinePlayer(url, fname, true);
-      btn.style.cssText='background:var(--vi);border-color:var(--vi);color:#fff';
-      if(dt)dt.textContent='▶ Putar';
-      toast('Putar audio → klik ⋮ → Download, atau 📋 salin link','info');
-      setTimeout(reset, 3000);
-    }
-    return;
-  }
-
-  // ── 4. Platform lain (IG, FB, Twitter, Vimeo, Reddit, dll) ───────────────
-  // Coba blob fetch dulu (beberapa CDN masih allow CORS)
-  if(dt)dt.textContent='⏳ Proses...';
-  const blob=await tryFetchBlob(url);
-  if(blob){
-    triggerBlobDownload(blob, fname);
-    btn.style.cssText='background:var(--gn);border-color:var(--gn);color:#fff';
-    if(dt)dt.textContent='✓ Selesai';
-    toast('Download berhasil! Cek folder unduhan kamu.','success');
-    setTimeout(reset, 3000);
-    return;
-  }
-
-  // Blob gagal → tampilkan inline player
-  showInlinePlayer(url, fname, false);
-  btn.style.cssText='background:var(--vi);border-color:var(--vi);color:#fff';
-  if(dt)dt.textContent='▶ Putar';
-  toast('Video siap di player — klik kanan → Simpan video sebagai...','info');
-  setTimeout(reset, 3000);
 }
 
-/** Trigger download via blob URL */
-function triggerBlobDownload(blob, fname){
-  const bu=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=bu;a.download=fname;a.style.display='none';
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
-  setTimeout(()=>URL.revokeObjectURL(bu),30000);
-}
-
-/**
- * Tampilkan inline media player.
- * isAudio=true → <audio>, false → <video>
- * Untuk video: klik kanan → Simpan video sebagai
- * Untuk audio: browser audio controls sudah ada tombol download built-in (tanpa controlslist)
- */
-function showInlinePlayer(url, fname, isAudio){
-  const old=document.getElementById('inline-media-player');
+function showYTPlayer(url, fname){
+  // Hapus player lama jika ada
+  const old = document.getElementById('yt-player');
   if(old) old.remove();
 
-  const wrap=document.createElement('div');
-  wrap.id='inline-media-player';
-  wrap.className='media-player-wrap';
+  const wrap = document.createElement('div');
+  wrap.id = 'yt-player';
+  wrap.style.cssText = 'background:var(--s1);border:1px solid rgba(79,142,255,.25);border-radius:12px;padding:14px;margin-bottom:12px;animation:up .25s ease';
 
-  const safeUrl=url.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
-  const titleText=isAudio
-    ? '🎵 Audio Player — klik ⋮ atau klik kanan untuk simpan'
-    : '▶ Video Player — klik kanan untuk simpan video';
+  // Encode url untuk inline onclick (escape single quotes)
+  const safeUrl = url.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
 
-  const hintHTML=isAudio
-    ? `<span class="media-player-hint-text">💡 <strong style="color:var(--am)">PC:</strong> Klik ⋮ di player → Download &nbsp;·&nbsp; <strong style="color:var(--am)">HP:</strong> Tahan lama → Download</span>`
-    : `<span class="media-player-hint-text">💡 <strong style="color:var(--am)">PC:</strong> Klik kanan video → <em>Simpan video sebagai</em> &nbsp;·&nbsp; <strong style="color:var(--am)">HP:</strong> Tahan lama video → Download</span>`;
-
-  const mediaEl=isAudio
-    ? `<audio src="${safeUrl}" controls preload="metadata" style="width:100%;border-radius:8px;display:block"></audio>`
-    : `<video src="${safeUrl}" controls preload="metadata" style="width:100%;max-height:340px;border-radius:8px;background:#000;display:block" oncontextmenu="return true"></video>`;
-
-  wrap.innerHTML=`
-    <div class="media-player-header">
-      <span class="media-player-title">${titleText}</span>
-      <button class="media-player-close" onclick="document.getElementById('inline-media-player').remove()">✕</button>
+  wrap.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <span style="font-size:.78rem;font-weight:600;color:var(--bl2)">▶ Preview — klik kanan video untuk simpan</span>
+      <button onclick="document.getElementById('yt-player').remove()"
+        style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:1rem;padding:2px 6px;line-height:1">✕</button>
     </div>
-    ${mediaEl}
-    <div class="media-player-hint">
-      ${hintHTML}
-      <button class="media-player-copy-btn" onclick="copyLinkDirect('${safeUrl}',this)">📋 Salin Link</button>
+    <video src="${url}" controls preload="metadata" controlslist="nodownload"
+      style="width:100%;max-height:340px;border-radius:8px;background:#000;display:block"
+      oncontextmenu="return true"></video>
+    <div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span style="font-size:.72rem;color:var(--t2);flex:1;line-height:1.55">
+        💡 <strong style="color:var(--am)">PC:</strong> Klik kanan video → <em>Simpan video sebagai</em> &nbsp;·&nbsp;
+        <strong style="color:var(--am)">HP:</strong> Tahan lama video → Download
+      </span>
+      <button onclick="ytCopy('${safeUrl}',this)"
+        style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:var(--bg1);border:1px solid rgba(79,142,255,.3);border-radius:7px;color:var(--bl2);font-size:.72rem;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;flex-shrink:0"
+        onmouseover="this.style.background='var(--bl)';this.style.color='#fff'"
+        onmouseout="this.style.background='var(--bg1)';this.style.color='var(--bl2)'">
+        📋 Salin Link
+      </button>
     </div>
   `;
 
-  const z=$('zone');
+  const z = $('zone');
   z.insertBefore(wrap, z.firstChild);
   wrap.scrollIntoView({behavior:'smooth', block:'start'});
 }
 
-async function copyLinkDirect(url, btn){
+async function ytCopy(url, btn){
   try{
     await navigator.clipboard.writeText(url);
-    const orig=btn.innerHTML;
-    btn.innerHTML='✓ Tersalin!';
-    btn.style.background='var(--gn)';
-    btn.style.borderColor='var(--gn)';
-    btn.style.color='#fff';
+    const orig = btn.innerHTML;
+    btn.innerHTML = '✓ Tersalin!';
+    btn.style.background = 'var(--gn)';
+    btn.style.borderColor = 'var(--gn)';
+    btn.style.color = '#fff';
     toast('Link disalin! Paste ke IDM / 1DM / browser address bar','success');
     setTimeout(()=>{ btn.innerHTML=orig; btn.style.cssText=''; }, 3000);
   }catch{
     toast('Gagal salin — coba manual','warn');
   }
+}
+
+function showGuide(type='other'){
+  const old=document.getElementById('dl-guide');
+  if(old)old.remove();
+  const g=document.createElement('div');
+  g.id='dl-guide';g.className='guide';
+  g.innerHTML=`<button class="guide-close" onclick="this.parentElement.remove()">✕</button>
+<span class="guide-title">💡 Tip: Jika download tidak otomatis</span>
+<div style="color:var(--t2);line-height:1.75">
+Klik 📋 di sebelah tombol → salin link → paste di browser address bar atau <strong>IDM / download manager</strong>
+</div>`;
+  const z=$('zone');
+  z.insertBefore(g,z.firstChild);
 }
 
 async function copyLink(b64){
