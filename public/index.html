@@ -248,7 +248,7 @@ footer a{color:var(--t2);text-decoration:none}
 </div>
 <div id="ts"></div>
 <footer>
-  <p>VaultDL &middot; API by <a href="https://api.ryzumi.net" target="_blank">api.ryzumi.net</a></p>
+  <p>VaultDL - Farid Store&middot; API by <a href="https://api.ryzumi.net" target="_blank">api.ryzumi.net</a></p>
   <p style="margin-top:5px;opacity:.5">Untuk keperluan pribadi. Hormati hak cipta konten creator.</p>
 </footer>
 <script>
@@ -370,8 +370,30 @@ function getQCls(v){
   return'q-low';
 }
 async function doSearch(){
-  const url=$('url-input').value.trim();
+  let url=$('url-input').value.trim();
   if(!isUrl(url)||busy)return;
+
+  // === PEMETAAN & PEMBERSIHAN URL FACEBOOK (Mencegah HTTP 500) ===
+  try {
+    let uObj = new URL(url);
+    // Menghapus parameter tracking
+    uObj.searchParams.delete('mibextid');
+    uObj.searchParams.delete('si');
+    uObj.searchParams.delete('fbclid');
+    let cleanUrl = uObj.href;
+    
+    // Konversi URL Share Mobile ke Format Desktop yang didukung API
+    if (cleanUrl.includes('/share/r/')) {
+      cleanUrl = cleanUrl.replace('/share/r/', '/reel/');
+    } else if (cleanUrl.includes('/share/v/')) {
+      cleanUrl = cleanUrl.replace('/share/v/', '/watch/?v=');
+    }
+    url = cleanUrl;
+  } catch(e) {
+    console.log("Gagal membersihkan URL", e);
+  }
+  // =============================================================
+
   busy=true;
   const p=getP(url);
   const btn=$('btn-s');
