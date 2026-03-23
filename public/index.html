@@ -371,14 +371,25 @@ function getQCls(v){
 }
 
 /* =====================================================
-   PENCARIAN — Telah diperbarui untuk shortlink FB
+   PENCARIAN — Telah diperbarui untuk shortlink FB (via <a> tag & domain web)
 ===================================================== */
 async function doSearch(){
   let url=$('url-input').value.trim();
   if(!isUrl(url)||busy)return;
 
-  // Cek apakah URL mengandung format tautan pendek (share/r, share/v, atau fb.watch)
+  // === PENCEGAT TAUTAN PENDEK FACEBOOK ===
   if (url.includes('/share/r/') || url.includes('/share/v/') || url.includes('fb.watch/')) {
+    
+    // Trik 1: Coba ubah domain untuk menghindari Deep Link Aplikasi
+    let webUrl = url;
+    try {
+      let u = new URL(url);
+      if (u.hostname.includes('facebook.com')) {
+        u.hostname = 'web.facebook.com'; 
+      }
+      webUrl = u.href;
+    } catch(e) {}
+
     setZ(`
       <div class="ec" style="flex-direction:column; background:rgba(255,176,64,.07); border-color:rgba(255,176,64,.22); animation:up .25s ease;">
         <div style="display:flex; gap:12px; align-items:center;">
@@ -392,16 +403,16 @@ async function doSearch(){
         <div style="margin-top:16px; padding:16px; background:var(--s2); border-radius:8px; border:1px solid var(--b2);">
           <div style="font-size:.85rem; font-weight:600; color:var(--tx); margin-bottom:8px;">Langkah mendapat video ini:</div>
           <ol style="margin-left:20px; font-size:.75rem; color:var(--t2); line-height:1.7;">
-            <li>Klik tombol kuning di bawah untuk membuka video di tab baru.</li>
-            <li>Tunggu sampai video memutar dan perhatikan URL di atas (address bar).</li>
-            <li>URL akan berubah menjadi panjang (memuat kata <i>/reel/</i> atau <i>/watch/</i>).</li>
-            <li>Salin URL panjang tersebut dan paste kembali ke halaman ini.</li>
+            <li>Klik tombol kuning di bawah untuk membuka video di browser.</li>
+            <li><strong style="color:var(--rd)">PENTING (HP):</strong> Jika tombol kuning malah membuka aplikasi Facebook, <b>tahan lama (long-press)</b> tombol tersebut, lalu pilih <i>"Buka di tab baru"</i>.</li>
+            <li>Tunggu sampai video memutar dan salin URL panjang dari <i>address bar</i> browser Anda.</li>
+            <li>Paste URL panjang tersebut kembali ke sini.</li>
           </ol>
         </div>
 
-        <button onclick="window.open('${url}', '_blank')" style="margin-top:16px; display:flex; align-items:center; justify-content:center; gap:8px; background:var(--am); color:#000; border:none; padding:14px; border-radius:8px; font-family:'Space Grotesk',sans-serif; font-size:.85rem; font-weight:700; cursor:pointer; transition:.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
-          ↗ Buka Video di Tab Baru
-        </button>
+        <a href="${webUrl}" target="_blank" style="margin-top:16px; display:flex; align-items:center; justify-content:center; gap:8px; background:var(--am); color:#000; text-decoration:none; padding:14px; border-radius:8px; font-family:'Space Grotesk',sans-serif; font-size:.85rem; font-weight:700; cursor:pointer; transition:.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+          ↗ Buka Video di Browser
+        </a>
       </div>
     `);
     
@@ -508,7 +519,7 @@ function fmtRow(m){
 }
 
 /* =====================================================
-   DOWNLOAD — Mendukung video FB di inline player
+   DOWNLOAD — Mendukung video FB/YT di inline player
 ===================================================== */
 async function doDownload(btn,b64,ext){
   if(btn.disabled)return;
