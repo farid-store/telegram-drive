@@ -317,6 +317,7 @@ const isUrl=s=>{try{new URL(s);return true}catch{return false}};
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const $=id=>document.getElementById(id);
 const setZ=h=>$('zone').innerHTML=h;
+
 function getP(url){
   try{
     const h=new URL(url).hostname.replace('www.','');
@@ -325,6 +326,7 @@ function getP(url){
   }catch{}
   return{n:'Video',c:'#4f8eff',bg:'rgba(79,142,255,.15)',ic:'▶'};
 }
+
 function ago(ts){
   const d=Date.now()-ts;
   if(d<60000)return'baru saja';
@@ -332,6 +334,7 @@ function ago(ts){
   if(d<86400000)return~~(d/3600000)+' jam lalu';
   return~~(d/86400000)+' hari lalu';
 }
+
 function toast(m,t='info'){
   const c={success:'var(--gn)',error:'var(--rd)',info:'var(--bl2)',warn:'var(--am)'};
   const el=document.createElement('div');
@@ -340,7 +343,9 @@ function toast(m,t='info'){
   $('ts').appendChild(el);
   setTimeout(()=>el.remove(),5000);
 }
+
 function onIn(){$('btn-s').disabled=!isUrl($('url-input').value.trim())}
+
 async function doPaste(){
   try{
     const t=await navigator.clipboard.readText();
@@ -348,8 +353,11 @@ async function doPaste(){
     else toast('Bukan URL valid','warn');
   }catch{toast('Tempel manual (Ctrl+V)','warn')}
 }
+
 function setDemo(k){$('url-input').value=DEMOS[k]||'';onIn()}
+
 function doClear(){$('url-input').value='';$('btn-s').disabled=true;setZ('')}
+
 function parseQ(q,ext){
   const lq=(q||'').toLowerCase();
   if(QLABELS[lq])return QLABELS[lq];
@@ -358,6 +366,7 @@ function parseQ(q,ext){
   if(q)return{label:q,cls:'q-low'};
   return{label:ext||'?',cls:'q-low'};
 }
+
 function getQCls(v){
   const s=String(v).toLowerCase();
   if(/2160|4k/.test(s))return'q-4k';
@@ -371,7 +380,7 @@ function getQCls(v){
 }
 
 /* =====================================================
-   PENCARIAN — Telah diperbarui untuk shortlink FB (via <a> tag & domain web)
+   PENCARIAN — Telah diperbarui untuk shortlink FB 
 ===================================================== */
 async function doSearch(){
   let url=$('url-input').value.trim();
@@ -379,8 +388,6 @@ async function doSearch(){
 
   // === PENCEGAT TAUTAN PENDEK FACEBOOK ===
   if (url.includes('/share/r/') || url.includes('/share/v/') || url.includes('fb.watch/')) {
-    
-    // Trik 1: Coba ubah domain untuk menghindari Deep Link Aplikasi
     let webUrl = url;
     try {
       let u = new URL(url);
@@ -416,13 +423,12 @@ async function doSearch(){
       </div>
     `);
     
-    // Matikan status loading pada tombol cari
     $('btn-s').disabled=false;
     $('btn-s').classList.remove('loading');
-    return; // Hentikan eksekusi
+    return;
   }
 
-  // Hapus parameter tracking agar stabil
+  // Hapus parameter tracking (untuk link normal FB agar API stabil)
   try {
     let uObj = new URL(url);
     uObj.searchParams.delete('mibextid');
@@ -488,12 +494,14 @@ function renderResult(data,url,p){
   </div>
 </div>`);
 }
+
 function swTab(tab,btn){
   document.querySelectorAll('.ft').forEach(b=>b.classList.remove('on'));
   document.querySelectorAll('.fg').forEach(g=>g.classList.remove('on'));
   btn.classList.add('on');
   document.getElementById('fg-'+tab)?.classList.add('on');
 }
+
 function fmtRow(m){
   const{label,cls}=parseQ(m.quality,m.extension);
   const ext=(m.extension||'').toUpperCase();
@@ -519,7 +527,7 @@ function fmtRow(m){
 }
 
 /* =====================================================
-   DOWNLOAD — Mendukung video FB/YT di inline player
+   DOWNLOAD — Mendukung video YT, FB, dan TW (Twitter)
 ===================================================== */
 async function doDownload(btn,b64,ext){
   if(btn.disabled)return;
@@ -530,19 +538,34 @@ async function doDownload(btn,b64,ext){
   btn.style.cssText='background:var(--am);border-color:var(--am);color:#fff;cursor:wait';
 
   let url;
-  try{url=decodeURIComponent(escape(atob(b64)))}
-  catch{toast('URL tidak valid','error');reset();return}
+  try{
+    url=decodeURIComponent(escape(atob(b64)));
+  }catch{
+    toast('URL tidak valid','error');reset();return;
+  }
+
+  // Pembersih URL Twitter: Hapus parameter "?tag=" yang sering bikin error download
+  try {
+    let uObj = new URL(url);
+    if (uObj.hostname.includes('twimg.com')) {
+      uObj.searchParams.delete('tag');
+      url = uObj.href;
+    }
+  } catch(e) {}
 
   const fname=`VaultDL_${Date.now()}.${ext||'mp4'}`;
 
+  // Deteksi CDN Platform
   const isYT = url.includes('googlevideo.com');
   const isFB = url.includes('fbcdn.net') || url.includes('scontent');
+  const isTW = url.includes('twimg.com');
 
-  if(isYT || isFB){
+  if(isYT || isFB || isTW){
+    // Putar di Inline Player untuk YT, FB, & Twitter
     if(dt)dt.textContent='▶ Putar';
     btn.style.cssText='background:var(--gn);border-color:var(--gn);color:#fff';
     showYTPlayer(url, fname);
-    toast('Video siap — klik kanan pada video → Simpan video sebagai...', 'info');
+    toast('Video siap — klik kanan/tahan lama pada video → Download', 'info');
     setTimeout(reset, 3000);
     return;
   }
@@ -594,7 +617,7 @@ function showYTPlayer(url, fname){
 
   wrap.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <span style="font-size:.78rem;font-weight:600;color:var(--bl2)">▶ Preview — klik kanan video untuk simpan</span>
+      <span style="font-size:.78rem;font-weight:600;color:var(--bl2)">▶ Preview — klik kanan/tahan video untuk simpan</span>
       <button onclick="document.getElementById('yt-player').remove()"
         style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:1rem;padding:2px 6px;line-height:1">✕</button>
     </div>
@@ -677,6 +700,7 @@ function saveHist(url,p,title){
   localStorage.setItem('vdl9',JSON.stringify(hist));
   renderHist();
 }
+
 function renderHist(){
   const l=$('hl'),e=$('he');
   if(!hist.length){l.innerHTML='';e.style.display='block';return}
@@ -688,6 +712,7 @@ function renderHist(){
     <div class="hd"></div>
   </div>`).join('');
 }
+
 function loadHist(enc){
   $('url-input').value=decodeURIComponent(enc);onIn();
   window.scrollTo({top:0,behavior:'smooth'});
