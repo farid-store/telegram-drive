@@ -1,43 +1,65 @@
-// api/get.js — Vercel serverless proxy ke Ryzumi API
-// Browser tidak bisa langsung fetch api.ryzumi.net karena CORS
-// Vercel server bisa — jadi kita proxy lewat sini
+// api/get.js — Vercel Edge Function
+// Edge runtime jalan di lokasi user (bukan datacenter Washington DC)
+// sehingga tidak diblokir Ryzumi
 
-module.exports = async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  if (req.method === 'OPTIONS') return res.status(200).end();
+export const config = { runtime: 'edge' };
 
-  const { url } = req.query;
-  if (!url) return res.status(400).json({ error: 'Parameter url diperlukan' });
+export default async function handler(req) {
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Content-Type': 'application/json',
+  };
 
-  try { new URL(url); } catch {
-    return res.status(400).json({ error: 'URL tidak valid' });
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 200, headers: corsHeaders });
   }
+
+  const { searchParams } = new URL(req.url);
+  const videoUrl = searchParams.get('url');
+
+  if (!videoUrl) {
+    return new Response(JSON.stringify({ error: 'Parameter url diperlukan' }), {
+      status: 400, headers: corsHeaders,
+    });
+  }
+
+  try { new URL(videoUrl); } catch {
+    return new Response(JSON.stringify({ error: 'URL tidak valid' }), {
+      status: 400, headers: corsHeaders,
+    });
+  }
+
+  const apiUrl = `https://api.ryzumi.net/api/downloader/all-in-one?url=${encodeURIComponent(videoUrl)}`;
 
   try {
-    const apiUrl = `https://api.ryzumi.net/api/downloader/all-in-one?url=${encodeURIComponent(url)}`;
-    const response = await fetch(apiUrl, {
+    const res = await fetch(apiUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept': 'application/json',
-        'Referer': 'https://api.ryzumi.net/',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'application/json, */*',
+        'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8',
+        'Referer': 'https://api.ryzumi.net/downloader',
+        'Origin': 'https://api.ryzumi.net',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
       },
-      signal: AbortSignal.timeout(25000),
     });
 
-    if (!response.ok) {
-      return res.status(response.status).json({
-        error: `Ryzumi API error: HTTP ${response.status}`,
-      });
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      return new Response(JSON.stringify({
+        error: `API error: HTTP ${res.status}`,
+        detail: text.slice(0, 200),
+      }), { status: res.status, headers: corsHeaders });
     }
 
-    const data = await response.json();
-    return res.status(200).json(data);
+    const data = await res.json();
+    return new Response(JSON.stringify(data), { status: 200, headers: corsHeaders });
 
   } catch (err) {
-    return res.status(500).json({
-      error: 'Gagal menghubungi Ryzumi API',
+    return new Response(JSON.stringify({
+      error: 'Fetch gagal',
       detail: err.message,
-    });
+    }), { status: 500, headers: corsHeaders });
   }
-};
+}
