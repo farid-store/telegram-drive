@@ -5,591 +5,375 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>VaultDL — Video Downloader</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#080810;--s1:#0f0f1a;--s2:#161625;--s3:#1e1e30;
-  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.11);
-  --text:#eeeef8;--muted:rgba(238,238,248,0.42);
-  --accent:#7c6fff;--accent2:#b8abff;--glow:rgba(124,111,255,0.15);
-  --green:#11d68f;--red:#f04848;--amber:#f5a623;--cyan:#22d3ee;
+  --ink:#0a0a0f;--ink2:#111118;--ink3:#1a1a24;--ink4:#22222e;
+  --line:rgba(255,255,255,0.06);--line2:rgba(255,255,255,0.12);
+  --txt:#f2f2fa;--txt2:rgba(242,242,250,0.55);--txt3:rgba(242,242,250,0.28);
+  --blue:#4f8eff;--blue2:#8ab4ff;--bg:rgba(79,142,255,0.13);--bg2:rgba(79,142,255,0.06);
+  --green:#00d68f;--rose:#ff4d6d;--amber:#ffb347;--violet:#a78bfa;
+  --r:12px;--r2:8px;
 }
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
-body::before{content:'';position:fixed;inset:0;background:
-  radial-gradient(ellipse 60% 40% at 20% 10%,rgba(124,111,255,0.08) 0%,transparent 60%),
-  radial-gradient(ellipse 40% 60% at 80% 80%,rgba(34,211,238,0.05) 0%,transparent 60%);
-  pointer-events:none;z-index:0}
-body::after{content:'';position:fixed;inset:0;
-  background-image:linear-gradient(rgba(124,111,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(124,111,255,0.03) 1px,transparent 1px);
-  background-size:52px 52px;pointer-events:none;z-index:0}
-
-nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:0 1.75rem;height:58px;
-  background:rgba(8,8,16,0.82);backdrop-filter:blur(24px);border-bottom:1px solid var(--border)}
-.logo{font-family:'Syne',sans-serif;font-size:1.15rem;font-weight:800;letter-spacing:-.03em;
-  background:linear-gradient(135deg,#fff 0%,var(--accent2) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.logo b{-webkit-text-fill-color:var(--accent)}
-.nav-tag{font-size:.72rem;padding:3px 10px;border-radius:20px;border:1px solid var(--border2);color:var(--accent2);background:var(--glow);font-weight:600}
-
-main{position:relative;z-index:1;max-width:820px;margin:0 auto;padding:90px 1.25rem 4rem}
-
-.hero{text-align:center;margin-bottom:2.5rem}
-.hero-pill{display:inline-flex;align-items:center;gap:7px;font-size:.76rem;padding:5px 14px;border-radius:20px;border:1px solid var(--border2);color:var(--accent2);background:var(--glow);margin-bottom:1.25rem;font-weight:500}
-.pulse{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.75)}}
-h1{font-family:'Syne',sans-serif;font-size:clamp(2rem,6vw,3.6rem);font-weight:800;line-height:1.1;letter-spacing:-.04em;margin-bottom:.9rem}
-h1 em{font-style:normal;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.hero-sub{font-size:.95rem;color:var(--muted);max-width:480px;margin:0 auto;line-height:1.7}
-
-.platforms{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin:1.5rem 0 2rem}
-.pbadge{display:flex;align-items:center;gap:5px;font-size:.72rem;font-weight:500;padding:4px 11px;border-radius:7px;border:1px solid var(--border);background:var(--s1);color:var(--muted);transition:.2s}
-.pbadge:hover{border-color:var(--border2);color:var(--text)}
-.picon{width:15px;height:15px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800}
-
-.input-card{background:var(--s1);border:1px solid var(--border2);border-radius:18px;padding:1.25rem;margin-bottom:1.25rem;position:relative;overflow:hidden}
-.input-card::before{content:'';position:absolute;top:-50px;left:50%;transform:translateX(-50%);width:280px;height:100px;background:var(--glow);border-radius:50%;filter:blur(40px);pointer-events:none}
-.input-row{display:flex;gap:9px}
-.url-input{flex:1;background:var(--bg);border:1px solid var(--border2);border-radius:11px;padding:13px 15px;font-family:'DM Sans',sans-serif;font-size:.88rem;color:var(--text);outline:none;transition:.2s}
-.url-input::placeholder{color:var(--muted)}
-.url-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow)}
-.btn-analyze{background:var(--accent);color:#fff;border:none;border-radius:11px;padding:0 22px;font-family:'Syne',sans-serif;font-size:.88rem;font-weight:800;cursor:pointer;transition:.2s;white-space:nowrap}
-.btn-analyze:hover{background:#9085ff;transform:translateY(-1px)}
-.btn-analyze:disabled{opacity:.45;cursor:not-allowed;transform:none}
-.quick-row{display:flex;gap:7px;margin-bottom:.9rem;flex-wrap:wrap}
-.qbtn{font-size:.72rem;padding:4px 11px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;transition:.2s}
-.qbtn:hover{border-color:var(--border2);color:var(--text);background:var(--s2)}
-
-#result-area{margin-bottom:1.25rem}
-
-/* PREVIEW CARD */
-.preview-card{background:var(--s1);border:1px solid var(--border2);border-radius:16px;overflow:hidden;animation:fadeUp .3s ease}
-@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-
-.preview-body{display:flex;position:relative}
-.preview-thumb-wrap{position:relative;width:200px;flex-shrink:0;background:var(--s2)}
-.preview-thumb-wrap img{width:200px;height:128px;object-fit:cover;display:block}
-.preview-thumb-placeholder{width:200px;height:128px;display:flex;align-items:center;justify-content:center;font-size:2.5rem;background:var(--s2)}
-
-.preview-info{flex:1;padding:.9rem 1rem;display:flex;flex-direction:column;gap:.45rem;min-width:0}
-.preview-platform-row{display:flex;align-items:center;gap:8px}
-.preview-plat-badge{font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:5px}
-.preview-author{font-size:.72rem;color:var(--muted)}
-.preview-title{font-family:'Syne',sans-serif;font-size:.9rem;font-weight:700;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.preview-url-txt{font-size:.65rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.6}
-
-/* ACTION ROW */
-.action-row{display:flex;align-items:center;gap:8px;padding:.8rem 1rem;border-top:1px solid var(--border);background:var(--s2)}
-.btn-dl-best{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:10px 16px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:.85rem;font-weight:800;cursor:pointer;transition:.2s}
-.btn-dl-best:hover{opacity:.88;transform:translateY(-1px)}
-.btn-dl-best:disabled{opacity:.5;cursor:not-allowed;transform:none}
-
-/* TITIK TIGA MENU */
-.menu-wrap{position:relative}
-.btn-dots{width:40px;height:40px;border-radius:9px;border:1px solid var(--border2);background:var(--s1);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;font-size:1.2rem;flex-shrink:0;line-height:1}
-.btn-dots:hover{background:var(--s3);color:var(--text);border-color:var(--accent)}
-.btn-dots.open{background:var(--glow);color:var(--accent);border-color:var(--accent)}
-
-.dropdown{position:absolute;bottom:calc(100% + 8px);right:0;background:var(--s2);border:1px solid var(--border2);border-radius:13px;padding:5px;min-width:240px;z-index:300;box-shadow:0 -8px 32px rgba(0,0,0,.5);display:none}
-.dropdown.open{display:block;animation:dropUp .18s ease}
-@keyframes dropUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-.dlabel{font-size:.63rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);padding:6px 10px 3px}
-.ditem{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 11px;border-radius:8px;cursor:pointer;transition:.15s;border:none;background:none;width:100%;text-align:left;color:var(--text);font-family:'DM Sans',sans-serif}
-.ditem:hover{background:var(--s3)}
-.ditem-l{display:flex;align-items:center;gap:9px}
-.dbadge{font-family:'Syne',sans-serif;font-size:.72rem;font-weight:800;min-width:34px;text-align:center;padding:2px 6px;border-radius:5px}
-.dname{font-size:.8rem;font-weight:500}
-.dext{font-size:.68rem;color:var(--muted)}
-.ddiv{height:1px;background:var(--border);margin:4px 5px}
-.q4k{background:rgba(34,211,238,.12);color:var(--cyan);border:1px solid rgba(34,211,238,.2)}
-.qfhd{background:rgba(124,111,255,.12);color:var(--accent2);border:1px solid rgba(124,111,255,.2)}
-.qhd{background:rgba(17,214,143,.12);color:var(--green);border:1px solid rgba(17,214,143,.2)}
-.qsd{background:rgba(245,166,35,.12);color:var(--amber);border:1px solid rgba(245,166,35,.2)}
-.qaudio{background:rgba(238,238,248,.06);color:var(--muted);border:1px solid var(--border)}
-
-/* ★ DOWNLOAD RESULT PANEL — kunci fix */
-.dl-result-panel{padding:1rem;border-top:1px solid var(--border)}
-.dl-result-panel .label{font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.65rem}
-
-/* Link download yang bisa DIKLIK USER — tidak auto-trigger */
-.btn-dl-link{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 16px;background:rgba(17,214,143,.07);border:1px solid rgba(17,214,143,.25);border-radius:11px;color:var(--green);text-decoration:none;font-family:'Syne',sans-serif;font-size:.88rem;font-weight:800;transition:.2s;cursor:pointer}
-.btn-dl-link:hover{background:rgba(17,214,143,.14);border-color:rgba(17,214,143,.45)}
-.btn-dl-link-info{font-size:.72rem;color:var(--muted);margin-top:7px;line-height:1.5}
-
-/* Fallback ke cobalt.tools */
-.fallback-box{background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.2);border-radius:10px;padding:.9rem 1rem;margin-top:8px}
-.fallback-box p{font-size:.78rem;color:rgba(245,166,35,.9);margin-bottom:.5rem}
-.btn-fallback{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;font-weight:600;font-family:'Syne',sans-serif;padding:7px 14px;border-radius:8px;background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.3);color:rgba(245,166,35,.95);text-decoration:none;transition:.2s}
-.btn-fallback:hover{background:rgba(245,166,35,.22)}
-
-/* Picker (Instagram carousel) */
-.picker-box{padding:.9rem 1rem;border-top:1px solid var(--border)}
-.picker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-top:.6rem}
-.picker-item{border-radius:9px;overflow:hidden;border:1px solid var(--border);display:block;text-decoration:none;transition:.2s}
-.picker-item:hover{border-color:var(--accent)}
-.picker-item img{width:100%;aspect-ratio:1;object-fit:cover;display:block}
-.picker-placeholder{width:100%;aspect-ratio:1;background:var(--s3);display:flex;align-items:center;justify-content:center;font-size:1.4rem}
-.picker-item-label{padding:5px 7px;font-size:.68rem;color:var(--muted);text-align:center}
-
-/* PROGRESS */
-.progress-section{padding:.85rem 1rem;border-top:1px solid var(--border)}
-.progress-top{display:flex;justify-content:space-between;font-size:.73rem;color:var(--muted);margin-bottom:6px}
-.progress-top .pct{color:var(--text);font-weight:600}
-.progress-track{height:4px;background:var(--s3);border-radius:2px;overflow:hidden}
-.progress-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .25s}
-.progress-status{font-size:.68rem;color:var(--muted);margin-top:5px}
-
-/* STATES */
-.loading-card{background:var(--s1);border:1px solid var(--border2);border-radius:16px;padding:2rem;text-align:center}
-.spinner{width:34px;height:34px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .75s linear infinite;margin:0 auto .85rem}
-@keyframes spin{to{transform:rotate(360deg)}}
-.loading-msg{font-size:.88rem;color:var(--text);margin-bottom:3px}
-.loading-sub{font-size:.73rem;color:var(--muted)}
-.error-banner{background:rgba(240,72,72,.06);border:1px solid rgba(240,72,72,.2);border-radius:12px;padding:1rem;display:flex;gap:10px;animation:fadeUp .3s ease}
-.etitle{font-size:.85rem;font-weight:600;color:rgba(240,72,72,.95)}
-.esub{font-size:.73rem;color:var(--muted);margin-top:3px;line-height:1.5}
-
-/* FEATURES */
-.features-section{margin-top:2.5rem}
-.section-label{font-size:.67rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:.85rem}
-.features-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:10px}
-.fcard{background:var(--s1);border:1px solid var(--border);border-radius:13px;padding:1rem;transition:.2s}
-.fcard:hover{border-color:var(--border2)}
-.ficon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;font-size:14px}
-.fcard h4{font-family:'Syne',sans-serif;font-size:.8rem;font-weight:700;margin-bottom:3px}
-.fcard p{font-size:.73rem;color:var(--muted);line-height:1.5}
-
-/* HISTORY */
-.history-section{margin-top:2rem}
-.history-list{display:flex;flex-direction:column;gap:7px}
-.hitem{display:flex;align-items:center;gap:10px;background:var(--s1);border:1px solid var(--border);border-radius:11px;padding:9px 13px;cursor:pointer;transition:.2s}
-.hitem:hover{border-color:var(--border2)}
-.hplat{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0}
-.htitle{flex:1;font-size:.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hmeta{font-size:.68rem;color:var(--muted);flex-shrink:0}
-.hbadge{font-size:.67rem;padding:2px 7px;border-radius:4px;font-weight:600;background:rgba(17,214,143,.1);color:var(--green)}
-
-#toast{position:fixed;bottom:1.75rem;right:1.75rem;z-index:999;display:flex;flex-direction:column;gap:7px}
-.toast-item{display:flex;align-items:center;gap:9px;background:var(--s2);border:1px solid var(--border2);border-radius:11px;padding:11px 15px;font-size:.78rem;animation:slideIn .25s ease;max-width:300px}
-@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
-.tdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-footer{position:relative;z-index:1;text-align:center;padding:2rem;font-size:.73rem;color:var(--muted);border-top:1px solid var(--border)}
-footer a{color:var(--accent2);text-decoration:none}
-@media(max-width:580px){
-  .preview-body{flex-direction:column}
-  .preview-thumb-wrap,.preview-thumb-wrap img{width:100%;height:170px}
-  .preview-thumb-placeholder{width:100%;height:170px}
-  nav .nav-tag{display:none}
+body{font-family:'Space Grotesk',sans-serif;background:var(--ink);color:var(--txt);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+.amb{position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 55% 35% at 15% 0%,rgba(79,142,255,.07) 0%,transparent 70%),radial-gradient(ellipse 40% 50% at 85% 90%,rgba(167,139,250,.05) 0%,transparent 70%)}
+.gbg{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse 90% 90% at 50% 50%,black 0%,transparent 100%)}
+nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:54px;background:rgba(10,10,15,.82);backdrop-filter:blur(20px);border-bottom:1px solid var(--line)}
+.wm{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:1rem;letter-spacing:-.02em}
+.wm b{color:var(--blue)}
+.nc{font-size:.67rem;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--bg);border:1px solid rgba(79,142,255,.2);color:var(--blue2)}
+.pg{position:relative;z-index:1;max-width:740px;margin:0 auto;padding:56px 1.5rem 80px}
+.hero{text-align:center;margin-bottom:36px}
+.ey{display:inline-flex;align-items:center;gap:7px;font-size:.68rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--blue2);margin-bottom:18px}
+.liv{width:6px;height:6px;border-radius:50%;background:var(--green);animation:bl 2s infinite}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.2}}
+h1{font-size:clamp(2rem,5.5vw,3.5rem);font-weight:700;line-height:1.07;letter-spacing:-.04em;margin-bottom:12px}
+h1 mark{background:linear-gradient(135deg,var(--blue),var(--violet));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-style:normal}
+.sub{font-size:.94rem;color:var(--txt2);line-height:1.65;max-width:440px;margin:0 auto}
+.plts{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin:18px 0 32px}
+.pt{font-size:.68rem;font-weight:600;padding:3px 9px;border-radius:5px;border:1px solid var(--line2);background:var(--ink2);color:var(--txt2);cursor:default;transition:.15s}
+.pt:hover{border-color:var(--blue);color:var(--txt);background:var(--bg2)}
+.ic{background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r);padding:18px;margin-bottom:14px;position:relative;overflow:hidden}
+.ic::after{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:160px;height:1px;background:linear-gradient(90deg,transparent,var(--blue),transparent)}
+.sb{display:flex;gap:8px}
+.uf{flex:1;background:var(--ink);border:1px solid var(--line2);border-radius:var(--r2);padding:12px 14px;font-family:'Space Grotesk',sans-serif;font-size:.88rem;color:var(--txt);outline:none;transition:.18s}
+.uf::placeholder{color:var(--txt3)}
+.uf:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--bg)}
+.bgo{background:var(--blue);color:#fff;border:none;border-radius:var(--r2);padding:12px 20px;font-family:'Space Grotesk',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:.18s}
+.bgo:hover{background:#6ba3ff;transform:translateY(-1px)}
+.bgo:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.hr{display:flex;gap:5px;margin-top:10px;flex-wrap:wrap}
+.hb{font-size:.7rem;padding:4px 10px;border-radius:5px;border:1px solid var(--line);background:transparent;color:var(--txt3);cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:.14s}
+.hb:hover{border-color:var(--line2);color:var(--txt2);background:var(--ink3)}
+#zone{margin-bottom:14px}
+.ls{background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r);padding:32px;text-align:center}
+.sp{width:30px;height:30px;border:2px solid var(--line2);border-top-color:var(--blue);border-radius:50%;animation:rot .65s linear infinite;margin:0 auto 12px}
+@keyframes rot{to{transform:rotate(360deg)}}
+.ls p{font-size:.85rem;color:var(--txt2)}
+.pv{background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r);overflow:hidden;animation:up .22s ease both}
+@keyframes up{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.pvt{display:flex}
+.tc{position:relative;flex-shrink:0;width:210px;background:var(--ink3)}
+.tc img{width:210px;height:126px;object-fit:cover;display:block}
+.tcp{width:210px;height:126px;display:flex;align-items:center;justify-content:center;background:var(--ink3);font-size:2rem}
+.pflg{position:absolute;top:8px;left:8px;font-size:.62rem;font-weight:700;padding:2px 7px;border-radius:4px}
+.mc{flex:1;padding:14px 15px;display:flex;flex-direction:column;gap:7px;min-width:0}
+.mt{font-size:.92rem;font-weight:600;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.ma{font-size:.72rem;color:var(--txt2)}
+.mu{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dlp{border-top:1px solid var(--line);background:var(--ink3);padding:14px 15px}
+.dlpl{font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:10px}
+.fgd{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:5px;margin-bottom:10px}
+.fb{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 8px;background:var(--ink2);border:1px solid var(--line2);border-radius:7px;cursor:pointer;transition:.15s;font-family:'Space Grotesk',sans-serif;position:relative;overflow:hidden}
+.fb:hover{border-color:var(--blue);background:var(--bg2)}
+.fb.active{border-color:var(--blue);background:var(--bg);box-shadow:0 0 0 1px var(--blue) inset}
+.fb.ld::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--blue),var(--violet));animation:sh 1s ease infinite}
+@keyframes sh{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.fq{font-size:.8rem;font-weight:700;font-family:'JetBrains Mono',monospace}
+.fs{font-size:.62rem;color:var(--txt2)}
+.sr{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:7px;font-size:.77rem;margin-top:6px}
+.isp{width:12px;height:12px;border:1.5px solid rgba(79,142,255,.3);border-top-color:var(--blue);border-radius:50%;animation:rot .55s linear infinite;flex-shrink:0}
+.ok{background:rgba(0,214,143,.07);border:1px solid rgba(0,214,143,.2);color:var(--green)}
+.pr{background:var(--bg);border:1px solid rgba(79,142,255,.18);color:var(--blue2)}
+.er{background:rgba(255,77,109,.07);border:1px solid rgba(255,77,109,.18);color:var(--rose)}
+.dl{display:flex;align-items:center;gap:10px;padding:12px 14px;background:rgba(0,214,143,.07);border:1px solid rgba(0,214,143,.2);border-radius:8px;text-decoration:none;font-weight:600;font-size:.84rem;transition:.18s;margin-top:7px;cursor:pointer;color:inherit}
+.dl:hover{background:rgba(0,214,143,.14);border-color:rgba(0,214,143,.4)}
+.dic{width:30px;height:30px;border-radius:6px;background:rgba(0,214,143,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.di{flex:1;min-width:0}
+.dn{font-size:.8rem;font-weight:600;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dh{font-size:.65rem;color:var(--txt3);margin-top:2px}
+.da{font-size:1rem;color:var(--green);flex-shrink:0}
+.fb2{display:flex;align-items:center;gap:9px;padding:11px 13px;background:rgba(255,179,71,.06);border:1px solid rgba(255,179,71,.18);border-radius:8px;text-decoration:none;font-size:.8rem;color:var(--amber);font-weight:600;transition:.15s;margin-top:7px}
+.fb2:hover{background:rgba(255,179,71,.12)}
+.pgd{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:5px;margin-top:8px}
+.pi{border-radius:6px;overflow:hidden;border:1px solid var(--line);text-decoration:none;display:block;transition:.15s}
+.pi:hover{border-color:var(--blue)}
+.pi img{width:100%;aspect-ratio:1;object-fit:cover;display:block}
+.pni{width:100%;aspect-ratio:1;background:var(--ink4);display:flex;align-items:center;justify-content:center;font-size:1.3rem}
+.pl{padding:4px 5px;font-size:.6rem;color:var(--txt3);text-align:center}
+.tip{background:var(--bg2);border:1px solid rgba(79,142,255,.1);border-radius:7px;padding:9px 12px;font-size:.71rem;color:var(--txt2);margin-top:8px;line-height:1.55}
+.tip a{color:var(--blue2);font-weight:600;text-decoration:none}
+.tip a:hover{text-decoration:underline}
+.sec{margin-top:40px}
+.sh{font-size:.63rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.sh::after{content:'';flex:1;height:1px;background:var(--line)}
+.fg{display:grid;grid-template-columns:repeat(auto-fill,minmax(162px,1fr));gap:7px}
+.fc{background:var(--ink2);border:1px solid var(--line);border-radius:10px;padding:13px;transition:.18s}
+.fc:hover{border-color:var(--line2)}
+.fi{font-size:1.1rem;margin-bottom:7px}
+.fc h4{font-size:.78rem;font-weight:600;margin-bottom:3px}
+.fc p{font-size:.68rem;color:var(--txt2);line-height:1.5}
+.hl{display:flex;flex-direction:column;gap:5px}
+.hi{display:flex;align-items:center;gap:9px;background:var(--ink2);border:1px solid var(--line);border-radius:8px;padding:9px 12px;cursor:pointer;transition:.15s}
+.hi:hover{border-color:var(--line2)}
+.hic{width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:700;flex-shrink:0}
+.htt{flex:1;font-size:.76rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hm{font-size:.64rem;color:var(--txt3);flex-shrink:0}
+.hd{width:5px;height:5px;border-radius:50%;background:var(--green);flex-shrink:0}
+.he{text-align:center;padding:20px;font-size:.76rem;color:var(--txt3)}
+#ts{position:fixed;bottom:18px;right:18px;z-index:999;display:flex;flex-direction:column;gap:5px}
+.to{display:flex;align-items:center;gap:8px;background:var(--ink3);border:1px solid var(--line2);border-radius:7px;padding:9px 13px;font-size:.76rem;animation:up .2s ease;max-width:270px}
+.td{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+footer{position:relative;z-index:1;border-top:1px solid var(--line);text-align:center;padding:22px;font-size:.7rem;color:var(--txt3)}
+footer a{color:var(--txt2);text-decoration:none}
+footer a:hover{color:var(--txt)}
+@media(max-width:520px){
+  .pvt{flex-direction:column}
+  .tc,.tc img,.tcp{width:100%;height:170px}
+  .fgd{grid-template-columns:repeat(3,1fr)}
+  nav{padding:0 1rem}
+  .pg{padding:36px 1rem 60px}
 }
 </style>
 </head>
 <body>
+<div class="amb"></div><div class="gbg"></div>
+
 <nav>
-  <div class="logo">Vault<b>DL</b></div>
-  <div class="nav-tag">✦ Free & Open</div>
+  <div class="wm">vault<b>dl</b></div>
+  <div class="nc">browser-native · no proxy</div>
 </nav>
 
-<main>
+<div class="pg">
   <div class="hero">
-    <div class="hero-pill"><div class="pulse"></div>Online · Tanpa install</div>
-    <h1>Download video dari<br/><em>mana saja</em></h1>
-    <p class="hero-sub">YouTube, TikTok, Instagram, Twitter, Vimeo, Reddit & 500+ platform. Gratis, tanpa watermark.</p>
+    <div class="ey"><div class="liv"></div>Download langsung dari browser</div>
+    <h1>Simpan video dari<br/><mark>platform apapun</mark></h1>
+    <p class="sub">YouTube · TikTok · Instagram · Twitter/X · Reddit · Vimeo · dan 500+ lainnya. Gratis, tanpa watermark.</p>
   </div>
 
-  <div class="platforms">
-    <div class="pbadge"><div class="picon" style="background:rgba(229,57,53,.15);color:#e53935">YT</div>YouTube</div>
-    <div class="pbadge"><div class="picon" style="background:#ff004420;color:#ff0044;font-family:Syne,sans-serif">T</div>TikTok</div>
-    <div class="pbadge"><div class="picon" style="background:rgba(197,111,227,.15);color:#c56fe3">IG</div>Instagram</div>
-    <div class="pbadge"><div class="picon" style="background:rgba(24,119,242,.15);color:#1877f2">FB</div>Facebook</div>
-    <div class="pbadge"><div class="picon" style="background:rgba(29,161,242,.15);color:#1da1f2">TW</div>Twitter/X</div>
-    <div class="pbadge"><div class="picon" style="background:rgba(26,183,234,.15);color:#1ab7ea">VM</div>Vimeo</div>
-    <div class="pbadge"><div class="picon" style="background:rgba(255,69,0,.15);color:#ff4500">RD</div>Reddit</div>
-    <div class="pbadge" style="border-style:dashed">+500 lainnya</div>
+  <div class="plts">
+    <span class="pt">YouTube</span><span class="pt">TikTok</span><span class="pt">Instagram</span>
+    <span class="pt">Twitter/X</span><span class="pt">Facebook</span><span class="pt">Reddit</span>
+    <span class="pt">Vimeo</span><span class="pt">SoundCloud</span><span class="pt">Twitch</span>
+    <span class="pt">Bilibili</span><span class="pt">Pinterest</span><span class="pt">+500 lainnya</span>
   </div>
 
-  <div class="input-card">
-    <div class="quick-row">
-      <button class="qbtn" onclick="pasteClip()">📋 Paste Clipboard</button>
-      <button class="qbtn" onclick="setDemo('yt')">▶ Demo YouTube</button>
-      <button class="qbtn" onclick="setDemo('tt')">◉ Demo TikTok</button>
-      <button class="qbtn" onclick="clearAll()">✕ Hapus</button>
+  <div class="ic">
+    <div class="sb">
+      <input class="uf" id="uf" type="url" placeholder="Paste URL video di sini..."
+        autocomplete="off" spellcheck="false"
+        oninput="onIn()" onkeydown="if(event.key==='Enter')go()"/>
+      <button class="bgo" id="bgo" onclick="go()" disabled>Preview ↗</button>
     </div>
-    <div class="input-row">
-      <input class="url-input" id="url-input" type="url"
-        placeholder="Tempel URL video di sini (YouTube, TikTok, Instagram, Twitter...)"
-        oninput="onInput()" onkeydown="if(event.key==='Enter')doAnalyze()"/>
-      <button class="btn-analyze" id="btn-analyze" onclick="doAnalyze()" disabled>Preview ↗</button>
+    <div class="hr">
+      <button class="hb" onclick="paste()">📋 Paste</button>
+      <button class="hb" onclick="demo('yt')">▶ YouTube</button>
+      <button class="hb" onclick="demo('tt')">◉ TikTok</button>
+      <button class="hb" onclick="demo('ig')">◈ Instagram</button>
+      <button class="hb" onclick="clr()">✕ Hapus</button>
     </div>
   </div>
 
-  <div id="result-area"></div>
+  <div id="zone"></div>
 
-  <div class="features-section">
-    <div class="section-label">Fitur</div>
-    <div class="features-grid">
-      <div class="fcard"><div class="ficon" style="background:rgba(124,111,255,.12)">🎬</div><h4>Preview Dulu</h4><p>Thumbnail & info video sebelum download</p></div>
-      <div class="fcard"><div class="ficon" style="background:rgba(17,214,143,.12)">🚫</div><h4>Tanpa Watermark</h4><p>TikTok, Reels, Facebook bersih</p></div>
-      <div class="fcard"><div class="ficon" style="background:rgba(34,211,238,.12)">📊</div><h4>Multi Kualitas</h4><p>4K, 1080p, 720p, 480p & audio only</p></div>
-      <div class="fcard"><div class="ficon" style="background:rgba(245,166,35,.12)">🎵</div><h4>Ekstrak Audio</h4><p>MP3, OGG, WAV, FLAC dari video apapun</p></div>
-      <div class="fcard"><div class="ficon" style="background:rgba(240,72,72,.12)">🔒</div><h4>Privasi</h4><p>Tidak ada log, tidak ada tracking</p></div>
-      <div class="fcard"><div class="ficon" style="background:rgba(184,171,255,.12)">⚡</div><h4>Hemat API</h4><p>Preview gratis — Cobalt hanya saat download</p></div>
+  <div class="sec">
+    <div class="sh">Cara Kerja</div>
+    <div class="fg">
+      <div class="fc"><div class="fi">🌐</div><h4>Browser-Native</h4><p>Request langsung dari browser — tidak lewat proxy server</p></div>
+      <div class="fc"><div class="fi">🚫</div><h4>No Watermark</h4><p>TikTok, Instagram, Facebook bersih tanpa logo</p></div>
+      <div class="fc"><div class="fi">📊</div><h4>Multi Format</h4><p>4K, 1080p, 720p, 480p, MP3, FLAC, OGG</p></div>
+      <div class="fc"><div class="fi">⚡</div><h4>Instant Preview</h4><p>Thumbnail & info muncul sebelum download</p></div>
+      <div class="fc"><div class="fi">🔒</div><h4>Zero Log</h4><p>URL tidak pernah disimpan di server manapun</p></div>
+      <div class="fc"><div class="fi">🔄</div><h4>Auto Fallback</h4><p>Coba beberapa Cobalt instance otomatis</p></div>
     </div>
   </div>
 
-  <div class="history-section" style="margin-top:2.5rem">
-    <div class="section-label">Riwayat Download</div>
-    <div class="history-list" id="history-list"></div>
-    <div id="history-empty" style="display:none;text-align:center;padding:2rem;color:var(--muted);font-size:.8rem">Belum ada riwayat.</div>
+  <div class="sec">
+    <div class="sh">Riwayat</div>
+    <div class="hl" id="hl"></div>
+    <div class="he" id="he">Belum ada riwayat</div>
   </div>
-</main>
+</div>
 
-<div id="toast"></div>
+<div id="ts"></div>
 <footer>
   <p>VaultDL · Powered by <a href="https://cobalt.tools" target="_blank">Cobalt</a> · <a href="https://noembed.com" target="_blank">noembed</a></p>
-  <p style="margin-top:5px;opacity:.4">Gunakan hanya untuk keperluan pribadi. Hormati hak cipta.</p>
+  <p style="margin-top:4px;opacity:.6">Hanya untuk keperluan pribadi. Patuhi hak cipta konten.</p>
 </footer>
 
 <script>
-/* =========================================================
-   PLATFORM MAP
-   ========================================================= */
-const PM = {
-  'youtube.com':    {n:'YouTube',   c:'#e53935', bg:'rgba(229,57,53,.15)',   ic:'YT'},
-  'youtu.be':       {n:'YouTube',   c:'#e53935', bg:'rgba(229,57,53,.15)',   ic:'YT'},
-  'tiktok.com':     {n:'TikTok',   c:'#ff004f', bg:'rgba(255,0,79,.15)',    ic:'TK'},
-  'instagram.com':  {n:'Instagram', c:'#c56fe3', bg:'rgba(197,111,227,.15)', ic:'IG'},
-  'facebook.com':   {n:'Facebook',  c:'#1877f2', bg:'rgba(24,119,242,.15)',  ic:'FB'},
-  'fb.watch':       {n:'Facebook',  c:'#1877f2', bg:'rgba(24,119,242,.15)',  ic:'FB'},
-  'twitter.com':    {n:'Twitter/X', c:'#1da1f2', bg:'rgba(29,161,242,.15)',  ic:'TW'},
-  'x.com':          {n:'Twitter/X', c:'#1da1f2', bg:'rgba(29,161,242,.15)',  ic:'TW'},
-  'vimeo.com':      {n:'Vimeo',    c:'#1ab7ea', bg:'rgba(26,183,234,.15)',  ic:'VM'},
-  'reddit.com':     {n:'Reddit',   c:'#ff4500', bg:'rgba(255,69,0,.15)',    ic:'RD'},
-  'twitch.tv':      {n:'Twitch',   c:'#9147ff', bg:'rgba(145,71,255,.15)',  ic:'TV'},
-  'soundcloud.com': {n:'SoundCloud',c:'#ff5500', bg:'rgba(255,85,0,.15)',    ic:'SC'},
-  'bilibili.com':   {n:'Bilibili', c:'#00a1d6', bg:'rgba(0,161,214,.15)',   ic:'BL'},
-  'dailymotion.com':{n:'Dailymotion',c:'#4834d4',bg:'rgba(72,52,212,.15)',  ic:'DM'},
-  'pinterest.com':  {n:'Pinterest', c:'#e60023', bg:'rgba(230,0,35,.15)',    ic:'PT'},
-  'tumblr.com':     {n:'Tumblr',   c:'#35465c', bg:'rgba(53,70,92,.15)',    ic:'TB'},
+/* ══════════════════════════════════════════
+   CONFIG — instance dicoba berurutan dari BROWSER
+   ══════════════════════════════════════════ */
+const INST=[
+  'https://cobalt.seelen.app',
+  'https://cobalt.ult.dev',
+  'https://co.blt.lol',
+  'https://cobalt-api.devol.it',
+  'https://dwnld.nichind.dev',
+  'https://cobalt.api.bots.gg',
+];
+const PM={
+  'youtube.com':{n:'YouTube',c:'#ff0000',bg:'rgba(255,0,0,.12)',ic:'YT'},
+  'youtu.be':{n:'YouTube',c:'#ff0000',bg:'rgba(255,0,0,.12)',ic:'YT'},
+  'tiktok.com':{n:'TikTok',c:'#ff2d55',bg:'rgba(255,45,85,.12)',ic:'TT'},
+  'instagram.com':{n:'Instagram',c:'#e1306c',bg:'rgba(225,48,108,.12)',ic:'IG'},
+  'facebook.com':{n:'Facebook',c:'#1877f2',bg:'rgba(24,119,242,.12)',ic:'FB'},
+  'fb.watch':{n:'Facebook',c:'#1877f2',bg:'rgba(24,119,242,.12)',ic:'FB'},
+  'twitter.com':{n:'Twitter',c:'#1d9bf0',bg:'rgba(29,155,240,.12)',ic:'TW'},
+  'x.com':{n:'Twitter',c:'#1d9bf0',bg:'rgba(29,155,240,.12)',ic:'TW'},
+  'reddit.com':{n:'Reddit',c:'#ff4500',bg:'rgba(255,69,0,.12)',ic:'RD'},
+  'vimeo.com':{n:'Vimeo',c:'#1ab7ea',bg:'rgba(26,183,234,.12)',ic:'VM'},
+  'twitch.tv':{n:'Twitch',c:'#9147ff',bg:'rgba(145,71,255,.12)',ic:'TV'},
+  'soundcloud.com':{n:'SoundCloud',c:'#ff5500',bg:'rgba(255,85,0,.12)',ic:'SC'},
+  'bilibili.com':{n:'Bilibili',c:'#00a1d6',bg:'rgba(0,161,214,.12)',ic:'BL'},
+  'pinterest.com':{n:'Pinterest',c:'#e60023',bg:'rgba(230,0,35,.12)',ic:'PT'},
 };
-function getPlatform(url){
-  try{const h=new URL(url).hostname.replace('www.','');
-    for(const[d,i]of Object.entries(PM))if(h.includes(d))return i;}catch{}
-  return{n:'Video',c:'#7c6fff',bg:'rgba(124,111,255,.15)',ic:'▶'};
-}
+const FMTS=[
+  {q:'max',lb:'Best',sb:'Auto',ao:false,af:'',ab:''},
+  {q:'2160',lb:'4K',sb:'2160p',ao:false,af:'',ab:''},
+  {q:'1080',lb:'FHD',sb:'1080p',ao:false,af:'',ab:''},
+  {q:'720',lb:'HD',sb:'720p',ao:false,af:'',ab:''},
+  {q:'480',lb:'SD',sb:'480p',ao:false,af:'',ab:''},
+  {q:'360',lb:'360p',sb:'360p',ao:false,af:'',ab:''},
+  {q:'',lb:'MP3',sb:'320kbps',ao:true,af:'mp3',ab:'320'},
+  {q:'',lb:'FLAC',sb:'Lossless',ao:true,af:'flac',ab:''},
+  {q:'',lb:'OGG',sb:'256kbps',ao:true,af:'ogg',ab:'256'},
+];
 
-/* =========================================================
-   STATE
-   ========================================================= */
-let hist = JSON.parse(localStorage.getItem('vdl_h')||'[]');
-let curUrl = '';
-let curPlat = null;
-let isFetching = false;
+/* STATE */
+let hist=JSON.parse(localStorage.getItem('vdl3')||'[]');
+let curUrl='',curP=null,curMeta={},busy=false;
 
-/* =========================================================
-   INPUT
-   ========================================================= */
-function isUrl(s){try{new URL(s);return true}catch{return false}}
-function onInput(){
-  document.getElementById('btn-analyze').disabled=!isUrl(document.getElementById('url-input').value.trim());
-}
-async function pasteClip(){
-  try{const t=await navigator.clipboard.readText();
-    if(isUrl(t)){document.getElementById('url-input').value=t;onInput();toast('URL ditempel ✓','success')}
-    else toast('Bukan URL valid','error');
-  }catch{toast('Tempel manual — clipboard tidak bisa diakses','error')}
-}
-const DEMOS={yt:'https://www.youtube.com/watch?v=dQw4w9WgXcQ',tt:'https://www.tiktok.com/@charlidamelio/video/7016895862693821701'};
-function setDemo(t){document.getElementById('url-input').value=DEMOS[t];onInput();}
-function clearAll(){document.getElementById('url-input').value='';document.getElementById('btn-analyze').disabled=true;document.getElementById('result-area').innerHTML='';curUrl='';curPlat=null;}
+/* UTILS */
+const isUrl=s=>{try{new URL(s);return true}catch{return false}};
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const setZ=h=>document.getElementById('zone').innerHTML=h;
+const $=id=>document.getElementById(id);
+function getP(url){try{const h=new URL(url).hostname.replace('www.','');for(const[d,i]of Object.entries(PM))if(h.includes(d))return i;}catch{}return{n:'Video',c:'#4f8eff',bg:'rgba(79,142,255,.12)',ic:'▶'};}
+function ago(ts){const d=Date.now()-ts;if(d<60000)return'baru saja';if(d<3600000)return~~(d/60000)+' mnt';if(d<86400000)return~~(d/3600000)+' jam';return~~(d/86400000)+' hari';}
+function urlTitle(url){try{const u=new URL(url);const v=u.searchParams.get('v');if(v)return'YouTube Video';const p=u.pathname.split('/').filter(Boolean);return p[p.length-1]?.replace(/[-_]/g,' ')||'Video';}catch{return'Video'}}
+function toast(m,t='info'){const c={success:'var(--green)',error:'var(--rose)',info:'var(--blue2)',warn:'var(--amber)'};const el=document.createElement('div');el.className='to';el.innerHTML=`<div class="td" style="background:${c[t]||c.info}"></div><span>${esc(m)}</span>`;$('ts').appendChild(el);setTimeout(()=>el.remove(),4000);}
 
-/* =========================================================
-   ANALYZE (ambil preview — tidak panggil Cobalt sama sekali)
-   ========================================================= */
-async function doAnalyze(){
-  const url=document.getElementById('url-input').value.trim();
-  if(!isUrl(url)) return;
-  curUrl=url; curPlat=getPlatform(url);
-  closeMenu();
-  showLoading(curPlat.n);
+/* INPUT */
+function onIn(){$('bgo').disabled=!isUrl($('uf').value.trim())}
+async function paste(){try{const t=await navigator.clipboard.readText();if(isUrl(t)){$('uf').value=t;onIn();toast('URL ditempel','success')}else toast('Bukan URL valid','warn');}catch{toast('Tempel manual','warn')}}
+const DEMOS={yt:'https://www.youtube.com/watch?v=dQw4w9WgXcQ',tt:'https://www.tiktok.com/@charlidamelio/video/7016895862693821701',ig:'https://www.instagram.com/p/CvZ8rlYNpqF/'};
+function demo(k){$('uf').value=DEMOS[k];onIn()}
+function clr(){$('uf').value='';$('bgo').disabled=true;setZ('');curUrl='';curP=null}
+
+/* PREVIEW */
+async function go(){
+  const url=$('uf').value.trim();
+  if(!isUrl(url)||busy)return;
+  curUrl=url;curP=getP(url);curMeta={};busy=true;
+  setZ('<div class="ls"><div class="sp"></div><p>Mengambil info video…</p></div>');
   try{
-    const res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});
-    const d=await res.json();
-    if(!res.ok||d.error){
-      // Fallback: tetap tampil preview minimal dari URL
-      renderPreview({meta:{title:urlTitle(url),author:null,thumbnail:null}},url,curPlat); return;
-    }
-    renderPreview(d,url,curPlat);
-  }catch{
-    renderPreview({meta:{title:urlTitle(url),author:null,thumbnail:null}},url,curPlat);
-  }
-}
-function urlTitle(url){
-  try{const u=new URL(url);const v=u.searchParams.get('v');if(v)return 'YouTube Video';
-    const p=u.pathname.split('/').filter(Boolean);return p[p.length-1]?.replace(/[-_]/g,' ')||'Video';}
-  catch{return 'Video'}
+    const r=await fetch(`https://noembed.com/embed?url=${encodeURIComponent(url)}`);
+    const d=await r.json();
+    curMeta=d.title?{title:d.title,author:d.author_name||null,thumb:d.thumbnail_url||null}:{title:urlTitle(url),author:null,thumb:null};
+  }catch{curMeta={title:urlTitle(url),author:null,thumb:null}}
+  renderPV();busy=false;
+  toast('Preview siap — pilih format','success');
 }
 
-/* =========================================================
-   RENDER PREVIEW CARD
-   ========================================================= */
-function renderPreview(data,url,plat){
-  const meta=data.meta||{};
-  const title=esc(meta.title||'Video');
-  const author=esc(meta.author||plat.n);
-  const thumb=meta.thumbnail;
-  const cobaltUrl=`https://cobalt.tools/#${encodeURIComponent(url)}`;
-
-  const thumbHtml=thumb
-    ?`<img src="${thumb}" alt="" onerror="this.parentElement.innerHTML='<div class=preview-thumb-placeholder>🎬</div>'">`
-    :`<div class="preview-thumb-placeholder">🎬</div>`;
-
-  document.getElementById('result-area').innerHTML=`
-<div class="preview-card" id="preview-card">
-  <div class="preview-body">
-    <div class="preview-thumb-wrap">${thumbHtml}</div>
-    <div class="preview-info">
-      <div class="preview-platform-row">
-        <span class="preview-plat-badge" style="background:${plat.bg};color:${plat.c}">${plat.ic} ${plat.n}</span>
-        <span class="preview-author">${author}</span>
-      </div>
-      <div class="preview-title">${title}</div>
-      <div class="preview-url-txt">${esc(url)}</div>
+/* RENDER */
+function renderPV(){
+  const p=curP,m=curMeta,cu=`https://cobalt.tools/#${encodeURIComponent(curUrl)}`;
+  const th=m.thumb?`<img src="${esc(m.thumb)}" alt="" onerror="this.parentElement.innerHTML='<div class=tcp>🎬</div>'">`:`<div class="tcp">🎬</div>`;
+  const fg=FMTS.map((f,i)=>`<button class="fb" id="f${i}" onclick="dl(${i})"><span class="fq">${esc(f.lb)}</span><span class="fs">${esc(f.sb)}</span></button>`).join('');
+  setZ(`<div class="pv">
+  <div class="pvt">
+    <div class="tc">${th}<div class="pflg" style="background:${p.bg};color:${p.c}">${esc(p.n)}</div></div>
+    <div class="mc">
+      <div class="mt">${esc(m.title||'Video')}</div>
+      ${m.author?`<div class="ma">oleh ${esc(m.author)}</div>`:''}
+      <div class="mu">${esc(curUrl)}</div>
     </div>
   </div>
-  <div class="action-row">
-    <button class="btn-dl-best" id="btn-dl-best" onclick="fetchDownload('max','h264',false)">
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M3.5 6.5 7 10l3.5-3.5M2 12h10" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      Download Best
-    </button>
-    <div class="menu-wrap">
-      <button class="btn-dots" id="btn-dots" onclick="toggleMenu()">⋯</button>
-      <div class="dropdown" id="dl-menu">
-        <div class="dlabel">📹 Video</div>
-        <button class="ditem" onclick="fetchDownload('2160','h264',false)"><div class="ditem-l"><span class="dbadge q4k">4K</span><span class="dname">2160p</span></div><span class="dext">MP4</span></button>
-        <button class="ditem" onclick="fetchDownload('1080','h264',false)"><div class="ditem-l"><span class="dbadge qfhd">FHD</span><span class="dname">1080p</span></div><span class="dext">MP4</span></button>
-        <button class="ditem" onclick="fetchDownload('720','h264',false)"><div class="ditem-l"><span class="dbadge qhd">HD</span><span class="dname">720p</span></div><span class="dext">MP4</span></button>
-        <button class="ditem" onclick="fetchDownload('480','h264',false)"><div class="ditem-l"><span class="dbadge qsd">SD</span><span class="dname">480p</span></div><span class="dext">MP4</span></button>
-        <button class="ditem" onclick="fetchDownload('360','h264',false)"><div class="ditem-l"><span class="dbadge qsd">LQ</span><span class="dname">360p</span></div><span class="dext">MP4</span></button>
-        <div class="ddiv"></div>
-        <div class="dlabel">🎵 Audio</div>
-        <button class="ditem" onclick="fetchDownload('max','h264',true,'mp3','320')"><div class="ditem-l"><span class="dbadge qaudio">MP3</span><span class="dname">320 kbps</span></div><span class="dext">.mp3</span></button>
-        <button class="ditem" onclick="fetchDownload('max','h264',true,'ogg','256')"><div class="ditem-l"><span class="dbadge qaudio">OGG</span><span class="dname">256 kbps</span></div><span class="dext">.ogg</span></button>
-        <button class="ditem" onclick="fetchDownload('max','h264',true,'flac','')"><div class="ditem-l"><span class="dbadge qaudio">FLAC</span><span class="dname">Lossless</span></div><span class="dext">.flac</span></button>
-        <div class="ddiv"></div>
-        <div class="dlabel">🔗 Eksternal</div>
-        <button class="ditem" onclick="window.open('${cobaltUrl}','_blank');closeMenu()"><div class="ditem-l"><span style="font-size:.9rem">🌐</span><span class="dname">Buka cobalt.tools</span></div><span class="dext">↗</span></button>
-      </div>
-    </div>
+  <div class="dlp">
+    <div class="dlpl">Pilih Format & Kualitas</div>
+    <div class="fgd">${fg}</div>
+    <div id="sa"></div>
+    <div class="tip">💡 Klik format → tunggu → klik tombol hijau untuk download. Jika semua gagal: <a href="${cu}" target="_blank" rel="noopener">buka cobalt.tools ↗</a></div>
   </div>
-  <div id="dl-area"></div>
-</div>`;
-
-  toast('Preview siap — pilih kualitas untuk download','success');
-  setTimeout(()=>document.addEventListener('click',outsideClose,{once:true}),60);
+</div>`);
 }
 
-/* =========================================================
-   MENU
-   ========================================================= */
-function toggleMenu(){
-  const m=document.getElementById('dl-menu');
-  const b=document.getElementById('btn-dots');
-  if(!m||!b)return;
-  const opening=!m.classList.contains('open');
-  m.classList.toggle('open',opening);
-  b.classList.toggle('open',opening);
-  if(opening)setTimeout(()=>document.addEventListener('click',outsideClose,{once:true}),60);
-}
-function closeMenu(){
-  const m=document.getElementById('dl-menu');
-  const b=document.getElementById('btn-dots');
-  if(m)m.classList.remove('open');
-  if(b)b.classList.remove('open');
-}
-function outsideClose(e){
-  const w=document.querySelector('.menu-wrap');
-  if(w&&!w.contains(e.target))closeMenu();
-}
+/* DOWNLOAD — browser langsung fetch Cobalt */
+async function dl(idx){
+  if(busy)return;
+  const fmt=FMTS[idx];busy=true;
+  document.querySelectorAll('.fb').forEach(b=>b.classList.remove('active'));
+  $(`f${idx}`)?.classList.add('active','ld');
+  const sa=$('sa');
+  const setS=h=>{if(sa)sa.innerHTML=h};
 
-/* =========================================================
-   FETCH DOWNLOAD — panggil /api/download lalu tampilkan link
-   ★ FIX UTAMA: tidak auto-click, tampilkan <a> yang diklik user
-   ========================================================= */
-async function fetchDownload(quality,codec,audioOnly,audioFormat='mp3',audioBitrate='320'){
-  if(isFetching)return;
-  closeMenu();
-  isFetching=true;
+  const pl={url:curUrl,filenameStyle:'pretty',tiktokFullAudio:true};
+  if(fmt.ao){pl.downloadMode='audio';pl.audioFormat=fmt.af||'mp3';if(fmt.ab)pl.audioBitrate=fmt.ab;}
+  else{pl.downloadMode='auto';pl.videoQuality=fmt.q||'max';pl.youtubeVideoCodec='h264';}
 
-  const qLabel=audioOnly?`${(audioFormat).toUpperCase()}`:(quality==='max'?'Best':quality==='2160'?'4K':quality+'p');
-  const dlArea=document.getElementById('dl-area');
-  const mainBtn=document.getElementById('btn-dl-best');
-  if(mainBtn){mainBtn.disabled=true;mainBtn.textContent='Memproses…'}
+  let lastErr='',result=null;
 
-  // Tampilkan progress
-  if(dlArea) dlArea.innerHTML=`
-    <div class="progress-section" id="prog-wrap">
-      <div class="progress-top"><span>Menyiapkan ${qLabel}…</span><span class="pct" id="prog-pct">0%</span></div>
-      <div class="progress-track"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
-      <div class="progress-status" id="prog-status">Menghubungkan ke server…</div>
-    </div>`;
-
-  let p=0;
-  const iv=setInterval(()=>{
-    p=Math.min(p+Math.random()*8+2,88);
-    setProg(p,p<35?'Menghubungkan…':p<65?'Mengambil stream…':'Menyiapkan link…');
-  },220);
-
-  try{
-    const res=await fetch('/api/download',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({url:curUrl,quality,codec,audioOnly,audioFormat,audioBitrate}),
-    });
-    clearInterval(iv);
-    const data=await res.json();
-
-    // Reset tombol
-    if(mainBtn){mainBtn.disabled=false;mainBtn.innerHTML='<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M3.5 6.5 7 10l3.5-3.5M2 12h10" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg> Download Best'}
-
-    // ★ FALLBACK — semua cobalt instance gagal
-    if(data.type==='fallback'){
-      setProg(100,'Server tidak merespons');
-      document.getElementById('prog-fill').style.background='var(--amber)';
-      showDlArea(`
-        <div class="fallback-box">
-          <p>⚠ Semua server tidak merespons. Buka langsung di cobalt.tools:</p>
-          <a href="${data.cobaltUrl}" target="_blank" rel="noopener" class="btn-fallback">🌐 Buka cobalt.tools ↗</a>
-        </div>`);
-      toast('Gunakan link cobalt.tools di bawah','info');
-      isFetching=false; return;
-    }
-
-    if(data.error||(!data.downloadUrl&&!data.url&&data.type!=='picker')){
-      setProg(100,'❌ '+(data.message||data.error||'Gagal'));
-      document.getElementById('prog-fill').style.background='var(--red)';
-      toast(data.error||'Gagal','error');
-      isFetching=false; return;
-    }
-
-    // ★ PICKER — Instagram carousel / Twitter multi-media
-    if(data.type==='picker'&&data.items){
-      setProg(100,'✓ '+data.items.length+' media ditemukan!');
-      document.getElementById('prog-fill').style.background='var(--green)';
-      const itemsHtml=data.items.map((it,i)=>`
-        <a href="${it.url}" target="_blank" rel="noopener" download class="picker-item">
-          ${it.thumb?`<img src="${it.thumb}" alt="media ${i+1}" onerror="this.outerHTML='<div class=picker-placeholder>${it.type==='video'?'🎬':'🖼'}</div>'">`:`<div class="picker-placeholder">${it.type==='video'?'🎬':'🖼'}</div>`}
-          <div class="picker-item-label">↓ ${it.type==='video'?'Video':'Foto'} ${i+1}</div>
-        </a>`).join('');
-      showDlArea(`
-        <div class="picker-box">
-          <div class="section-label">${data.items.length} media — klik untuk download</div>
-          <div class="picker-grid">${itemsHtml}</div>
-          ${data.audioUrl?`<a href="${data.audioUrl}" target="_blank" download class="btn-dl-link" style="margin-top:8px">🎵 Download Audio Terpisah <span>↓</span></a>`:''}
-        </div>`);
-      toast(`${data.items.length} media siap!`,'success');
-      addHist(curUrl,curPlat,document.querySelector('.preview-title')?.textContent||'Video',qLabel);
-      isFetching=false; return;
-    }
-
-    // ★ LINK DOWNLOAD BERHASIL
-    // Tampilkan sebagai <a> yang user klik sendiri — BUKAN auto-trigger
-    const dlUrl=data.downloadUrl||data.url;
-    const fname=data.filename||`vaultdl_${qLabel}_${Date.now()}.mp4`;
-
-    setProg(100,'✓ Link siap! Klik tombol di bawah untuk download');
-    document.getElementById('prog-fill').style.background='var(--green)';
-    document.getElementById('prog-status').style.color='var(--green)';
-
-    showDlArea(`
-      <div class="dl-result-panel">
-        <div class="label">Link Download Siap</div>
-        <a href="${dlUrl}" target="_blank" rel="noopener" download="${fname}" class="btn-dl-link">
-          <span>⬇ Download ${qLabel}</span>
-          <span style="font-size:.75rem;opacity:.7">${fname.slice(0,35)}…</span>
-        </a>
-        <div class="btn-dl-link-info">
-          💡 Klik tombol hijau di atas. Jika browser bertanya — pilih <strong>Save</strong>.<br>
-          Kalau tidak mulai, klik kanan → <strong>Save link as…</strong>
-        </div>
-      </div>`);
-
-    toast(`Link ${qLabel} siap — klik tombol hijau!`,'success');
-    addHist(curUrl,curPlat,document.querySelector('.preview-title')?.textContent||'Video',qLabel);
-
-  }catch(err){
-    clearInterval(iv);
-    setProg(100,'Koneksi gagal');
-    document.getElementById('prog-fill').style.background='var(--red)';
-    if(mainBtn){mainBtn.disabled=false;mainBtn.innerHTML='<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M3.5 6.5 7 10l3.5-3.5M2 12h10" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg> Download Best'}
-    const cobaltUrl=`https://cobalt.tools/#${encodeURIComponent(curUrl)}`;
-    showDlArea(`<div class="fallback-box"><p>⚠ Koneksi gagal. Coba langsung di cobalt.tools:</p><a href="${cobaltUrl}" target="_blank" class="btn-fallback">🌐 Buka cobalt.tools ↗</a></div>`);
-    toast('Gunakan fallback cobalt.tools','error');
+  for(const inst of INST){
+    const host=new URL(inst).hostname;
+    setS(`<div class="sr pr"><div class="isp"></div><span>Mencoba <b>${esc(host)}</b>…</span></div>`);
+    try{
+      const ctrl=new AbortController();
+      const tid=setTimeout(()=>ctrl.abort(),9000);
+      const res=await fetch(inst+'/',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Accept':'application/json'},
+        body:JSON.stringify(pl),
+        signal:ctrl.signal,
+      });
+      clearTimeout(tid);
+      if(!res.ok){lastErr=`HTTP ${res.status}`;continue}
+      const data=await res.json();
+      if(data.status==='error'){
+        lastErr=data.error?.code||'error';
+        if(lastErr.includes('unavailable')||lastErr.includes('age')||lastErr.includes('login'))break;
+        continue;
+      }
+      result=data;break;
+    }catch(e){lastErr=e.name==='AbortError'?'timeout':e.message;continue}
   }
-  isFetching=false;
+
+  $(`f${idx}`)?.classList.remove('ld');
+
+  if(!result){
+    const cu=`https://cobalt.tools/#${encodeURIComponent(curUrl)}`;
+    setS(`<div class="sr er">⚠ Semua instance tidak merespons (${esc(lastErr)})</div>
+      <a href="${cu}" target="_blank" rel="noopener" class="fb2">
+        <span>🌐</span><span>Buka di cobalt.tools langsung ↗</span>
+      </a>`);
+    toast('Coba cobalt.tools langsung','warn');busy=false;return;
+  }
+
+  if(result.status==='picker'&&result.picker){
+    const items=result.picker;
+    const g=items.map((it,i)=>`<a href="${esc(it.url)}" target="_blank" rel="noopener" download class="pi">${it.thumb?`<img src="${esc(it.thumb)}" onerror="this.outerHTML='<div class=pni>${it.type==='video'?'🎬':'🖼'}</div>'">`:`<div class="pni">${it.type==='video'?'🎬':'🖼'}</div>`}<div class="pl">${it.type==='video'?'Video':'Foto'} ${i+1}</div></a>`).join('');
+    setS(`<div class="sr ok">✓ ${items.length} media — klik untuk download</div><div class="pgd">${g}</div>${result.audio?`<a href="${esc(result.audio)}" target="_blank" download class="dl" style="margin-top:6px"><div class="dic">🎵</div><div class="di"><div class="dn">Download Audio Terpisah</div></div><div class="da">↓</div></a>`:''}`);
+    toast(`${items.length} media siap!`,'success');
+    addH(curUrl,curP,curMeta.title||'Video',fmt.lb);busy=false;return;
+  }
+
+  const dlUrl=result.url;
+  if(!dlUrl){setS('<div class="sr er">⚠ Response tidak valid</div>');toast('Response tidak valid','error');busy=false;return;}
+  const fn=result.filename||`vaultdl_${fmt.lb}_${Date.now()}.mp4`;
+  const short=fn.length>40?fn.slice(0,40)+'…':fn;
+
+  setS(`<div class="sr ok">✓ Link ${esc(fmt.lb)} siap</div>
+    <a href="${esc(dlUrl)}" target="_blank" rel="noopener" download="${esc(fn)}" class="dl">
+      <div class="dic"><svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 2v8M4 7.5 7.5 11 11 7.5M2 13h11" stroke="var(--green)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="di"><div class="dn">↓ Download ${esc(fmt.lb)}</div><div class="dh">${esc(short)}</div></div>
+      <div class="da">↓</div>
+    </a>`);
+  toast(`${fmt.lb} siap — klik tombol hijau!`,'success');
+  addH(curUrl,curP,curMeta.title||'Video',fmt.lb);busy=false;
 }
 
-function setProg(pct,status){
-  const f=document.getElementById('prog-fill');
-  const p=document.getElementById('prog-pct');
-  const s=document.getElementById('prog-status');
-  if(f)f.style.width=Math.round(pct)+'%';
-  if(p)p.textContent=Math.round(pct)+'%';
-  if(s)s.textContent=status;
-}
+/* HISTORY */
+function addH(url,p,title,q){hist.unshift({url,title,q,pn:p.n,pc:p.c,pb:p.bg,pi:p.ic,ts:Date.now()});if(hist.length>20)hist.pop();localStorage.setItem('vdl3',JSON.stringify(hist));renderH();}
+function renderH(){const l=$('hl'),e=$('he');if(!hist.length){l.innerHTML='';e.style.display='block';return}e.style.display='none';l.innerHTML=hist.map(h=>`<div class="hi" onclick="reuse('${encodeURIComponent(h.url)}')"><div class="hic" style="background:${h.pb};color:${h.pc}">${esc(h.pi)}</div><div class="htt">${esc(h.title)}</div><div class="hm">${esc(h.q)} · ${ago(h.ts)}</div><div class="hd"></div></div>`).join('');}
+function reuse(enc){$('uf').value=decodeURIComponent(enc);onIn();window.scrollTo({top:0,behavior:'smooth'});toast('URL dimuat','info');}
 
-function showDlArea(html){
-  const a=document.getElementById('dl-area');
-  if(a)a.innerHTML=html;
-}
-
-/* =========================================================
-   HISTORY
-   ========================================================= */
-function addHist(url,plat,title,q){
-  hist.unshift({url,title,q,pn:plat.n,pc:plat.c,pb:plat.bg,pi:plat.ic,ts:Date.now()});
-  if(hist.length>20)hist.pop();
-  localStorage.setItem('vdl_h',JSON.stringify(hist));
-  renderHist();
-}
-function renderHist(){
-  const l=document.getElementById('history-list');
-  const e=document.getElementById('history-empty');
-  if(!hist.length){l.innerHTML='';e.style.display='block';return;}
-  e.style.display='none';
-  l.innerHTML=hist.map(h=>`
-    <div class="hitem" onclick="reuseUrl('${encodeURIComponent(h.url)}')">
-      <div class="hplat" style="background:${h.pb};color:${h.pc}">${h.pi}</div>
-      <div class="htitle">${esc(h.title)}</div>
-      <div class="hmeta">${h.q} · ${ago(h.ts)}</div>
-      <div class="hbadge">✓</div>
-    </div>`).join('');
-}
-function reuseUrl(enc){
-  const url=decodeURIComponent(enc);
-  document.getElementById('url-input').value=url;onInput();
-  window.scrollTo({top:0,behavior:'smooth'});
-  toast('URL dimuat dari riwayat','success');
-}
-function ago(ts){const d=Date.now()-ts;if(d<60000)return'baru saja';if(d<3600000)return Math.floor(d/60000)+' mnt lalu';if(d<86400000)return Math.floor(d/3600000)+' jam lalu';return Math.floor(d/86400000)+' hari lalu';}
-
-/* =========================================================
-   UI HELPERS
-   ========================================================= */
-function showLoading(n){document.getElementById('result-area').innerHTML=`<div class="loading-card"><div class="spinner"></div><div class="loading-msg">Mengambil info ${n}…</div><div class="loading-sub">Thumbnail & metadata video</div></div>`;}
-function showError(t,s){document.getElementById('result-area').innerHTML=`<div class="error-banner"><span style="font-size:1.1rem">⚠</span><div><div class="etitle">${esc(t)}</div>${s?`<div class="esub">${esc(s)}</div>`:''}</div></div>`;}
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function toast(msg,type='info'){const c={success:'var(--green)',error:'var(--red)',info:'var(--accent2)'};const el=document.createElement('div');el.className='toast-item';el.innerHTML=`<div class="tdot" style="background:${c[type]||c.info}"></div><span>${esc(msg)}</span>`;document.getElementById('toast').appendChild(el);setTimeout(()=>el.remove(),4200);}
-
-/* =========================================================
-   INIT
-   ========================================================= */
+/* INIT */
 document.addEventListener('DOMContentLoaded',()=>{
-  renderHist();
+  renderH();
   document.body.addEventListener('dragover',e=>e.preventDefault());
-  document.body.addEventListener('drop',e=>{
-    e.preventDefault();const t=e.dataTransfer.getData('text');
-    if(t&&isUrl(t)){document.getElementById('url-input').value=t;onInput();toast('URL dari drag & drop','success');}
-  });
+  document.body.addEventListener('drop',e=>{e.preventDefault();const t=e.dataTransfer.getData('text');if(t&&isUrl(t)){$('uf').value=t;onIn();toast('URL dari drag & drop','success')}});
 });
 </script>
 </body>
