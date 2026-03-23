@@ -1,1 +1,8 @@
-{}
+{
+  "regions": ["sin1"],
+  "functions": {
+    "api/get.js": {
+      "maxDuration": 30
+    }
+  }
+}
