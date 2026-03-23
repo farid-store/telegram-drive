@@ -127,8 +127,9 @@ h1 em{font-style:normal;background:linear-gradient(135deg,var(--bl),var(--vi));-
 .fe{font-size:.68rem;font-weight:600;color:var(--t2);text-transform:uppercase;flex-shrink:0}
 .fnfo{font-size:.68rem;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-.dlb{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;background:var(--bg1);border:1px solid rgba(79,142,255,.3);border-radius:7px;color:var(--bl2);font-family:'Space Grotesk',sans-serif;font-size:.73rem;font-weight:600;text-decoration:none;transition:.15s;white-space:nowrap;flex-shrink:0}
-.dlb:hover{background:var(--bl);border-color:var(--bl);color:#fff;transform:translateY(-1px)}
+.dlb{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;background:var(--bg1);border:1px solid rgba(79,142,255,.3);border-radius:7px;color:var(--bl2);font-family:'Space Grotesk',sans-serif;font-size:.73rem;font-weight:600;text-decoration:none;transition:.15s;white-space:nowrap;flex-shrink:0;cursor:pointer;}
+.dlb:hover:not(:disabled){background:var(--bl);border-color:var(--bl);color:#fff;transform:translateY(-1px)}
+.dlb:disabled{opacity:0.6;cursor:not-allowed;}
 .dlb svg{flex-shrink:0}
 
 .ni{padding:14px;text-align:center;font-size:.78rem;color:var(--t2)}
@@ -380,7 +381,6 @@ function getP(url) {
     for (const [d,i] of Object.entries(PLAT)) {
       if (h === d || h.endsWith('.'+d)) return i;
     }
-    // partial match fallback
     for (const [d,i] of Object.entries(PLAT)) {
       if (h.includes(d)) return i;
     }
@@ -495,7 +495,6 @@ function renderResult(data,url,p){
   const videos=data.medias.filter(m=>m.type==='video');
   const audios =data.medias.filter(m=>m.type==='audio');
 
-  // mp4 first, then others
   const sorted=[
     ...videos.filter(m=>m.extension==='mp4'),
     ...videos.filter(m=>m.extension!=='mp4'),
@@ -505,8 +504,8 @@ function renderResult(data,url,p){
     ?`<img src="${esc(thumb)}" alt="" loading="lazy" onerror="this.parentElement.innerHTML='<div class=vth-ph>🎬</div>'">`
     :`<div class="vth-ph">🎬</div>`;
 
-  const vrows=sorted.length?sorted.map(fmtRow).join(''):`<div class="ni">Tidak ada format video</div>`;
-  const arows=audios.length?audios.map(fmtRow).join(''):`<div class="ni">Tidak ada format audio</div>`;
+  const vrows=sorted.length?sorted.map(m=>fmtRow(m, title)).join(''):`<div class="ni">Tidak ada format video</div>`;
+  const arows=audios.length?audios.map(m=>fmtRow(m, title)).join(''):`<div class="ni">Tidak ada format audio</div>`;
 
   const audioTab=audios.length
     ?`<button class="ft" onclick="swTab('audio',this)">🎵 Audio <span class="tc">${audios.length}</span></button>`:'';
@@ -545,32 +544,82 @@ function swTab(tab,btn){
   document.getElementById('fg-'+tab)?.classList.add('on');
 }
 
-function fmtRow(m){
+function fmtRow(m, title){
   const {label,cls}=parseQ(m.quality,m.extension);
-  const ext=(m.extension||'').toUpperCase();
-  // Extra info: codec or quality prefix without parentheses
+  const ext=(m.extension||'mp4').toLowerCase();
   const rawPre=(m.quality||'').replace(/\([^)]+\)/,'').trim();
-  const info=(rawPre&&rawPre.toLowerCase()!==m.extension)?rawPre:'';
-
+  const info=(rawPre&&rawPre.toLowerCase()!==ext)?rawPre:'';
+  
+  // Modifikasi: Ubah tag a menjadi button
   return `<div class="fi">
   <div class="fl">
     <span class="qb2 ${cls}">${esc(label)}</span>
-    <span class="fe">${esc(ext)}</span>
+    <span class="fe">${esc(ext.toUpperCase())}</span>
     ${info?`<span class="fnfo">${esc(info)}</span>`:''}
   </div>
-  <a href="${esc(m.url)}" download target="_blank" rel="noopener noreferrer" class="dlb"
-     onclick="onDl(event,this)">
+  <button class="dlb" onclick="onDl(event, this, '${esc(m.url)}', '${esc(ext)}', '${esc(title)}')">
     <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v7.5M3 6.5 6 10l3-3.5M1 11h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
     Download
-  </a>
+  </button>
 </div>`;
 }
 
-function onDl(e,btn){
-  // Flash green feedback
-  btn.style.cssText='background:var(--gn);border-color:var(--gn);color:#fff';
-  setTimeout(()=>btn.style.cssText='',2000);
-  toast('Download dimulai! Cek folder unduhan kamu.','success');
+/* ── FUNGSI DOWNLOAD BARU ── */
+async function onDl(e, btn, url, ext, title) {
+  e.preventDefault();
+  if (btn.disabled) return;
+  
+  const originalHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Menarik Data...';
+  btn.style.cssText = 'background:var(--am);border-color:var(--am);color:#fff;cursor:wait;';
+  
+  try {
+    // 1. Mencoba mengambil file ke memori browser
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('CORS block atau error network');
+    
+    const blob = await response.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+    
+    // 2. Membuat link virtual untuk memaksa download file asli
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = blobUrl;
+    
+    // Rapihkan nama file (hapus karakter yang tidak valid)
+    let safeTitle = title.replace(/[^a-zA-Z0-9 -]/g, '').substring(0, 30);
+    a.download = `VaultDL_${safeTitle}_${Date.now()}.${ext}`; 
+    
+    document.body.appendChild(a);
+    a.click();
+    
+    // 3. Bersihkan memori browser setelah terunduh
+    window.URL.revokeObjectURL(blobUrl);
+    a.remove();
+    
+    btn.innerHTML = '✅ Sukses';
+    btn.style.cssText = 'background:var(--gn);border-color:var(--gn);color:#fff';
+    toast('Download otomatis dimulai! Cek folder unduhan kamu.','success');
+    
+  } catch (err) {
+    // 4. Fallback jika gagal (Biasanya karena server video menolak pengunduhan via website pihak ketiga)
+    btn.innerHTML = '⚠ Mengalihkan...';
+    btn.style.cssText = 'background:var(--am);border-color:var(--am);color:#fff';
+    
+    toast('Video akan dibuka di tab baru, silakan klik titik tiga (⋮) lalu pilih Download.','warn');
+    
+    setTimeout(() => {
+        window.open(url, '_blank');
+    }, 1500);
+  }
+  
+  // Kembalikan tombol seperti semula
+  setTimeout(() => {
+      btn.disabled = false;
+      btn.innerHTML = originalHtml;
+      btn.style.cssText = '';
+  }, 4000);
 }
 
 function showErr(title,sub=''){
