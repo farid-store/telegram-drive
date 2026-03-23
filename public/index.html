@@ -481,23 +481,28 @@ async function doDownload(btn,b64,ext){
   const isYT = url.includes('googlevideo.com');
 
   if(isYT){
-    // YOUTUBE: URL googlevideo.com di-proxy via /api/dl (Vercel Edge)
-    // URL terikat ke IP server Ryzumi HK, bukan IP user — jadi proxy dari Vercel bisa
-    if(dt)dt.textContent='⬇ Downloading...';
-    btn.style.cssText='background:var(--am);border-color:var(--am);color:#fff;cursor:wait';
+    // YOUTUBE: googlevideo.com blokir Vercel IP (datacenter).
+    // Satu-satunya cara: fetch blob langsung dari browser user (IP rumah/mobile = tidak diblokir).
+    // googlevideo.com TIDAK kirim CORS header, jadi fetch() biasa gagal.
+    // Solusi: gunakan no-cors mode → dapat opaque response → tidak bisa blob.
+    // Workaround terbaik: buka URL di tab baru + tampilkan panduan copy-link ke IDM.
+    // Untuk download otomatis YouTube: user perlu pakai ekstensi browser (IDM, DownThemAll, dll).
 
-    const proxyUrl = `/api/dl?url=${encodeURIComponent(url)}&name=${encodeURIComponent(fname)}`;
+    if(dt)dt.textContent='↗ Buka Tab';
+    btn.style.cssText='background:var(--gn);border-color:var(--gn);color:#fff';
+
+    // Buka di tab baru — ini satu-satunya cara yang bekerja
     const a = document.createElement('a');
-    a.href = proxyUrl;
-    a.download = fname;
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
     a.style.display = 'none';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
 
-    btn.style.cssText='background:var(--gn);border-color:var(--gn);color:#fff';
-    if(dt)dt.textContent='✓ Downloading';
-    toast('Download YouTube dimulai lewat server!','success');
+    showYTInfo(url);
+    toast('Tab dibuka — ikuti panduan di bawah untuk download', 'info');
     setTimeout(reset, 4000);
     return;
   }
@@ -536,6 +541,50 @@ async function doDownload(btn,b64,ext){
     btn.style.cssText='';
     if(dt)dt.textContent=orig;
     btn.disabled=false;
+  }
+}
+
+function showYTInfo(url){
+  // Hapus info lama
+  const old = document.getElementById('yt-info');
+  if(old) old.remove();
+
+  const d = document.createElement('div');
+  d.id = 'yt-info';
+  d.style.cssText = 'background:rgba(255,176,64,.07);border:1px solid rgba(255,176,64,.22);border-radius:10px;padding:14px 16px;margin-bottom:12px;font-size:.77rem;line-height:1.7;animation:up .2s ease;position:relative';
+  d.innerHTML = `
+    <button onclick="this.parentElement.remove()" style="position:absolute;top:10px;right:12px;background:none;border:none;color:rgba(240,240,250,.28);cursor:pointer;font-size:1rem;line-height:1;padding:0">✕</button>
+    <div style="font-weight:700;color:var(--am);margin-bottom:8px;font-size:.8rem">📺 Cara download video YouTube</div>
+    <div style="color:rgba(240,240,250,.5)">
+      <strong style="color:var(--am)">Tab sudah terbuka.</strong> YouTube memblokir download otomatis dari server. Gunakan salah satu cara ini:<br><br>
+      <strong style="color:var(--tx)">🖥 PC — Cara termudah:</strong><br>
+      1. Di tab yang terbuka, klik kanan pada video → <strong>"Simpan video sebagai..."</strong><br><br>
+      <strong style="color:var(--tx)">⚡ Semua device — Pakai link:</strong><br>
+      1. Klik <strong>📋</strong> di sebelah tombol Download<br>
+      2. Paste link di <strong>IDM</strong> / <strong>1DM (Android)</strong> / <strong>address bar browser</strong>
+    </div>
+    <div style="margin-top:10px;display:flex;gap:7px">
+      <button onclick="ytCopyLink('${url.replace(/'/g,"\'")}',this)" style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:var(--bg1);border:1px solid rgba(79,142,255,.3);border-radius:7px;color:var(--bl2);font-size:.72rem;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:.15s" onmouseover="this.style.background='var(--bl)';this.style.color='#fff'" onmouseout="this.style.background='var(--bg1)';this.style.color='var(--bl2)'">
+        📋 Salin Link
+      </button>
+    </div>
+  `;
+  const z = $('zone');
+  z.insertBefore(d, z.firstChild);
+  d.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+async function ytCopyLink(url, btn){
+  try{
+    await navigator.clipboard.writeText(url);
+    btn.textContent='✓ Tersalin!';
+    btn.style.background='var(--gn)';
+    btn.style.borderColor='var(--gn)';
+    btn.style.color='#fff';
+    toast('Link disalin! Paste ke IDM / 1DM / browser address bar','success');
+    setTimeout(()=>{btn.innerHTML='📋 Salin Link';btn.style.cssText=''},3000);
+  }catch{
+    toast('Gagal salin, coba manual','warn');
   }
 }
 
