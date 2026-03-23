@@ -1,6 +1,6 @@
-// api/dl.js — Stream proxy untuk YouTube & platform yang blokir direct download
-// Dipanggil hanya untuk platform yang butuh proxy (YouTube, dll)
-// Platform lain (TikTok, Instagram) langsung download tanpa lewat sini
+// api/dl.js — Stream proxy untuk YouTube (googlevideo.com)
+// URL googlevideo terikat ke IP server Ryzumi (HK), bukan IP user
+// Jadi kita bisa proxy dari Vercel dengan header yang benar
 
 export const config = { runtime: 'edge' };
 
@@ -8,6 +8,7 @@ export default async function handler(req) {
   const cors = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Range',
   };
 
   if (req.method === 'OPTIONS') {
@@ -19,50 +20,68 @@ export default async function handler(req) {
   const filename = searchParams.get('name') || 'video.mp4';
 
   if (!fileUrl) {
-    return new Response(JSON.stringify({ error: 'url param required' }), {
+    return new Response(JSON.stringify({ error: 'url required' }), {
+      status: 400,
+      headers: { ...cors, 'Content-Type': 'application/json' },
+    });
+  }
+
+  // Hanya izinkan domain YouTube CDN
+  try {
+    const u = new URL(fileUrl);
+    if (!u.hostname.includes('googlevideo.com')) {
+      return new Response(JSON.stringify({ error: 'Only googlevideo.com allowed' }), {
+        status: 403,
+        headers: { ...cors, 'Content-Type': 'application/json' },
+      });
+    }
+  } catch {
+    return new Response(JSON.stringify({ error: 'Invalid URL' }), {
       status: 400,
       headers: { ...cors, 'Content-Type': 'application/json' },
     });
   }
 
   try {
-    // Fetch file dari sumber (YouTube CDN, dll)
+    // Forward range header jika ada (untuk resume download)
+    const rangeHeader = req.headers.get('range');
+
     const upstream = await fetch(fileUrl, {
       headers: {
-        // Headers yang YouTube butuhkan
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        'Referer': 'https://www.youtube.com/',
-        'Origin': 'https://www.youtube.com',
+        // Header yang YouTube CDN butuhkan
+        'User-Agent': 'com.google.android.youtube/17.36.4 (Linux; U; Android 12; GB) gzip',
         'Accept': '*/*',
         'Accept-Encoding': 'identity',
-        'Range': req.headers.get('range') || 'bytes=0-',
+        'Connection': 'keep-alive',
+        ...(rangeHeader ? { 'Range': rangeHeader } : {}),
       },
     });
 
     if (!upstream.ok && upstream.status !== 206) {
-      return new Response(JSON.stringify({ error: `Upstream error: ${upstream.status}` }), {
+      return new Response(JSON.stringify({ error: `YouTube CDN error: ${upstream.status}` }), {
         status: upstream.status,
         headers: { ...cors, 'Content-Type': 'application/json' },
       });
     }
 
-    // Forward response dengan header download
-    const headers = new Headers({
+    // Build response headers
+    const respHeaders = new Headers({
       ...cors,
       'Content-Disposition': `attachment; filename="${encodeURIComponent(filename)}"`,
       'Content-Type': upstream.headers.get('Content-Type') || 'video/mp4',
       'Accept-Ranges': 'bytes',
     });
 
-    // Forward content-length dan content-range jika ada
-    const cl = upstream.headers.get('Content-Length');
-    const cr = upstream.headers.get('Content-Range');
-    if (cl) headers.set('Content-Length', cl);
-    if (cr) headers.set('Content-Range', cr);
+    // Forward penting headers dari upstream
+    const fwd = ['Content-Length', 'Content-Range', 'Last-Modified', 'ETag'];
+    for (const h of fwd) {
+      const v = upstream.headers.get(h);
+      if (v) respHeaders.set(h, v);
+    }
 
     return new Response(upstream.body, {
       status: upstream.status,
-      headers,
+      headers: respHeaders,
     });
 
   } catch (err) {
