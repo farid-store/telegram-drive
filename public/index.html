@@ -55,9 +55,6 @@ h1 em{font-style:normal;background:linear-gradient(135deg,var(--bl),var(--vi));-
 .btn-search.loading .spsm{display:block}
 .btn-search.loading .ico-s{display:none}
 @keyframes rot{to{transform:rotate(360deg)}}
-.quick-row{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
-.qb{font-size:.69rem;padding:4px 10px;border-radius:5px;border:1px solid var(--b1);background:transparent;color:var(--t3);cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:.14s}
-.qb:hover{border-color:var(--b2);color:var(--t2);background:var(--s2)}
 #zone{margin-bottom:14px}
 .lc{background:var(--s1);border:1px solid var(--b2);border-radius:var(--r);padding:32px;text-align:center}
 .lsp{width:32px;height:32px;border:2px solid var(--b2);border-top-color:var(--bl);border-radius:50%;animation:rot .7s linear infinite;margin:0 auto 12px}
@@ -200,16 +197,6 @@ footer a{color:var(--t2);text-decoration:none}
       Cari Format
     </button>
   </div>
-  <div class="quick-row">
-    <button class="qb" onclick="doPaste()">📋 Paste</button>
-    <button class="qb" onclick="setDemo('yt')">▶ YouTube</button>
-    <button class="qb" onclick="setDemo('tt')">◉ TikTok</button>
-    <button class="qb" onclick="setDemo('ig')">◈ Instagram</button>
-    <button class="qb" onclick="setDemo('tw')">✦ Twitter</button>
-    <button class="qb" onclick="setDemo('fb')">● Facebook</button>
-    <button class="qb" onclick="setDemo('rd')">◆ Reddit</button>
-    <button class="qb" onclick="doClear()">✕ Hapus</button>
-  </div>
 </div>
 <div id="zone"></div>
 <div class="sec">
@@ -303,14 +290,6 @@ const QLABELS={
   'original':{label:'Original',cls:'q-best'},
 };
 const API='https://api.ryzumi.net/api/downloader/all-in-one';
-const DEMOS={
-  yt:'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-  tt:'https://www.tiktok.com/@voidlane.cjo/video/7608076678421662994',
-  ig:'https://www.instagram.com/p/CvZ8rlYNpqF/',
-  tw:'https://x.com/NASA/status/1755663743186534460',
-  fb:'https://www.facebook.com/watch/?v=766882641177003',
-  rd:'https://www.reddit.com/r/videos/comments/zl90mz/',
-};
 let hist=JSON.parse(localStorage.getItem('vdl9')||'[]');
 let busy=false;
 const isUrl=s=>{try{new URL(s);return true}catch{return false}};
@@ -345,18 +324,6 @@ function toast(m,t='info'){
 }
 
 function onIn(){$('btn-s').disabled=!isUrl($('url-input').value.trim())}
-
-async function doPaste(){
-  try{
-    const t=await navigator.clipboard.readText();
-    if(isUrl(t)){$('url-input').value=t;onIn();toast('URL ditempel','success')}
-    else toast('Bukan URL valid','warn');
-  }catch{toast('Tempel manual (Ctrl+V)','warn')}
-}
-
-function setDemo(k){$('url-input').value=DEMOS[k]||'';onIn()}
-
-function doClear(){$('url-input').value='';$('btn-s').disabled=true;setZ('')}
 
 function parseQ(q,ext){
   const lq=(q||'').toLowerCase();
@@ -425,7 +392,7 @@ async function doSearch(){
     return;
   }
 
-  // Hapus parameter tracking agar API stabil
+  // Hapus parameter tracking (untuk link normal FB agar API stabil)
   try {
     let uObj = new URL(url);
     uObj.searchParams.delete('mibextid');
@@ -523,6 +490,10 @@ function fmtRow(m){
 </div>`;
 }
 
+/* =====================================================
+   DOWNLOAD — Mendukung video YT dan FB
+   Twitter dikembalikan ke Blob Fetch / Direct untuk hindari 403
+===================================================== */
 async function doDownload(btn,b64,ext){
   if(btn.disabled)return;
   btn.disabled=true;
@@ -538,22 +509,13 @@ async function doDownload(btn,b64,ext){
     toast('URL tidak valid','error');reset();return;
   }
 
-  // Pembersih URL Twitter
-  try {
-    let uObj = new URL(url);
-    if (uObj.hostname.includes('twimg.com')) {
-      uObj.searchParams.delete('tag');
-      url = uObj.href;
-    }
-  } catch(e) {}
-
   const fname=`VaultDL_${Date.now()}.${ext||'mp4'}`;
 
+  // Deteksi CDN Platform (Tanpa Twitter, karena embed Twitter memicu 403)
   const isYT = url.includes('googlevideo.com');
   const isFB = url.includes('fbcdn.net') || url.includes('scontent');
-  const isTW = url.includes('twimg.com');
 
-  if(isYT || isFB || isTW){
+  if(isYT || isFB){
     if(dt)dt.textContent='▶ Putar';
     btn.style.cssText='background:var(--gn);border-color:var(--gn);color:#fff';
     showYTPlayer(url, fname);
@@ -562,6 +524,7 @@ async function doDownload(btn,b64,ext){
     return;
   }
 
+  // PLATFORM LAIN TERMASUK TWITTER — Menggunakan fetch blob
   try{
     const r=await fetch(url,{mode:'cors',cache:'no-store'});
     if(!r.ok)throw new Error(`HTTP ${r.status}`);
@@ -581,6 +544,7 @@ async function doDownload(btn,b64,ext){
     console.log('[VaultDL] blob failed:',e.message);
   }
 
+  // Fallback ke Tab Baru
   const af=document.createElement('a');
   af.href=url;af.download=fname;af.target='_blank';af.rel='noopener';af.style.display='none';
   document.body.appendChild(af);af.click();document.body.removeChild(af);
