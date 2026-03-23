@@ -371,7 +371,8 @@ let busy = false;
 
 /* ── utils ── */
 const isUrl = s => { try { new URL(s); return true } catch { return false } };
-const esc   = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+// PERBAIKAN: Menambahkan escape untuk tanda kutip tunggal (&#39;) agar tidak merusak HTML
+const esc   = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const $     = id => document.getElementById(id);
 const setZ  = h => $('zone').innerHTML = h;
 
@@ -550,14 +551,18 @@ function fmtRow(m, title){
   const rawPre=(m.quality||'').replace(/\([^)]+\)/,'').trim();
   const info=(rawPre&&rawPre.toLowerCase()!==ext)?rawPre:'';
   
-  // Modifikasi: Ubah tag a menjadi button
+  // PERBAIKAN: Menggunakan data-* attribute untuk menghindari error bentrok tanda kutip
   return `<div class="fi">
   <div class="fl">
     <span class="qb2 ${cls}">${esc(label)}</span>
     <span class="fe">${esc(ext.toUpperCase())}</span>
     ${info?`<span class="fnfo">${esc(info)}</span>`:''}
   </div>
-  <button class="dlb" onclick="onDl(event, this, '${esc(m.url)}', '${esc(ext)}', '${esc(title)}')">
+  <button class="dlb" 
+    onclick="onDl(event, this)" 
+    data-url="${esc(m.url)}" 
+    data-ext="${esc(ext)}" 
+    data-title="${esc(title)}">
     <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v7.5M3 6.5 6 10l3-3.5M1 11h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
     Download
   </button>
@@ -565,9 +570,14 @@ function fmtRow(m, title){
 }
 
 /* ── FUNGSI DOWNLOAD BARU ── */
-async function onDl(e, btn, url, ext, title) {
+async function onDl(e, btn) {
   e.preventDefault();
   if (btn.disabled) return;
+  
+  // PERBAIKAN: Tarik data dari atribut data-* yang sudah aman
+  const url = btn.getAttribute('data-url');
+  const ext = btn.getAttribute('data-ext');
+  const title = btn.getAttribute('data-title');
   
   const originalHtml = btn.innerHTML;
   btn.disabled = true;
@@ -575,26 +585,22 @@ async function onDl(e, btn, url, ext, title) {
   btn.style.cssText = 'background:var(--am);border-color:var(--am);color:#fff;cursor:wait;';
   
   try {
-    // 1. Mencoba mengambil file ke memori browser
     const response = await fetch(url);
     if (!response.ok) throw new Error('CORS block atau error network');
     
     const blob = await response.blob();
     const blobUrl = window.URL.createObjectURL(blob);
     
-    // 2. Membuat link virtual untuk memaksa download file asli
     const a = document.createElement('a');
     a.style.display = 'none';
     a.href = blobUrl;
     
-    // Rapihkan nama file (hapus karakter yang tidak valid)
-    let safeTitle = title.replace(/[^a-zA-Z0-9 -]/g, '').substring(0, 30);
+    let safeTitle = title.replace(/[^a-zA-Z0-9 -]/g, '').substring(0, 30) || 'Video';
     a.download = `VaultDL_${safeTitle}_${Date.now()}.${ext}`; 
     
     document.body.appendChild(a);
     a.click();
     
-    // 3. Bersihkan memori browser setelah terunduh
     window.URL.revokeObjectURL(blobUrl);
     a.remove();
     
@@ -603,18 +609,15 @@ async function onDl(e, btn, url, ext, title) {
     toast('Download otomatis dimulai! Cek folder unduhan kamu.','success');
     
   } catch (err) {
-    // 4. Fallback jika gagal (Biasanya karena server video menolak pengunduhan via website pihak ketiga)
-    btn.innerHTML = '⚠ Mengalihkan...';
+    btn.innerHTML = '⚠ Buka Tab...';
     btn.style.cssText = 'background:var(--am);border-color:var(--am);color:#fff';
-    
-    toast('Video akan dibuka di tab baru, silakan klik titik tiga (⋮) lalu pilih Download.','warn');
+    toast('Sistem mengalihkan ke video. Silakan klik titik tiga (⋮) lalu pilih Download.','warn');
     
     setTimeout(() => {
         window.open(url, '_blank');
     }, 1500);
   }
   
-  // Kembalikan tombol seperti semula
   setTimeout(() => {
       btn.disabled = false;
       btn.innerHTML = originalHtml;
