@@ -170,6 +170,10 @@ footer a{color:var(--t2);text-decoration:none}
 .player-loading-spin{width:28px;height:28px;border:2px solid var(--b2);border-top-color:var(--bl);border-radius:50%;animation:rot .7s linear infinite}
 .player-loading-txt{font-size:.75rem;color:var(--t2)}
 
+/* === DOODSTREAM IFRAME === */
+.dood-ratio{position:relative;padding-bottom:56.25%;height:0;border-radius:8px;overflow:hidden;background:#000}
+.dood-ratio iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0}
+
 @media(max-width:540px){
   .vi{flex-direction:column}
   .vth,.vth img,.vth-ph{width:100%;height:180px}
@@ -210,6 +214,7 @@ footer a{color:var(--t2);text-decoration:none}
     <div class="pt"><div class="pt-ic" style="background:rgba(133,199,66,.2);color:#85c742">RM</div>Rumble</div>
     <div class="pt"><div class="pt-ic" style="background:rgba(38,165,228,.2);color:#26a5e4">TG</div>Telegram</div>
     <div class="pt"><div class="pt-ic" style="background:rgba(0,180,120,.2);color:#00b478">TB</div>Terabox</div>
+    <div class="pt"><div class="pt-ic" style="background:rgba(255,107,53,.2);color:#ff6b35">DS</div>Doodstream</div>
     <div class="pt"><div class="pt-ic" style="background:rgba(100,100,100,.2);color:#aaa">+</div>+500 lainnya</div>
   </div>
 </div>
@@ -247,6 +252,7 @@ footer a{color:var(--t2);text-decoration:none}
     <div class="pc"><div class="pc-ic" style="background:rgba(0,102,220,.15);color:#0066dc">DM</div><div><div class="pc-n">Dailymotion</div><div class="pc-c">Video</div></div></div>
     <div class="pc"><div class="pc-ic" style="background:rgba(230,0,35,.15);color:#e60023">PT</div><div><div class="pc-n">Pinterest</div><div class="pc-c">Video &amp; GIF</div></div></div>
     <div class="pc"><div class="pc-ic" style="background:rgba(0,180,120,.15);color:#00b478">TB</div><div><div class="pc-n">Terabox</div><div class="pc-c">File &amp; Video</div></div></div>
+    <div class="pc"><div class="pc-ic" style="background:rgba(255,107,53,.15);color:#ff6b35">DS</div><div><div class="pc-n">Doodstream</div><div class="pc-c">Embed &amp; Direct</div></div></div>
   </div>
 </div>
 <div class="sec">
@@ -315,6 +321,24 @@ const PLAT={
   'terabox.tech':{n:'Terabox',c:'#00b478',bg:'rgba(0,180,120,.15)',ic:'TB'},
   'teraboxapp.com':{n:'Terabox',c:'#00b478',bg:'rgba(0,180,120,.15)',ic:'TB'},
   'dubox.com':{n:'Terabox',c:'#00b478',bg:'rgba(0,180,120,.15)',ic:'TB'},
+  // Doodstream & semua mirror/aliasnya
+  'doodstream.com':{n:'Doodstream',c:'#ff6b35',bg:'rgba(255,107,53,.15)',ic:'DS'},
+  'dood.watch':{n:'Doodstream',c:'#ff6b35',bg:'rgba(255,107,53,.15)',ic:'DS'},
+  'dood.to':{n:'Doodstream',c:'#ff6b35',bg:'rgba(255,107,53,.15)',ic:'DS'},
+  'dood.so':{n:'Doodstream',c:'#ff6b35',bg:'rgba(255,107,53,.15)',ic:'DS'},
+  'dood.la':{n:'Doodstream',c:'#ff6b35',bg:'rgba(255,107,53,.15)',ic:'DS'},
+  'dood.ws':{n:'Doodstream',c:'#ff6b35',bg:'rgba(255,107,53,.15)',ic:'DS'},
+  'dood.sh':{n:'Doodstream',c:'#ff6b35',bg:'rgba(255,107,53,.15)',ic:'DS'},
+  'dood.pm':{n:'Doodstream',c:'#ff6b35',bg:'rgba(255,107,53,.15)',ic:'DS'},
+  'dood.wf':{n:'Doodstream',c:'#ff6b35',bg:'rgba(255,107,53,.15)',ic:'DS'},
+  'dood.cx':{n:'Doodstream',c:'#ff6b35',bg:'rgba(255,107,53,.15)',ic:'DS'},
+  'dood.li':{n:'Doodstream',c:'#ff6b35',bg:'rgba(255,107,53,.15)',ic:'DS'},
+  'dooood.com':{n:'Doodstream',c:'#ff6b35',bg:'rgba(255,107,53,.15)',ic:'DS'},
+  'doods.pro':{n:'Doodstream',c:'#ff6b35',bg:'rgba(255,107,53,.15)',ic:'DS'},
+  'ds2play.com':{n:'Doodstream',c:'#ff6b35',bg:'rgba(255,107,53,.15)',ic:'DS'},
+  'ds2video.com':{n:'Doodstream',c:'#ff6b35',bg:'rgba(255,107,53,.15)',ic:'DS'},
+  'd0o0d.com':{n:'Doodstream',c:'#ff6b35',bg:'rgba(255,107,53,.15)',ic:'DS'},
+  'do7go.com':{n:'Doodstream',c:'#ff6b35',bg:'rgba(255,107,53,.15)',ic:'DS'},
 };
 const QLABELS={
   'hd_no_watermark':{label:'HD No WM',cls:'q-hd'},
@@ -349,6 +373,46 @@ function isTeraboxUrl(url){
     const h = new URL(url).hostname.replace('www.','');
     return TERABOX_DOMAINS.some(d => h === d || h.endsWith('.'+d));
   }catch{ return false; }
+}
+
+// ============================================================
+// DOODSTREAM CONFIG
+// Mekanisme ekstraksi link dood:
+//   1. Coba lewat api.ryzumi (all-in-one, support dood)
+//   2. Fallback native: fetch HTML via proxy → extract pass_md5 + token
+//      → susun URL final → pakai iframe embed sebagai player
+//   3. Last resort: tampilkan embed iframe langsung
+// Mirror & alias dood (terus bertambah):
+// ============================================================
+const DOOD_DOMAINS = [
+  'doodstream.com','dood.watch','dood.to','dood.so','dood.la',
+  'dood.ws','dood.sh','dood.pm','dood.wf','dood.cx','dood.li',
+  'dooood.com','doods.pro','ds2play.com','ds2video.com',
+  'd0o0d.com','do7go.com',
+];
+
+function isDoodUrl(url){
+  try{
+    const h = new URL(url).hostname.replace('www.','');
+    // cek exact match atau subdomain
+    if(DOOD_DOMAINS.some(d => h === d || h.endsWith('.'+d))) return true;
+    // pattern dood.*
+    if(/^dood?\.[a-z]{2,6}$/.test(h)) return true;
+    return false;
+  }catch{ return false; }
+}
+
+// Ekstrak file_code dari URL dood (bagian setelah /d/ atau /e/ atau /f/)
+function doodExtractCode(url){
+  try{
+    const m = new URL(url).pathname.match(/\/[def]\/([a-z0-9]+)/i);
+    return m ? m[1] : null;
+  }catch{ return null; }
+}
+
+// Canonical embed URL (doodstream selalu punya mirror, pakai dood.la yg paling stabil)
+function doodEmbedUrl(code){
+  return `https://dood.la/e/${code}`;
 }
 
 // ============================================================
@@ -391,6 +455,7 @@ function detectCDN(url){
     if(h.includes('fbcdn.net') || h.includes('scontent')) return 'facebook';
     if(h.includes('cdninstagram') || h.includes('instagram')) return 'instagram';
     if(h.includes('terabox') || h.includes('dubox') || h.includes('freeterabox')) return 'terabox';
+    if(isDoodUrl(url)) return 'doodstream';
   }catch{}
   return 'generic';
 }
@@ -422,17 +487,21 @@ async function fetchBlobWithFallback(rawUrl, cdn){
   const url = cleanCDNUrl(rawUrl, cdn);
 
   // 1. Coba langsung (works untuk TikTok, SoundCloud, dll)
-  try{
-    const r = await fetch(url, {
-      mode: 'cors',
-      cache: 'no-store',
-      referrerPolicy: 'no-referrer',
-    });
-    if(r.ok && r.headers.get('content-length') !== '0'){
-      const b = await r.blob();
-      if(b.size > 500) return {blob: b, usedUrl: url, method: 'direct'};
-    }
-  }catch(e){ console.log('[VaultDL] direct fetch failed:', e.message); }
+  // Skip direct fetch untuk CDN yang butuh Referer khusus
+  const needsReferer = ['twitter','facebook','doodstream'].includes(cdn);
+  if(!needsReferer){
+    try{
+      const r = await fetch(url, {
+        mode: 'cors',
+        cache: 'no-store',
+        referrerPolicy: 'no-referrer',
+      });
+      if(r.ok && r.headers.get('content-length') !== '0'){
+        const b = await r.blob();
+        if(b.size > 500) return {blob: b, usedUrl: url, method: 'direct'};
+      }
+    }catch(e){ console.log('[VaultDL] direct fetch failed:', e.message); }
+  }
 
   // 2. Coba tiap CORS proxy
   for(const proxy of CORS_PROXIES){
@@ -457,6 +526,10 @@ async function fetchBlobWithFallback(rawUrl, cdn){
 function buildVideoSrc(rawUrl, cdn){
   const url = cleanCDNUrl(rawUrl, cdn);
   if(cdn === 'twitter' || cdn === 'facebook'){
+    return CORS_PROXIES[0] + encodeURIComponent(url);
+  }
+  // doodstream CDN: cek Referer dood.* — pakai proxy
+  if(cdn === 'doodstream'){
     return CORS_PROXIES[0] + encodeURIComponent(url);
   }
   // terabox streaming_url sudah di-proxy oleh Robin API worker → langsung pakai
@@ -712,6 +785,363 @@ function retryTerabox(enc){
   doTeraboxSearch(url);
 }
 
+// ============================================================
+// DOODSTREAM — handler khusus
+// Strategi berlapis:
+//   Layer 1: api.ryzumi all-in-one (primer, 500+ platform)
+//   Layer 2: Native extraction via CORS proxy
+//            - fetch HTML → regex pass_md5 path + token
+//            - fetch pass_md5 dengan Referer spoofed → base URL
+//            - susun final URL + 10 char random + token
+//   Layer 3: Iframe embed /e/{code} sebagai player fallback
+// ============================================================
+async function doDoodSearch(url){
+  busy = true;
+  const p = {n:'Doodstream',c:'#ff6b35',bg:'rgba(255,107,53,.15)',ic:'DS'};
+  const btn = $('btn-s');
+  btn.disabled = true; btn.classList.add('loading');
+  setZ(`<div class="lc"><div class="lsp" style="border-top-color:#ff6b35"></div><p>Mengambil video dari Doodstream...</p><small>Mencoba 3 metode ekstraksi...</small></div>`);
+
+  // --- Layer 1: api.ryzumi ---
+  try{
+    const res = await fetch(`${API}?url=${encodeURIComponent(url)}`, {headers:{accept:'application/json'}});
+    if(res.ok){
+      const data = await res.json();
+      if(data.medias?.length){
+        renderResult(data, url, p);
+        saveHist(url, p, data.title || 'Doodstream Video');
+        toast(`${data.medias.length} format tersedia!`, 'success');
+        busy = false; btn.disabled = false; btn.classList.remove('loading');
+        return;
+      }
+    }
+  }catch(e){ console.log('[Dood] ryzumi failed:', e.message); }
+
+  // Update status
+  setZ(`<div class="lc"><div class="lsp" style="border-top-color:#ff6b35"></div><p>Mencoba ekstraksi langsung...</p><small>Bypass Cloudflare via proxy</small></div>`);
+
+  // --- Layer 2: Native extraction ---
+  const code = doodExtractCode(url);
+  if(code){
+    const result = await doodNativeExtract(url, code);
+    if(result){
+      renderDoodResult(result, url, p, code);
+      saveHist(url, p, result.title || 'Doodstream Video');
+      toast('Link video berhasil diekstrak!', 'success');
+      busy = false; btn.disabled = false; btn.classList.remove('loading');
+      return;
+    }
+  }
+
+  // --- Layer 3: Iframe embed fallback ---
+  setZ('');
+  if(code){
+    renderDoodEmbed(url, code, p);
+    saveHist(url, p, 'Doodstream Video');
+    toast('Menampilkan embed player Doodstream','info');
+  } else {
+    showDoodFallback(url);
+    toast('Tidak dapat mengekstrak — tampilkan opsi manual','warn');
+  }
+
+  busy = false; btn.disabled = false; btn.classList.remove('loading');
+}
+
+// Native extraction: fetch HTML via CORS proxy → parse pass_md5 → fetch base URL → assemble final link
+async function doodNativeExtract(pageUrl, code){
+  // Normalisasi ke dood.la (mirror paling stabil untuk ekstraksi)
+  const fetchUrl = `https://dood.la/d/${code}`;
+
+  for(const proxy of CORS_PROXIES){
+    try{
+      const proxyUrl = proxy + encodeURIComponent(fetchUrl);
+      const r = await fetch(proxyUrl, {cache:'no-store'});
+      if(!r.ok) continue;
+      const html = await r.text();
+      if(!html || html.length < 500) continue;
+
+      // Extract title
+      const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+      const title = titleMatch ? titleMatch[1].replace(/\s*[-|].*$/,'').trim() : 'Doodstream Video';
+
+      // Extract thumbnail
+      const thumbMatch = html.match(/og:image[^>]+content=["']([^"']+)/i) ||
+                         html.match(/poster=["']([^"']+)/i);
+      const thumbnail = thumbMatch ? thumbMatch[1] : '';
+
+      // Extract pass_md5 path — format: /pass_md5/{code}/{hash}
+      const passMd5Match = html.match(/\/pass_md5\/[a-z0-9]+\/[a-z0-9]+/i);
+      if(!passMd5Match) continue;
+      const passMd5Path = passMd5Match[0];
+
+      // Extract token — biasanya di dalam JS: token:'xxxxxxxx' atau &token=xxxxxxxx
+      const tokenMatch = html.match(/[?&'"]token['":\s=]+([a-z0-9]+)/i);
+      if(!tokenMatch) continue;
+      const token = tokenMatch[1];
+
+      // Fetch base URL via pass_md5 (perlu Referer = dood domain)
+      // Pakai proxy + header Referer tidak bisa dari browser, tapi corsproxy.io forward semua header
+      const passMd5Url = `https://dood.la${passMd5Path}`;
+      const passProxy  = proxy + encodeURIComponent(passMd5Url);
+
+      let baseUrl = null;
+      try{
+        const pr = await fetch(passProxy, {
+          cache: 'no-store',
+          headers: { 'Referer': 'https://dood.la/' }
+        });
+        if(pr.ok){
+          const txt = await pr.text();
+          // Response berupa URL CDN, misal: https://cdn.doodcdn.co/hls/.../ atau plain mp4 URL
+          baseUrl = txt.trim().replace(/['"]/g,'');
+        }
+      }catch(e){ console.log('[Dood native] pass_md5 fetch failed:', e.message); }
+
+      if(!baseUrl || !baseUrl.startsWith('http')) continue;
+
+      // Susun final URL: baseUrl + random(10) + ?token=TOKEN&expiry=TIMESTAMP
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      const rand10 = Array.from({length:10}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
+      const expiry = Date.now() + 3600000; // +1 jam
+      const finalUrl = `${baseUrl}${rand10}?token=${token}&expiry=${expiry}`;
+
+      return { title, thumbnail, finalUrl, token, passMd5Path, proxy };
+
+    }catch(e){ console.log('[Dood native] proxy failed:', proxy, e.message); }
+  }
+  return null;
+}
+
+function renderDoodResult(result, shareUrl, p, code){
+  const embedUrl = doodEmbedUrl(code);
+  const b64final = btoa(unescape(encodeURIComponent(result.finalUrl)));
+  const thumbH = result.thumbnail
+    ? `<img src="${esc(result.thumbnail)}" alt="" loading="lazy" style="width:100%;height:180px;object-fit:cover;display:block" onerror="this.style.display='none'">`
+    : `<div style="height:80px;display:flex;align-items:center;justify-content:center;font-size:2rem;background:var(--s2)">🎬</div>`;
+
+  setZ(`<div class="rc" style="border-color:rgba(255,107,53,.3)">
+  <div style="position:relative;overflow:hidden">
+    ${thumbH}
+    <div style="position:absolute;top:8px;left:8px;font-size:.6rem;font-weight:700;padding:3px 9px;border-radius:5px;background:rgba(255,107,53,.9);color:#fff">DOODSTREAM</div>
+  </div>
+  <div style="padding:14px 16px;border-bottom:1px solid var(--b1)">
+    <div style="font-size:.92rem;font-weight:600;line-height:1.35;margin-bottom:6px">${esc(result.title)}</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(shareUrl)}</div>
+  </div>
+  <div style="padding:10px 6px">
+    <div class="fi" style="border-color:rgba(255,107,53,.2);background:rgba(255,107,53,.05)">
+      <div class="fl">
+        <span class="qb2 q-best">Direct</span>
+        <span class="fe">MP4</span>
+        <span class="fnfo">Token valid ~60 mnt</span>
+      </div>
+      <div style="display:flex;gap:5px;align-items:center;flex-shrink:0">
+        <button class="dlb" style="background:rgba(255,107,53,.15);border-color:rgba(255,107,53,.4);color:#ff6b35"
+          onclick="doodDownload(this,'${b64final}','mp4')">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v7.5M3 6.5 6 10l3-3.5M1 11h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="dt">Download</span>
+        </button>
+        <button class="dlb" style="background:rgba(255,107,53,.12);border-color:rgba(255,107,53,.3);color:#ff6b35"
+          onclick="doodPreview(this,'${b64final}','${esc(result.title.replace(/'/g,"&apos;"))}')">
+          ▶ Preview
+        </button>
+        <button class="cpb" onclick="doodCopy('${b64final}')" title="Salin direct link">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="4.5" y="4.5" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M8.5 4.5V3A1.5 1.5 0 0 0 7 1.5H3A1.5 1.5 0 0 0 1.5 3v4A1.5 1.5 0 0 0 3 8.5h1.5" stroke="currentColor" stroke-width="1.3"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="fi" style="margin-top:4px">
+      <div class="fl">
+        <span class="qb2 q-low">Embed</span>
+        <span class="fe">Iframe</span>
+        <span class="fnfo">Buka player bawaan Doodstream</span>
+      </div>
+      <div style="display:flex;gap:5px;flex-shrink:0">
+        <button class="dlb" onclick="doodOpenEmbed('${esc(embedUrl)}')" style="gap:5px">
+          ▶ Buka Embed
+        </button>
+        <a href="${esc(embedUrl)}" target="_blank" class="cpb" title="Tab baru">
+          <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M4 1H1v9h9V7M6 1h4v4M10 1 5 6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+  <div style="padding:8px 16px 12px;font-size:.7rem;color:var(--t3);line-height:1.6;border-top:1px solid var(--b1)">
+    ⏱ Link direct <strong style="color:var(--am)">expire ~60 menit</strong> — download segera. Jika gagal, refresh halaman ini dan cari ulang.
+  </div>
+</div>`);
+}
+
+function renderDoodEmbed(shareUrl, code, p){
+  const embedUrl = doodEmbedUrl(code);
+  setZ(`<div class="rc" style="border-color:rgba(255,107,53,.3);animation:up .25s ease">
+  <div style="padding:14px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--b1)">
+    <div style="width:34px;height:34px;border-radius:9px;background:rgba(255,107,53,.15);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">🎬</div>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:.88rem;font-weight:600">Doodstream — Embed Player</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(shareUrl)}</div>
+    </div>
+    <div style="font-size:.62rem;font-weight:700;padding:3px 9px;border-radius:6px;background:rgba(255,107,53,.15);color:#ff6b35;border:1px solid rgba(255,107,53,.3);flex-shrink:0">DOOD</div>
+  </div>
+
+  <div style="padding:12px">
+    <!-- Iframe embed Doodstream -->
+    <div style="position:relative;padding-bottom:56.25%;height:0;border-radius:8px;overflow:hidden;background:#000">
+      <iframe
+        src="${esc(embedUrl)}"
+        frameborder="0"
+        allowfullscreen
+        scrolling="no"
+        allow="autoplay; fullscreen"
+        referrerpolicy="no-referrer"
+        style="position:absolute;top:0;left:0;width:100%;height:100%;border:0"
+        loading="lazy">
+      </iframe>
+    </div>
+  </div>
+
+  <div style="padding:8px 14px 14px;display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--b1)">
+    <a href="${esc(embedUrl)}" target="_blank"
+      style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:rgba(255,107,53,.15);border:1px solid rgba(255,107,53,.3);border-radius:8px;color:#ff6b35;font-size:.76rem;font-weight:600;text-decoration:none;transition:.15s"
+      onmouseover="this.style.background='#ff6b35';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,107,53,.15)';this.style.color='#ff6b35'">
+      ↗ Buka Embed di Tab Baru
+    </a>
+    <a href="${esc(shareUrl)}" target="_blank"
+      style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--bg1);border:1px solid rgba(79,142,255,.3);border-radius:8px;color:var(--bl2);font-size:.76rem;font-weight:600;text-decoration:none;transition:.15s"
+      onmouseover="this.style.background='var(--bl)';this.style.color='#fff'" onmouseout="this.style.background='var(--bg1)';this.style.color='var(--bl2)'">
+      🌐 Buka Halaman Asli
+    </a>
+  </div>
+
+  <div style="padding:0 14px 12px;font-size:.7rem;color:var(--t3);line-height:1.65">
+    💡 Di dalam player: klik tombol <strong style="color:var(--am)">⋮</strong> atau <strong style="color:var(--am)">Download</strong> yang muncul saat video berjalan untuk menyimpan file.
+  </div>
+</div>`);
+}
+
+function showDoodFallback(url){
+  setZ(`<div class="ec" style="flex-direction:column;background:rgba(255,107,53,.07);border-color:rgba(255,107,53,.3);animation:up .25s ease">
+    <div style="display:flex;gap:12px;align-items:center">
+      <div class="ei">🎬</div>
+      <div>
+        <div class="et" style="color:#ff6b35">Doodstream Terdeteksi</div>
+        <div class="es">Semua metode ekstraksi gagal (Cloudflare aktif). Gunakan opsi di bawah.</div>
+      </div>
+    </div>
+    <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
+      <button onclick="retryDood('${encodeURIComponent(url)}')"
+        style="display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(255,107,53,.15);border:1px solid rgba(255,107,53,.3);color:#ff6b35;padding:12px 14px;border-radius:8px;font-size:.82rem;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:.2s"
+        onmouseover="this.style.background='rgba(255,107,53,.3)'" onmouseout="this.style.background='rgba(255,107,53,.15)'">
+        🔄 Coba Lagi
+      </button>
+      <a href="${url}" target="_blank"
+        style="display:flex;align-items:center;gap:8px;background:var(--bg1);border:1px solid rgba(79,142,255,.3);color:var(--bl2);text-decoration:none;padding:12px 14px;border-radius:8px;font-size:.82rem;font-weight:600;transition:.2s"
+        onmouseover="this.style.background='var(--bl)';this.style.color='#fff'" onmouseout="this.style.background='var(--bg1)';this.style.color='var(--bl2)'">
+        ↗ Buka di Browser
+      </a>
+    </div>
+  </div>`);
+}
+
+async function doodDownload(btn, b64, ext){
+  if(btn.disabled) return;
+  btn.disabled = true;
+  const dt = btn.querySelector('.dt');
+  const orig = dt?.textContent || 'Download';
+  if(dt) dt.textContent = '⏳...';
+  btn.style.cssText = 'background:var(--am);border-color:var(--am);color:#fff;cursor:wait';
+
+  let dlUrl;
+  try{ dlUrl = decodeURIComponent(escape(atob(b64))); }
+  catch{ toast('URL tidak valid','error'); reset(); return; }
+
+  const fname = `VaultDL_dood_${Date.now()}.${ext||'mp4'}`;
+
+  // Doodstream CDN: perlu Referer dood.* — coba via proxy
+  const result = await fetchBlobWithFallback(dlUrl, 'doodstream');
+  if(result){
+    downloadBlob(result.blob, fname);
+    btn.style.cssText = 'background:var(--gn);border-color:var(--gn);color:#fff';
+    if(dt) dt.textContent = '✓ Selesai';
+    toast('Download Doodstream berhasil!','success');
+    setTimeout(reset, 3000);
+    return;
+  }
+
+  // Fallback: anchor + tab baru
+  const a = document.createElement('a');
+  a.href = dlUrl; a.download = fname; a.target = '_blank'; a.rel = 'noopener'; a.style.display = 'none';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  btn.style.cssText = 'background:var(--gn);border-color:var(--gn);color:#fff';
+  if(dt) dt.textContent = '↗ Tab Baru';
+  toast('Dibuka di tab baru — jika tidak mulai, 📋 salin link ke IDM','info');
+  setTimeout(reset, 4000);
+
+  function reset(){ btn.style.cssText=''; if(dt) dt.textContent=orig; btn.disabled=false; }
+}
+
+function doodPreview(btn, b64, title){
+  let url;
+  try{ url = decodeURIComponent(escape(atob(b64))); }
+  catch{ toast('URL tidak valid','error'); return; }
+  btn.style.cssText = 'background:var(--gn);border-color:var(--gn);color:#ff6b35';
+  btn.textContent = '▶ Playing';
+  showInlinePlayer(url, 'doodstream', `${title||'dood'}.mp4`);
+  toast('Preview Doodstream — klik kanan video → Simpan untuk download','info');
+  setTimeout(()=>{ btn.style.cssText=''; btn.textContent='▶ Preview'; }, 4000);
+}
+
+async function doodCopy(b64){
+  let url;
+  try{ url = decodeURIComponent(escape(atob(b64))); }
+  catch{ toast('URL tidak valid','error'); return; }
+  try{
+    await navigator.clipboard.writeText(url);
+    toast('Direct link disalin! Paste ke IDM / 1DM / address bar','success');
+  }catch{
+    const ta = document.createElement('textarea');
+    ta.value = url; ta.style.cssText = 'position:fixed;opacity:0;left:-9999px';
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    toast('Link disalin!','success');
+  }
+}
+
+function doodOpenEmbed(embedUrl){
+  const old = document.getElementById('dood-embed-popup');
+  if(old) old.remove();
+
+  const wrap = document.createElement('div');
+  wrap.id = 'dood-embed-popup';
+  wrap.style.cssText = 'background:var(--s1);border:1px solid rgba(255,107,53,.3);border-radius:12px;padding:14px;margin-bottom:12px;animation:up .25s ease';
+  wrap.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <span style="font-size:.78rem;font-weight:600;color:#ff6b35">🎬 Doodstream Player</span>
+      <button onclick="document.getElementById('dood-embed-popup').remove()"
+        style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:1rem;padding:2px 6px">✕</button>
+    </div>
+    <div style="position:relative;padding-bottom:56.25%;height:0;border-radius:8px;overflow:hidden;background:#000">
+      <iframe src="${esc(embedUrl)}" frameborder="0" allowfullscreen scrolling="no"
+        allow="autoplay; fullscreen" referrerpolicy="no-referrer"
+        style="position:absolute;top:0;left:0;width:100%;height:100%;border:0" loading="lazy">
+      </iframe>
+    </div>
+    <div style="margin-top:10px;font-size:.7rem;color:var(--t3);line-height:1.6">
+      💡 Klik tombol <strong style="color:var(--am)">Download</strong> di dalam player Doodstream untuk menyimpan video.
+    </div>`;
+
+  const z = $('zone');
+  z.insertBefore(wrap, z.firstChild);
+  wrap.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function retryDood(enc){
+  const url = decodeURIComponent(enc);
+  $('url-input').value = url;
+  onIn();
+  doDoodSearch(url);
+}
+
 async function doSearch(){
   let url=$('url-input').value.trim();
   if(!isUrl(url)||busy)return;
@@ -765,6 +1195,12 @@ async function doSearch(){
   // === INTERCEPTOR TERABOX ===
   if(isTeraboxUrl(url)){
     doTeraboxSearch(url);
+    return;
+  }
+
+  // === INTERCEPTOR DOODSTREAM ===
+  if(isDoodUrl(url)){
+    doDoodSearch(url);
     return;
   }
 
