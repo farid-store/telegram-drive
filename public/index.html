@@ -10,26 +10,22 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg:#07070d;--s1:#0e0e18;--s2:#151521;--s3:#1c1c2a;
-  --b1:rgba(255,255,255,.055);--b2:rgba(255,255,255,.1);--b3:rgba(255,255,255,.16);
+  --b1:rgba(255,255,255,.055);--b2:rgba(255,255,255,.1);
   --tx:#f0f0fa;--t2:rgba(240,240,250,.5);--t3:rgba(240,240,250,.27);
   --bl:#4f8eff;--bl2:#8ab4ff;--bg1:rgba(79,142,255,.14);--bg2:rgba(79,142,255,.07);
   --gn:#00d48a;--rd:#ff4d6d;--am:#ffb040;--vi:#b48aff;--cy:#22d6ee;
-  --r:14px;--r2:9px;--r3:7px;
+  --r:14px;--r2:9px;
 }
 html{scroll-behavior:smooth}
 body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
 .amb{position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 65% 45% at 0% 0%,rgba(79,142,255,.07),transparent 65%),radial-gradient(ellipse 50% 60% at 100% 100%,rgba(180,138,255,.05),transparent 65%)}
 .gbg{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(var(--b1) 1px,transparent 1px),linear-gradient(90deg,var(--b1) 1px,transparent 1px);background-size:52px 52px;opacity:.6;mask-image:radial-gradient(ellipse 90% 90% at 50% 30%,black,transparent)}
-
-nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:54px;background:rgba(7,7,13,.85);backdrop-filter:blur(24px) saturate(150%);border-bottom:1px solid var(--b1)}
+nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:54px;background:rgba(7,7,13,.85);backdrop-filter:blur(24px);border-bottom:1px solid var(--b1)}
 .logo{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:1rem;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
 .logo-icon{width:26px;height:26px;background:linear-gradient(135deg,var(--bl),var(--vi));border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px}
-.logo b{color:var(--bl);font-style:normal}
+.logo b{color:var(--bl)}
 .nbadge{font-size:.63rem;font-weight:600;padding:3px 9px;border-radius:20px;background:var(--bg1);border:1px solid rgba(79,142,255,.22);color:var(--bl2)}
-
 .pg{position:relative;z-index:1;max-width:780px;margin:0 auto;padding:56px 1.5rem 80px}
-
-/* hero */
 .hero{text-align:center;margin-bottom:36px}
 .hero-pill{display:inline-flex;align-items:center;gap:7px;font-size:.67rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--bl2);margin-bottom:18px;padding:5px 12px;border-radius:20px;border:1px solid rgba(79,142,255,.2);background:var(--bg2)}
 .live-dot{width:6px;height:6px;border-radius:50%;background:var(--gn);animation:blink 2s infinite}
@@ -37,8 +33,6 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-co
 h1{font-size:clamp(2rem,5.5vw,3.4rem);font-weight:700;line-height:1.06;letter-spacing:-.04em;margin-bottom:12px}
 h1 em{font-style:normal;background:linear-gradient(135deg,var(--bl),var(--vi));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .hero-sub{font-size:.95rem;color:var(--t2);line-height:1.7;max-width:460px;margin:0 auto}
-
-/* platform scroll */
 .plts-wrap{position:relative;margin:20px 0 32px;overflow:hidden}
 .plts-wrap::before,.plts-wrap::after{content:'';position:absolute;top:0;bottom:0;width:40px;z-index:2;pointer-events:none}
 .plts-wrap::before{left:0;background:linear-gradient(90deg,var(--bg),transparent)}
@@ -48,8 +42,6 @@ h1 em{font-style:normal;background:linear-gradient(135deg,var(--bl),var(--vi));-
 .pt{display:flex;align-items:center;gap:6px;font-size:.7rem;font-weight:600;padding:5px 12px;border-radius:7px;border:1px solid var(--b2);background:var(--s1);color:var(--t2);white-space:nowrap;cursor:default;flex-shrink:0;transition:.15s}
 .pt:hover{border-color:var(--bl);color:var(--tx)}
 .pt-ic{width:16px;height:16px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;flex-shrink:0}
-
-/* input */
 .main-card{background:var(--s1);border:1px solid var(--b2);border-radius:var(--r);padding:20px;margin-bottom:16px;position:relative;overflow:hidden}
 .main-card::before{content:'';position:absolute;top:-1px;left:50%;transform:translateX(-50%);width:200px;height:1px;background:linear-gradient(90deg,transparent,var(--bl),transparent)}
 .search-row{display:flex;gap:8px}
@@ -59,30 +51,23 @@ h1 em{font-style:normal;background:linear-gradient(135deg,var(--bl),var(--vi));-
 .btn-search{background:var(--bl);color:#fff;border:none;border-radius:var(--r2);padding:13px 20px;font-family:'Space Grotesk',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:.2s;display:flex;align-items:center;gap:7px;min-width:130px;justify-content:center}
 .btn-search:hover{background:#6ca0ff;transform:translateY(-1px)}
 .btn-search:disabled{opacity:.35;cursor:not-allowed;transform:none}
-.spsm{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:rot .6s linear infinite;display:none;flex-shrink:0}
+.spsm{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:rot .6s linear infinite;display:none}
 .btn-search.loading .spsm{display:block}
 .btn-search.loading .ico-s{display:none}
 @keyframes rot{to{transform:rotate(360deg)}}
 .quick-row{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
 .qb{font-size:.69rem;padding:4px 10px;border-radius:5px;border:1px solid var(--b1);background:transparent;color:var(--t3);cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:.14s}
 .qb:hover{border-color:var(--b2);color:var(--t2);background:var(--s2)}
-
 #zone{margin-bottom:14px}
-
-/* loading */
 .lc{background:var(--s1);border:1px solid var(--b2);border-radius:var(--r);padding:32px;text-align:center}
 .lsp{width:32px;height:32px;border:2px solid var(--b2);border-top-color:var(--bl);border-radius:50%;animation:rot .7s linear infinite;margin:0 auto 12px}
 .lc p{font-size:.85rem;color:var(--t2)}
 .lc small{font-size:.72rem;color:var(--t3);display:block;margin-top:4px}
-
-/* error */
 .ec{background:rgba(255,77,109,.06);border:1px solid rgba(255,77,109,.18);border-radius:var(--r);padding:16px 18px;display:flex;gap:12px;animation:up .2s ease}
-.ei{font-size:1.2rem;flex-shrink:0;margin-top:1px}
+.ei{font-size:1.2rem;flex-shrink:0}
 .et{font-size:.87rem;font-weight:600;color:rgba(255,77,109,.95)}
 .es{font-size:.73rem;color:var(--t2);margin-top:4px;line-height:1.55}
 @keyframes up{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-
-/* result */
 .rc{background:var(--s1);border:1px solid var(--b2);border-radius:var(--r);overflow:hidden;animation:up .25s ease}
 .vi{display:flex}
 .vth{position:relative;flex-shrink:0;width:220px;background:var(--s2);overflow:hidden}
@@ -96,8 +81,6 @@ h1 em{font-style:normal;background:linear-gradient(135deg,var(--bl),var(--vi));-
 .vau::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--t3)}
 .vsrc{font-size:.68rem;color:var(--t3)}
 .vur{font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-/* format panel */
 .fp{border-top:1px solid var(--b1)}
 .fts{display:flex;padding:0 4px;border-bottom:1px solid var(--b1);gap:2px}
 .ft{flex:1;padding:10px 8px;background:none;border:none;font-family:'Space Grotesk',sans-serif;font-size:.74rem;font-weight:600;color:var(--t2);cursor:pointer;transition:.15s;border-bottom:2px solid transparent;margin-bottom:-1px;display:flex;align-items:center;justify-content:center;gap:5px}
@@ -107,55 +90,49 @@ h1 em{font-style:normal;background:linear-gradient(135deg,var(--bl),var(--vi));-
 .ft.on .tc{background:var(--bg1);color:var(--bl2)}
 .fg{display:none;padding:6px}
 .fg.on{display:block}
-
-/* format item */
 .fi{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;border-radius:8px;transition:.14s;border:1px solid transparent}
 .fi:hover{background:var(--s2);border-color:var(--b2)}
 .fl{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
 .qb2{font-family:'JetBrains Mono',monospace;font-size:.72rem;font-weight:600;padding:3px 9px;border-radius:5px;white-space:nowrap;flex-shrink:0;min-width:70px;text-align:center}
-.q-4k  {background:rgba(34,214,238,.1); color:var(--cy); border:1px solid rgba(34,214,238,.2)}
-.q-1440{background:rgba(79,142,255,.1); color:var(--bl2);border:1px solid rgba(79,142,255,.2)}
-.q-1080{background:rgba(180,138,255,.1);color:var(--vi); border:1px solid rgba(180,138,255,.2)}
-.q-720 {background:rgba(0,212,138,.1);  color:var(--gn); border:1px solid rgba(0,212,138,.2)}
-.q-480 {background:rgba(255,176,64,.1); color:var(--am); border:1px solid rgba(255,176,64,.2)}
+.q-4k  {background:rgba(34,214,238,.1);color:var(--cy);border:1px solid rgba(34,214,238,.2)}
+.q-1440{background:rgba(79,142,255,.1);color:var(--bl2);border:1px solid rgba(79,142,255,.2)}
+.q-1080{background:rgba(180,138,255,.1);color:var(--vi);border:1px solid rgba(180,138,255,.2)}
+.q-720 {background:rgba(0,212,138,.1);color:var(--gn);border:1px solid rgba(0,212,138,.2)}
+.q-480 {background:rgba(255,176,64,.1);color:var(--am);border:1px solid rgba(255,176,64,.2)}
 .q-low {background:rgba(240,240,250,.06);color:var(--t2);border:1px solid var(--b2)}
 .q-audio{background:rgba(240,240,250,.04);color:var(--t3);border:1px solid var(--b1)}
-.q-hd  {background:rgba(0,212,138,.1);  color:var(--gn); border:1px solid rgba(0,212,138,.2)}
-.q-nowm{background:rgba(79,142,255,.1); color:var(--bl2);border:1px solid rgba(79,142,255,.2)}
+.q-hd  {background:rgba(0,212,138,.1);color:var(--gn);border:1px solid rgba(0,212,138,.2)}
+.q-nowm{background:rgba(79,142,255,.1);color:var(--bl2);border:1px solid rgba(79,142,255,.2)}
 .q-wm  {background:rgba(240,240,250,.06);color:var(--t2);border:1px solid var(--b2)}
-.q-best{background:rgba(255,176,64,.1); color:var(--am); border:1px solid rgba(255,176,64,.2)}
+.q-best{background:rgba(255,176,64,.1);color:var(--am);border:1px solid rgba(255,176,64,.2)}
 .fe{font-size:.68rem;font-weight:600;color:var(--t2);text-transform:uppercase;flex-shrink:0}
 .fnfo{font-size:.68rem;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-.dlb{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;background:var(--bg1);border:1px solid rgba(79,142,255,.3);border-radius:7px;color:var(--bl2);font-family:'Space Grotesk',sans-serif;font-size:.73rem;font-weight:600;text-decoration:none;transition:all .2s;white-space:nowrap;flex-shrink:0;cursor:pointer;min-width:100px;justify-content:center}
-.dlb:hover{background:var(--bl);border-color:var(--bl);color:#fff;transform:translateY(-1px)}
-.dlb.busy{pointer-events:none;opacity:.8}
-.dlb svg{flex-shrink:0}
-
+.dlb{display:inline-flex;align-items:center;gap:5px;padding:7px 12px;background:var(--bg1);border:1px solid rgba(79,142,255,.3);border-radius:7px;color:var(--bl2);font-family:'Space Grotesk',sans-serif;font-size:.72rem;font-weight:600;cursor:pointer;transition:.15s;white-space:nowrap;flex-shrink:0}
+.dlb:hover{background:var(--bl);border-color:var(--bl);color:#fff}
+.dlb:disabled{opacity:.5;cursor:not-allowed}
+.cpb{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;background:var(--s2);border:1px solid var(--b2);border-radius:7px;color:var(--t2);cursor:pointer;transition:.15s;flex-shrink:0;padding:0}
+.cpb:hover{background:var(--s3);color:var(--tx)}
 .ni{padding:14px;text-align:center;font-size:.78rem;color:var(--t2)}
-
-/* sections */
+.guide{background:rgba(255,176,64,.07);border:1px solid rgba(255,176,64,.22);border-radius:10px;padding:12px 15px;margin-bottom:12px;font-size:.77rem;line-height:1.65;animation:up .2s ease;position:relative}
+.guide strong{color:var(--am)}
+.guide-title{font-weight:700;color:var(--am);margin-bottom:6px;font-size:.8rem;display:block}
+.guide-close{position:absolute;top:10px;right:12px;background:none;border:none;color:var(--t3);cursor:pointer;font-size:1rem;line-height:1;padding:0}
+.guide-close:hover{color:var(--am)}
 .sec{margin-top:42px}
 .sh{font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);margin-bottom:12px;display:flex;align-items:center;gap:8px}
 .sh::after{content:'';flex:1;height:1px;background:var(--b1)}
-
-/* platform grid */
 .pg2{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px}
 .pc{display:flex;align-items:center;gap:8px;background:var(--s1);border:1px solid var(--b1);border-radius:9px;padding:9px 12px;transition:.15s}
 .pc:hover{border-color:var(--b2);background:var(--s2)}
 .pc-ic{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0}
 .pc-n{font-size:.74rem;font-weight:600}
 .pc-c{font-size:.62rem;color:var(--t3)}
-
-/* features */
 .fg2{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
 .fc{background:var(--s1);border:1px solid var(--b1);border-radius:11px;padding:14px;transition:.2s}
 .fc:hover{border-color:var(--b2)}
 .fci{font-size:1.1rem;margin-bottom:8px}
 .fc h4{font-size:.78rem;font-weight:600;margin-bottom:3px}
 .fc p{font-size:.68rem;color:var(--t2);line-height:1.55}
-
-/* history */
 .hl{display:flex;flex-direction:column;gap:5px}
 .hi{display:flex;align-items:center;gap:10px;background:var(--s1);border:1px solid var(--b1);border-radius:9px;padding:10px 13px;cursor:pointer;transition:.15s}
 .hi:hover{border-color:var(--b2);background:var(--s2)}
@@ -164,15 +141,11 @@ h1 em{font-style:normal;background:linear-gradient(135deg,var(--bl),var(--vi));-
 .hm{font-size:.65rem;color:var(--t3);flex-shrink:0}
 .hd{width:5px;height:5px;border-radius:50%;background:var(--gn);flex-shrink:0}
 .he{text-align:center;padding:20px;font-size:.77rem;color:var(--t3)}
-
 #ts{position:fixed;bottom:18px;right:18px;z-index:999;display:flex;flex-direction:column;gap:6px}
-.to{display:flex;align-items:center;gap:8px;background:var(--s2);border:1px solid var(--b2);border-radius:9px;padding:10px 14px;font-size:.76rem;animation:up .22s ease;max-width:280px;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.to{display:flex;align-items:center;gap:8px;background:var(--s2);border:1px solid var(--b2);border-radius:9px;padding:10px 14px;font-size:.76rem;animation:up .22s ease;max-width:300px;box-shadow:0 4px 20px rgba(0,0,0,.3)}
 .td{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-
 footer{position:relative;z-index:1;border-top:1px solid var(--b1);text-align:center;padding:22px;font-size:.7rem;color:var(--t3)}
 footer a{color:var(--t2);text-decoration:none}
-footer a:hover{color:var(--tx)}
-
 @media(max-width:540px){
   .vi{flex-direction:column}
   .vth,.vth img,.vth-ph{width:100%;height:180px}
@@ -185,20 +158,16 @@ footer a:hover{color:var(--tx)}
 </head>
 <body>
 <div class="amb"></div><div class="gbg"></div>
-
 <nav>
   <div class="logo"><div class="logo-icon">⬇</div>vault<b>dl</b></div>
   <div class="nbadge">500+ Platform</div>
 </nav>
-
 <div class="pg">
-
 <div class="hero">
   <div class="hero-pill"><div class="live-dot"></div>Gratis · No Login · No Watermark</div>
   <h1>Download video dari<br/><em>platform apapun</em></h1>
-  <p class="hero-sub">YouTube, TikTok, Instagram, Twitter, Facebook, Reddit, Vimeo, dan 500+ platform lainnya — cukup paste URL.</p>
+  <p class="hero-sub">YouTube, TikTok, Instagram, Twitter, Facebook, Reddit, Vimeo, dan 500+ platform — cukup paste URL.</p>
 </div>
-
 <div class="plts-wrap">
   <div class="plts-track" id="ptrack">
     <div class="pt"><div class="pt-ic" style="background:rgba(255,51,51,.2);color:#ff3333">YT</div>YouTube</div>
@@ -214,14 +183,11 @@ footer a:hover{color:var(--tx)}
     <div class="pt"><div class="pt-ic" style="background:rgba(0,102,220,.2);color:#0066dc">DM</div>Dailymotion</div>
     <div class="pt"><div class="pt-ic" style="background:rgba(230,0,35,.2);color:#e60023">PT</div>Pinterest</div>
     <div class="pt"><div class="pt-ic" style="background:rgba(10,102,194,.2);color:#0a66c2">LI</div>LinkedIn</div>
-    <div class="pt"><div class="pt-ic" style="background:rgba(0,140,255,.2);color:#008cff">OK</div>OK.ru</div>
     <div class="pt"><div class="pt-ic" style="background:rgba(133,199,66,.2);color:#85c742">RM</div>Rumble</div>
-    <div class="pt"><div class="pt-ic" style="background:rgba(27,183,110,.2);color:#1bb76e">IM</div>Imgur</div>
     <div class="pt"><div class="pt-ic" style="background:rgba(38,165,228,.2);color:#26a5e4">TG</div>Telegram</div>
     <div class="pt"><div class="pt-ic" style="background:rgba(100,100,100,.2);color:#aaa">+</div>+500 lainnya</div>
   </div>
 </div>
-
 <div class="main-card">
   <div class="search-row">
     <input class="url-input" id="url-input" type="url"
@@ -245,449 +211,393 @@ footer a:hover{color:var(--tx)}
     <button class="qb" onclick="doClear()">✕ Hapus</button>
   </div>
 </div>
-
 <div id="zone"></div>
-
 <div class="sec">
   <div class="sh">Platform Didukung</div>
   <div class="pg2">
-    <div class="pc"><div class="pc-ic" style="background:rgba(255,51,51,.15);color:#ff3333">YT</div><div><div class="pc-n">YouTube</div><div class="pc-c">Video & Shorts</div></div></div>
+    <div class="pc"><div class="pc-ic" style="background:rgba(255,51,51,.15);color:#ff3333">YT</div><div><div class="pc-n">YouTube</div><div class="pc-c">Video &amp; Shorts</div></div></div>
     <div class="pc"><div class="pc-ic" style="background:rgba(255,45,85,.15);color:#ff2d55">TT</div><div><div class="pc-n">TikTok</div><div class="pc-c">No Watermark</div></div></div>
-    <div class="pc"><div class="pc-ic" style="background:rgba(225,48,108,.15);color:#e1306c">IG</div><div><div class="pc-n">Instagram</div><div class="pc-c">Reels & Posts</div></div></div>
-    <div class="pc"><div class="pc-ic" style="background:rgba(24,119,242,.15);color:#1877f2">FB</div><div><div class="pc-n">Facebook</div><div class="pc-c">Video & Reels</div></div></div>
-    <div class="pc"><div class="pc-ic" style="background:rgba(29,155,240,.15);color:#1d9bf0">TW</div><div><div class="pc-n">Twitter/X</div><div class="pc-c">Video & GIF</div></div></div>
-    <div class="pc"><div class="pc-ic" style="background:rgba(255,69,0,.15);color:#ff4500">RD</div><div><div class="pc-n">Reddit</div><div class="pc-c">Video & GIF</div></div></div>
+    <div class="pc"><div class="pc-ic" style="background:rgba(225,48,108,.15);color:#e1306c">IG</div><div><div class="pc-n">Instagram</div><div class="pc-c">Reels &amp; Posts</div></div></div>
+    <div class="pc"><div class="pc-ic" style="background:rgba(24,119,242,.15);color:#1877f2">FB</div><div><div class="pc-n">Facebook</div><div class="pc-c">Video &amp; Reels</div></div></div>
+    <div class="pc"><div class="pc-ic" style="background:rgba(29,155,240,.15);color:#1d9bf0">TW</div><div><div class="pc-n">Twitter/X</div><div class="pc-c">Video &amp; GIF</div></div></div>
+    <div class="pc"><div class="pc-ic" style="background:rgba(255,69,0,.15);color:#ff4500">RD</div><div><div class="pc-n">Reddit</div><div class="pc-c">Video &amp; GIF</div></div></div>
     <div class="pc"><div class="pc-ic" style="background:rgba(26,183,234,.15);color:#1ab7ea">VM</div><div><div class="pc-n">Vimeo</div><div class="pc-c">HD Video</div></div></div>
     <div class="pc"><div class="pc-ic" style="background:rgba(255,85,0,.15);color:#ff5500">SC</div><div><div class="pc-n">SoundCloud</div><div class="pc-c">Audio</div></div></div>
-    <div class="pc"><div class="pc-ic" style="background:rgba(145,71,255,.15);color:#9147ff">TV</div><div><div class="pc-n">Twitch</div><div class="pc-c">Clips & VOD</div></div></div>
+    <div class="pc"><div class="pc-ic" style="background:rgba(145,71,255,.15);color:#9147ff">TV</div><div><div class="pc-n">Twitch</div><div class="pc-c">Clips &amp; VOD</div></div></div>
     <div class="pc"><div class="pc-ic" style="background:rgba(0,161,214,.15);color:#00a1d6">BL</div><div><div class="pc-n">Bilibili</div><div class="pc-c">Video</div></div></div>
     <div class="pc"><div class="pc-ic" style="background:rgba(0,102,220,.15);color:#0066dc">DM</div><div><div class="pc-n">Dailymotion</div><div class="pc-c">Video</div></div></div>
-    <div class="pc"><div class="pc-ic" style="background:rgba(230,0,35,.15);color:#e60023">PT</div><div><div class="pc-n">Pinterest</div><div class="pc-c">Video & GIF</div></div></div>
+    <div class="pc"><div class="pc-ic" style="background:rgba(230,0,35,.15);color:#e60023">PT</div><div><div class="pc-n">Pinterest</div><div class="pc-c">Video &amp; GIF</div></div></div>
   </div>
 </div>
-
 <div class="sec">
-  <div class="sh">Fitur Unggulan</div>
+  <div class="sh">Fitur</div>
   <div class="fg2">
-    <div class="fc"><div class="fci">🎯</div><h4>Universal</h4><p>Satu URL untuk semua — cukup paste URL dari platform manapun</p></div>
-    <div class="fc"><div class="fci">🚫</div><h4>No Watermark</h4><p>TikTok, Instagram, Facebook bersih tanpa logo</p></div>
-    <div class="fc"><div class="fci">📊</div><h4>Multi Kualitas</h4><p>4K hingga 144p, audio MP3/M4A/Opus/FLAC</p></div>
-    <div class="fc"><div class="fci">⚡</div><h4>Tanpa Server</h4><p>Request langsung dari browser — cepat & privat</p></div>
-    <div class="fc"><div class="fci">🔒</div><h4>Zero Log</h4><p>URL tidak pernah disimpan di server manapun</p></div>
-    <div class="fc"><div class="fci">📱</div><h4>Semua Device</h4><p>HP, tablet, dan desktop — responsive sempurna</p></div>
+    <div class="fc"><div class="fci">🎯</div><h4>Universal</h4><p>Cukup paste URL dari platform manapun</p></div>
+    <div class="fc"><div class="fci">🚫</div><h4>No Watermark</h4><p>TikTok, Instagram, Facebook bersih</p></div>
+    <div class="fc"><div class="fci">📊</div><h4>Multi Kualitas</h4><p>4K, 1080p, 720p, audio M4A/Opus/MP3</p></div>
+    <div class="fc"><div class="fci">📋</div><h4>Copy Link</h4><p>Salin link untuk IDM atau download manager</p></div>
+    <div class="fc"><div class="fci">🔒</div><h4>Zero Log</h4><p>URL tidak pernah disimpan di server</p></div>
+    <div class="fc"><div class="fci">📱</div><h4>Semua Device</h4><p>HP, tablet, desktop — responsive sempurna</p></div>
   </div>
 </div>
-
 <div class="sec">
-  <div class="sh">Riwayat Download</div>
+  <div class="sh">Riwayat</div>
   <div class="hl" id="hl"></div>
   <div class="he" id="he">Belum ada riwayat. Download video pertamamu!</div>
 </div>
-
 </div>
-
 <div id="ts"></div>
-
 <footer>
-  <p>VaultDL · API by <a href="https://api.ryzumi.net" target="_blank">api.ryzumi.net</a> · Gratis & Open</p>
+  <p>VaultDL &middot; API by <a href="https://api.ryzumi.net" target="_blank">api.ryzumi.net</a></p>
   <p style="margin-top:5px;opacity:.5">Untuk keperluan pribadi. Hormati hak cipta konten creator.</p>
 </footer>
-
 <script>
-/* ══════════════════════════════════════════
-   PLATFORM MAP
-══════════════════════════════════════════ */
-const PLAT = {
-  'youtube.com':    {n:'YouTube',    c:'#ff3333',bg:'rgba(255,51,51,.15)',  ic:'YT'},
-  'youtu.be':       {n:'YouTube',    c:'#ff3333',bg:'rgba(255,51,51,.15)',  ic:'YT'},
-  'tiktok.com':     {n:'TikTok',    c:'#ff2d55',bg:'rgba(255,45,85,.15)',  ic:'TT'},
-  'vm.tiktok.com':  {n:'TikTok',    c:'#ff2d55',bg:'rgba(255,45,85,.15)',  ic:'TT'},
-  'instagram.com':  {n:'Instagram',  c:'#e1306c',bg:'rgba(225,48,108,.15)',ic:'IG'},
-  'facebook.com':   {n:'Facebook',   c:'#1877f2',bg:'rgba(24,119,242,.15)',ic:'FB'},
-  'fb.watch':       {n:'Facebook',   c:'#1877f2',bg:'rgba(24,119,242,.15)',ic:'FB'},
-  'twitter.com':    {n:'Twitter',    c:'#1d9bf0',bg:'rgba(29,155,240,.15)',ic:'TW'},
-  'x.com':          {n:'Twitter',    c:'#1d9bf0',bg:'rgba(29,155,240,.15)',ic:'TW'},
-  't.co':           {n:'Twitter',    c:'#1d9bf0',bg:'rgba(29,155,240,.15)',ic:'TW'},
-  'reddit.com':     {n:'Reddit',     c:'#ff4500',bg:'rgba(255,69,0,.15)',  ic:'RD'},
-  'redd.it':        {n:'Reddit',     c:'#ff4500',bg:'rgba(255,69,0,.15)',  ic:'RD'},
-  'vimeo.com':      {n:'Vimeo',      c:'#1ab7ea',bg:'rgba(26,183,234,.15)',ic:'VM'},
-  'twitch.tv':      {n:'Twitch',     c:'#9147ff',bg:'rgba(145,71,255,.15)',ic:'TV'},
-  'clips.twitch.tv':{n:'Twitch',     c:'#9147ff',bg:'rgba(145,71,255,.15)',ic:'TV'},
-  'soundcloud.com': {n:'SoundCloud', c:'#ff5500',bg:'rgba(255,85,0,.15)', ic:'SC'},
-  'bilibili.com':   {n:'Bilibili',   c:'#00a1d6',bg:'rgba(0,161,214,.15)',ic:'BL'},
-  'b23.tv':         {n:'Bilibili',   c:'#00a1d6',bg:'rgba(0,161,214,.15)',ic:'BL'},
+const PLAT={
+  'youtube.com':{n:'YouTube',c:'#ff3333',bg:'rgba(255,51,51,.15)',ic:'YT'},
+  'youtu.be':{n:'YouTube',c:'#ff3333',bg:'rgba(255,51,51,.15)',ic:'YT'},
+  'tiktok.com':{n:'TikTok',c:'#ff2d55',bg:'rgba(255,45,85,.15)',ic:'TT'},
+  'vm.tiktok.com':{n:'TikTok',c:'#ff2d55',bg:'rgba(255,45,85,.15)',ic:'TT'},
+  'instagram.com':{n:'Instagram',c:'#e1306c',bg:'rgba(225,48,108,.15)',ic:'IG'},
+  'facebook.com':{n:'Facebook',c:'#1877f2',bg:'rgba(24,119,242,.15)',ic:'FB'},
+  'fb.watch':{n:'Facebook',c:'#1877f2',bg:'rgba(24,119,242,.15)',ic:'FB'},
+  'twitter.com':{n:'Twitter',c:'#1d9bf0',bg:'rgba(29,155,240,.15)',ic:'TW'},
+  'x.com':{n:'Twitter',c:'#1d9bf0',bg:'rgba(29,155,240,.15)',ic:'TW'},
+  't.co':{n:'Twitter',c:'#1d9bf0',bg:'rgba(29,155,240,.15)',ic:'TW'},
+  'reddit.com':{n:'Reddit',c:'#ff4500',bg:'rgba(255,69,0,.15)',ic:'RD'},
+  'redd.it':{n:'Reddit',c:'#ff4500',bg:'rgba(255,69,0,.15)',ic:'RD'},
+  'vimeo.com':{n:'Vimeo',c:'#1ab7ea',bg:'rgba(26,183,234,.15)',ic:'VM'},
+  'twitch.tv':{n:'Twitch',c:'#9147ff',bg:'rgba(145,71,255,.15)',ic:'TV'},
+  'soundcloud.com':{n:'SoundCloud',c:'#ff5500',bg:'rgba(255,85,0,.15)',ic:'SC'},
+  'bilibili.com':{n:'Bilibili',c:'#00a1d6',bg:'rgba(0,161,214,.15)',ic:'BL'},
+  'b23.tv':{n:'Bilibili',c:'#00a1d6',bg:'rgba(0,161,214,.15)',ic:'BL'},
   'dailymotion.com':{n:'Dailymotion',c:'#0066dc',bg:'rgba(0,102,220,.15)',ic:'DM'},
-  'pinterest.com':  {n:'Pinterest',  c:'#e60023',bg:'rgba(230,0,35,.15)', ic:'PT'},
-  'pin.it':         {n:'Pinterest',  c:'#e60023',bg:'rgba(230,0,35,.15)', ic:'PT'},
-  'tumblr.com':     {n:'Tumblr',     c:'#35465c',bg:'rgba(53,70,92,.15)', ic:'TU'},
-  'ok.ru':          {n:'OK.ru',      c:'#f7931e',bg:'rgba(247,147,30,.15)',ic:'OK'},
-  'linkedin.com':   {n:'LinkedIn',   c:'#0a66c2',bg:'rgba(10,102,194,.15)',ic:'LI'},
-  'streamable.com': {n:'Streamable', c:'#009cff',bg:'rgba(0,156,255,.15)',ic:'ST'},
-  'imgur.com':      {n:'Imgur',      c:'#1bb76e',bg:'rgba(27,183,110,.15)',ic:'IM'},
-  'rumble.com':     {n:'Rumble',     c:'#85c742',bg:'rgba(133,199,66,.15)',ic:'RM'},
-  'odysee.com':     {n:'Odysee',     c:'#e50054',bg:'rgba(229,0,84,.15)', ic:'OD'},
-  'telegram.org':   {n:'Telegram',   c:'#26a5e4',bg:'rgba(38,165,228,.15)',ic:'TG'},
-  't.me':           {n:'Telegram',   c:'#26a5e4',bg:'rgba(38,165,228,.15)',ic:'TG'},
-  'gfycat.com':     {n:'Gfycat',    c:'#00b5ab',bg:'rgba(0,181,171,.15)', ic:'GF'},
-  'tenor.com':      {n:'Tenor',     c:'#ffd700',bg:'rgba(255,215,0,.15)', ic:'TN'},
-  'giphy.com':      {n:'Giphy',     c:'#ff6666',bg:'rgba(255,102,102,.15)',ic:'GP'},
-  'capcut.com':     {n:'CapCut',    c:'#aaaaaa',bg:'rgba(100,100,100,.15)',ic:'CC'},
-  'likee.video':    {n:'Likee',     c:'#ff004f',bg:'rgba(255,0,79,.15)',  ic:'LK'},
-  'weibo.com':      {n:'Weibo',     c:'#e6162d',bg:'rgba(230,22,45,.15)', ic:'WB'},
-  'kwai.com':       {n:'Kwai',      c:'#ffcc00',bg:'rgba(255,204,0,.15)', ic:'KW'},
-  'snackvideo.com': {n:'Snack',     c:'#ff6b35',bg:'rgba(255,107,53,.15)',ic:'SN'},
-  'chingari.io':    {n:'Chingari',  c:'#ff5733',bg:'rgba(255,87,51,.15)', ic:'CH'},
-  'mxtakatak.com':  {n:'MX TakaTak',c:'#ff4500',bg:'rgba(255,69,0,.15)', ic:'MX'},
+  'pinterest.com':{n:'Pinterest',c:'#e60023',bg:'rgba(230,0,35,.15)',ic:'PT'},
+  'pin.it':{n:'Pinterest',c:'#e60023',bg:'rgba(230,0,35,.15)',ic:'PT'},
+  'tumblr.com':{n:'Tumblr',c:'#35465c',bg:'rgba(53,70,92,.15)',ic:'TU'},
+  'ok.ru':{n:'OK.ru',c:'#f7931e',bg:'rgba(247,147,30,.15)',ic:'OK'},
+  'linkedin.com':{n:'LinkedIn',c:'#0a66c2',bg:'rgba(10,102,194,.15)',ic:'LI'},
+  'streamable.com':{n:'Streamable',c:'#009cff',bg:'rgba(0,156,255,.15)',ic:'ST'},
+  'imgur.com':{n:'Imgur',c:'#1bb76e',bg:'rgba(27,183,110,.15)',ic:'IM'},
+  'rumble.com':{n:'Rumble',c:'#85c742',bg:'rgba(133,199,66,.15)',ic:'RM'},
+  'odysee.com':{n:'Odysee',c:'#e50054',bg:'rgba(229,0,84,.15)',ic:'OD'},
+  'telegram.org':{n:'Telegram',c:'#26a5e4',bg:'rgba(38,165,228,.15)',ic:'TG'},
+  't.me':{n:'Telegram',c:'#26a5e4',bg:'rgba(38,165,228,.15)',ic:'TG'},
+  'gfycat.com':{n:'Gfycat',c:'#00b5ab',bg:'rgba(0,181,171,.15)',ic:'GF'},
+  'capcut.com':{n:'CapCut',c:'#aaa',bg:'rgba(100,100,100,.15)',ic:'CC'},
+  'likee.video':{n:'Likee',c:'#ff004f',bg:'rgba(255,0,79,.15)',ic:'LK'},
+  'weibo.com':{n:'Weibo',c:'#e6162d',bg:'rgba(230,22,45,.15)',ic:'WB'},
+  'kwai.com':{n:'Kwai',c:'#ffcc00',bg:'rgba(255,204,0,.15)',ic:'KW'},
 };
-
-const QLABELS = {
-  'hd_no_watermark':{label:'HD · No WM',cls:'q-hd'},
-  'no_watermark':   {label:'No WM',     cls:'q-nowm'},
-  'watermark':      {label:'With WM',   cls:'q-wm'},
-  'audio':          {label:'Audio',     cls:'q-audio'},
-  'hd':             {label:'HD',        cls:'q-hd'},
-  'sd':             {label:'SD',        cls:'q-low'},
-  'best':           {label:'Best',      cls:'q-best'},
-  'high':           {label:'High',      cls:'q-1080'},
-  'medium':         {label:'Medium',    cls:'q-480'},
-  'normal':         {label:'Normal',    cls:'q-low'},
-  'low':            {label:'Low',       cls:'q-low'},
-  'original':       {label:'Original',  cls:'q-best'},
+const QLABELS={
+  'hd_no_watermark':{label:'HD No WM',cls:'q-hd'},
+  'no_watermark':{label:'No WM',cls:'q-nowm'},
+  'watermark':{label:'With WM',cls:'q-wm'},
+  'audio':{label:'Audio',cls:'q-audio'},
+  'hd':{label:'HD',cls:'q-hd'},
+  'sd':{label:'SD',cls:'q-low'},
+  'best':{label:'Best',cls:'q-best'},
+  'high':{label:'High',cls:'q-1080'},
+  'medium':{label:'Medium',cls:'q-480'},
+  'normal':{label:'Normal',cls:'q-low'},
+  'low':{label:'Low',cls:'q-low'},
+  'original':{label:'Original',cls:'q-best'},
 };
-
-const API = 'https://api.ryzumi.net/api/downloader/all-in-one';
-
-const DEMOS = {
-  yt: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-  tt: 'https://www.tiktok.com/@voidlane.cjo/video/7608076678421662994',
-  ig: 'https://www.instagram.com/p/CvZ8rlYNpqF/',
-  tw: 'https://x.com/NASA/status/1755663743186534460',
-  fb: 'https://www.facebook.com/watch/?v=766882641177003',
-  rd: 'https://www.reddit.com/r/videos/comments/zl90mz/',
+const API='https://api.ryzumi.net/api/downloader/all-in-one';
+const DEMOS={
+  yt:'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+  tt:'https://www.tiktok.com/@voidlane.cjo/video/7608076678421662994',
+  ig:'https://www.instagram.com/p/CvZ8rlYNpqF/',
+  tw:'https://x.com/NASA/status/1755663743186534460',
+  fb:'https://www.facebook.com/watch/?v=766882641177003',
+  rd:'https://www.reddit.com/r/videos/comments/zl90mz/',
 };
-
-let hist = JSON.parse(localStorage.getItem('vdl7') || '[]');
-let busy = false;
-
-/* ── utils ── */
-const isUrl = s => { try { new URL(s); return true } catch { return false } };
-const esc   = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-const $     = id => document.getElementById(id);
-const setZ  = h => $('zone').innerHTML = h;
-
-function getP(url) {
-  try {
-    const h = new URL(url).hostname.replace('www.','');
-    for (const [d,i] of Object.entries(PLAT)) {
-      if (h === d || h.endsWith('.'+d)) return i;
-    }
-    // partial match fallback
-    for (const [d,i] of Object.entries(PLAT)) {
-      if (h.includes(d)) return i;
-    }
-  } catch {}
-  return {n:'Video',c:'#4f8eff',bg:'rgba(79,142,255,.15)',ic:'▶'};
+let hist=JSON.parse(localStorage.getItem('vdl9')||'[]');
+let busy=false;
+const isUrl=s=>{try{new URL(s);return true}catch{return false}};
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const $=id=>document.getElementById(id);
+const setZ=h=>$('zone').innerHTML=h;
+function getP(url){
+  try{
+    const h=new URL(url).hostname.replace('www.','');
+    for(const[d,i]of Object.entries(PLAT)){if(h===d||h.endsWith('.'+d))return i}
+    for(const[d,i]of Object.entries(PLAT)){if(h.includes(d))return i}
+  }catch{}
+  return{n:'Video',c:'#4f8eff',bg:'rgba(79,142,255,.15)',ic:'▶'};
 }
-
-function ago(ts) {
-  const d = Date.now()-ts;
+function ago(ts){
+  const d=Date.now()-ts;
   if(d<60000)return'baru saja';
   if(d<3600000)return~~(d/60000)+' mnt lalu';
   if(d<86400000)return~~(d/3600000)+' jam lalu';
   return~~(d/86400000)+' hari lalu';
 }
-
 function toast(m,t='info'){
   const c={success:'var(--gn)',error:'var(--rd)',info:'var(--bl2)',warn:'var(--am)'};
   const el=document.createElement('div');
   el.className='to';
   el.innerHTML=`<div class="td" style="background:${c[t]||c.info}"></div><span>${esc(m)}</span>`;
   $('ts').appendChild(el);
-  setTimeout(()=>el.remove(),4500);
+  setTimeout(()=>el.remove(),5000);
 }
-
-/* ── input ── */
-function onIn(){ $('btn-s').disabled = !isUrl($('url-input').value.trim()); }
+function onIn(){$('btn-s').disabled=!isUrl($('url-input').value.trim())}
 async function doPaste(){
   try{
     const t=await navigator.clipboard.readText();
     if(isUrl(t)){$('url-input').value=t;onIn();toast('URL ditempel','success')}
-    else toast('Bukan URL yang valid','warn');
-  }catch{toast('Tempel manual (Ctrl+V / Cmd+V)','warn')}
+    else toast('Bukan URL valid','warn');
+  }catch{toast('Tempel manual (Ctrl+V)','warn')}
 }
-function setDemo(k){ $('url-input').value=DEMOS[k]||''; onIn(); }
-function doClear(){ $('url-input').value=''; $('btn-s').disabled=true; setZ(''); }
-
-/* ── parse quality ── */
-function parseQ(q, ext) {
-  const lq = (q||'').toLowerCase();
-  if(QLABELS[lq]) return QLABELS[lq];
-  const m = q.match(/\(([^)]+)\)/);
-  if(m) return {label:m[1], cls:getQCls(m[1])};
-  if(q) return {label:q, cls:'q-low'};
-  return {label:ext?.toUpperCase()||'?', cls:'q-low'};
+function setDemo(k){$('url-input').value=DEMOS[k]||'';onIn()}
+function doClear(){$('url-input').value='';$('btn-s').disabled=true;setZ('')}
+function parseQ(q,ext){
+  const lq=(q||'').toLowerCase();
+  if(QLABELS[lq])return QLABELS[lq];
+  const m=String(q).match(/\(([^)]+)\)/);
+  if(m)return{label:m[1],cls:getQCls(m[1])};
+  if(q)return{label:q,cls:'q-low'};
+  return{label:ext||'?',cls:'q-low'};
 }
-
 function getQCls(v){
-  const s=v.toLowerCase();
-  if(/2160|4k/.test(s)) return 'q-4k';
-  if(/1440/.test(s))     return 'q-1440';
-  if(/1080/.test(s))     return 'q-1080';
-  if(/720/.test(s))      return 'q-720';
-  if(/480/.test(s))      return 'q-480';
-  if(/360|240|144/.test(s)) return 'q-low';
-  if(/kb\/s|kbps/.test(s))  return 'q-audio';
-  return 'q-low';
+  const s=String(v).toLowerCase();
+  if(/2160|4k/.test(s))return'q-4k';
+  if(/1440/.test(s))return'q-1440';
+  if(/1080/.test(s))return'q-1080';
+  if(/720/.test(s))return'q-720';
+  if(/480/.test(s))return'q-480';
+  if(/360|240|144/.test(s))return'q-low';
+  if(/kb|kbps/.test(s))return'q-audio';
+  return'q-low';
 }
-
-/* ── main search ── */
-async function doSearch() {
-  const url = $('url-input').value.trim();
-  if(!isUrl(url)||busy) return;
+async function doSearch(){
+  const url=$('url-input').value.trim();
+  if(!isUrl(url)||busy)return;
   busy=true;
   const p=getP(url);
   const btn=$('btn-s');
-  btn.disabled=true; btn.classList.add('loading');
-
-  setZ(`<div class="lc"><div class="lsp"></div><p>Mengambil format dari ${esc(p.n)}…</p><small>api.ryzumi.net</small></div>`);
-
+  btn.disabled=true;btn.classList.add('loading');
+  setZ(`<div class="lc"><div class="lsp"></div><p>Mengambil format dari ${esc(p.n)}...</p><small>api.ryzumi.net</small></div>`);
   try{
-    const res=await fetch(`${API}?url=${encodeURIComponent(url)}`,{
-      headers:{'accept':'application/json'},
-    });
-
+    const res=await fetch(`${API}?url=${encodeURIComponent(url)}`,{headers:{accept:'application/json'}});
     if(!res.ok){
-      showErr(
-        `Gagal: HTTP ${res.status}`,
-        res.status===404?'Video tidak ditemukan atau sudah dihapus'
-        :res.status===403?'Video privat atau akses ditolak'
-        :'Coba beberapa saat lagi'
-      );
+      showErr(`Gagal: HTTP ${res.status}`,res.status===404?'Video tidak ditemukan':res.status===403?'Video privat':'Coba lagi');
       return;
     }
-
     const data=await res.json();
-    if(!data.medias?.length){
-      showErr('Tidak ada format tersedia','Platform mungkin belum didukung, atau video privat/dihapus');
-      return;
-    }
-
+    if(!data.medias?.length){showErr('Tidak ada format tersedia','Video privat atau platform tidak didukung');return}
     renderResult(data,url,p);
     saveHist(url,p,data.title||'Video');
     toast(`${data.medias.length} format tersedia!`,'success');
-
   }catch(err){
-    showErr('Koneksi gagal','Pastikan URL benar. Jika masalah berlanjut, coba matikan ad-blocker.');
-    console.error('[VaultDL]',err);
+    showErr('Koneksi gagal','Coba matikan ad-blocker dan refresh');
   }finally{
-    busy=false;
-    btn.disabled=false;
-    btn.classList.remove('loading');
+    busy=false;btn.disabled=false;btn.classList.remove('loading');
   }
 }
-
-/* ── render ── */
 function renderResult(data,url,p){
   const title=data.title||'Video';
   const thumb=data.thumbnail||'';
   const source=data.source||p.n;
   const author=data.author?.name||null;
-
   const videos=data.medias.filter(m=>m.type==='video');
-  const audios =data.medias.filter(m=>m.type==='audio');
-
-  // mp4 first, then others
-  const sorted=[
-    ...videos.filter(m=>m.extension==='mp4'),
-    ...videos.filter(m=>m.extension!=='mp4'),
-  ];
-
-  const thumbH=thumb
-    ?`<img src="${esc(thumb)}" alt="" loading="lazy" onerror="this.parentElement.innerHTML='<div class=vth-ph>🎬</div>'">`
-    :`<div class="vth-ph">🎬</div>`;
-
-  const vrows=sorted.length?sorted.map(m=>fmtRow(m,title)).join(''):`<div class="ni">Tidak ada format video</div>`;
-  const arows=audios.length?audios.map(m=>fmtRow(m,title)).join(''):`<div class="ni">Tidak ada format audio</div>`;
-
-  const audioTab=audios.length
-    ?`<button class="ft" onclick="swTab('audio',this)">🎵 Audio <span class="tc">${audios.length}</span></button>`:'';
-  const audioPan=audios.length
-    ?`<div class="fg" id="fg-audio">${arows}</div>`:'';
-
-  setZ(`
-<div class="rc">
+  const audios=data.medias.filter(m=>m.type==='audio');
+  const sorted=[...videos.filter(m=>m.extension==='mp4'),...videos.filter(m=>m.extension!=='mp4')];
+  const thumbH=thumb?`<img src="${esc(thumb)}" alt="" loading="lazy" onerror="this.parentElement.innerHTML='<div class=vth-ph>🎬</div>'">`:`<div class="vth-ph">🎬</div>`;
+  const vrows=sorted.length?sorted.map(fmtRow).join(''):`<div class="ni">Tidak ada format video</div>`;
+  const arows=audios.length?audios.map(fmtRow).join(''):`<div class="ni">Tidak ada format audio</div>`;
+  const aTab=audios.length?`<button class="ft" onclick="swTab('audio',this)">🎵 Audio <span class="tc">${audios.length}</span></button>`:'';
+  const aPan=audios.length?`<div class="fg" id="fg-audio">${arows}</div>`:'';
+  setZ(`<div class="rc">
   <div class="vi">
-    <div class="vth">
-      ${thumbH}
-      <div class="vflg" style="background:${p.bg};color:${p.c}">${esc(p.n)}</div>
-    </div>
+    <div class="vth">${thumbH}<div class="vflg" style="background:${p.bg};color:${p.c}">${esc(p.n)}</div></div>
     <div class="vm">
       <div class="vtl">${esc(title)}</div>
       ${author?`<div class="vau">${esc(author)}</div>`:''}
       <div class="vsrc">via ${esc(source)}</div>
-      <div class="vur" title="${esc(url)}">${esc(url)}</div>
+      <div class="vur">${esc(url)}</div>
     </div>
   </div>
   <div class="fp">
     <div class="fts">
       <button class="ft on" onclick="swTab('video',this)">🎬 Video <span class="tc">${sorted.length}</span></button>
-      ${audioTab}
+      ${aTab}
     </div>
     <div class="fg on" id="fg-video">${vrows}</div>
-    ${audioPan}
+    ${aPan}
   </div>
 </div>`);
 }
-
 function swTab(tab,btn){
   document.querySelectorAll('.ft').forEach(b=>b.classList.remove('on'));
   document.querySelectorAll('.fg').forEach(g=>g.classList.remove('on'));
   btn.classList.add('on');
   document.getElementById('fg-'+tab)?.classList.add('on');
 }
-
-function fmtRow(m, titleRef){
-  const {label,cls}=parseQ(m.quality,m.extension);
+function fmtRow(m){
+  const{label,cls}=parseQ(m.quality,m.extension);
   const ext=(m.extension||'').toUpperCase();
   const rawPre=(m.quality||'').replace(/\([^)]+\)/,'').trim();
   const info=(rawPre&&rawPre.toLowerCase()!==m.extension)?rawPre:'';
-
-  // Encode URL ke base64 agar aman di dalam HTML attribute
-  const encodedUrl = btoa(unescape(encodeURIComponent(m.url)));
-  const safeTitle  = esc((titleRef||'VaultDL').slice(0,60));
-
+  // Encode URL as base64 for safe HTML attribute storage
+  const b64=btoa(unescape(encodeURIComponent(m.url)));
   return `<div class="fi">
   <div class="fl">
     <span class="qb2 ${cls}">${esc(label)}</span>
     <span class="fe">${esc(ext)}</span>
     ${info?`<span class="fnfo">${esc(info)}</span>`:''}
   </div>
-  <button class="dlb" data-url="${encodedUrl}" data-ext="${ext.toLowerCase()}" data-title="${safeTitle}" onclick="onDl(this)">
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v7.5M3 6.5 6 10l3-3.5M1 11h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    <span>Download</span>
-  </button>
+  <div style="display:flex;gap:5px;align-items:center;flex-shrink:0">
+    <button class="dlb" onclick="doDownload(this,'${b64}','${ext.toLowerCase()}')">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v7.5M3 6.5 6 10l3-3.5M1 11h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="dt">Download</span>
+    </button>
+    <button class="cpb" onclick="copyLink('${b64}')" title="Salin link">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="4.5" y="4.5" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M8.5 4.5V3A1.5 1.5 0 0 0 7 1.5H3A1.5 1.5 0 0 0 1.5 3v4A1.5 1.5 0 0 0 3 8.5h1.5" stroke="currentColor" stroke-width="1.3"/></svg>
+    </button>
+  </div>
 </div>`;
 }
 
-// Deteksi apakah URL butuh proxy server (YouTube CDN signed URL)
-// googlevideo.com = YouTube CDN, butuh header khusus → pakai /api/dl proxy
-// Platform lain (tikwm, cdninstagram, twimg, redd.it, dll) = direct download
-function needsProxy(url) {
-  try {
-    const h = new URL(url).hostname;
-    return h.includes('googlevideo.com') || h.includes('youtube.com');
-  } catch { return false; }
-}
+/* =====================================================
+   DOWNLOAD — 2 strategi:
+   1. fetch() blob → createObjectURL (TikTok, IG, Vimeo, dll)
+   2. <a download> direct → browser download panel (YouTube)
+   + tombol Copy Link untuk IDM / download manager
+===================================================== */
+async function doDownload(btn,b64,ext){
+  if(btn.disabled)return;
+  btn.disabled=true;
+  const dt=btn.querySelector('.dt');
+  const orig=dt?.textContent||'Download';
+  if(dt)dt.textContent='...';
+  btn.style.cssText='background:var(--am);border-color:var(--am);color:#fff;cursor:wait';
 
-async function onDl(btn) {
-  if (btn.classList.contains('busy')) return;
-
-  const encodedUrl = btn.getAttribute('data-url');
-  const ext        = btn.getAttribute('data-ext') || 'mp4';
-  const title      = btn.getAttribute('data-title') || 'VaultDL';
-  const txtEl      = btn.querySelector('span');
-  const origTxt    = txtEl.textContent;
-
-  // Decode URL dari base64
   let url;
-  try { url = decodeURIComponent(escape(atob(encodedUrl))); }
-  catch { toast('URL tidak valid', 'error'); return; }
+  try{url=decodeURIComponent(escape(atob(b64)))}
+  catch{toast('URL tidak valid','error');reset();return}
 
-  btn.classList.add('busy');
-  txtEl.textContent = 'Memproses…';
-  btn.style.cssText = 'background:var(--am);border-color:var(--am);color:#fff;cursor:wait';
+  const fname=`VaultDL_${Date.now()}.${ext||'mp4'}`;
 
-  const filename = `${title.slice(0,40).replace(/[^a-z0-9]/gi,'_')}.${ext}`;
+  const isYT = url.includes('googlevideo.com');
 
-  if (needsProxy(url)) {
-    // ── YOUTUBE & platform butuh server proxy ──
-    // Gunakan /api/dl yang stream file dengan header yang benar
-    txtEl.textContent = 'Mengunduh via server…';
-
-    const proxyUrl = `/api/dl?url=${encodeURIComponent(url)}&name=${encodeURIComponent(filename)}`;
-
-    // Trigger download lewat invisible anchor ke proxy endpoint
-    const a = document.createElement('a');
-    a.href = proxyUrl;
-    a.download = filename;
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-
-    btn.style.cssText = 'background:var(--gn);border-color:var(--gn);color:#fff';
-    txtEl.textContent = '✓ Dimulai';
-    toast('Download YouTube dimulai lewat server!', 'success');
-
-  } else {
-    // ── Platform lain (TikTok, Instagram, dll) — coba fetch blob dulu ──
-    txtEl.textContent = 'Mengunduh…';
-    try {
-      const resp = await fetch(url, { mode: 'cors' });
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-
-      const blob    = await resp.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      const a       = document.createElement('a');
-      a.href     = blobUrl;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 8000);
-
-      btn.style.cssText = 'background:var(--gn);border-color:var(--gn);color:#fff';
-      txtEl.textContent = '✓ Selesai';
-      toast('Download berhasil!', 'success');
-
-    } catch (err) {
-      // Fallback: anchor direct download (untuk CDN yang punya CORS tapi blob gagal)
-      console.log('[VaultDL] blob failed, trying anchor:', err.message);
-      const a = document.createElement('a');
-      a.href     = url;
-      a.download = filename;
-      a.target   = '_blank';
-      a.rel      = 'noopener noreferrer';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-
-      btn.style.cssText = 'background:var(--gn);border-color:var(--gn);color:#fff';
-      txtEl.textContent = '✓ Dimulai';
-      toast('Download dimulai!', 'success');
-    }
+  if(isYT){
+    // YOUTUBE: URL terikat ke IP browser user — tidak bisa diproxy.
+    // Buka tab baru + tampilkan panduan cara simpan.
+    const a=document.createElement('a');
+    a.href=url;a.target='_blank';a.rel='noopener noreferrer';a.style.display='none';
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    btn.style.cssText='background:var(--gn);border-color:var(--gn);color:#fff';
+    if(dt)dt.textContent='↗ Buka Tab';
+    showGuide('yt');
+    toast('Tab YouTube dibuka — ikuti panduan cara simpan di bawah','info');
+    setTimeout(reset,4000);
+    return;
   }
 
-  setTimeout(() => {
-    btn.style.cssText = '';
-    txtEl.textContent = origTxt;
-    btn.classList.remove('busy');
-  }, 3500);
+  // PLATFORM LAIN (TikTok, Instagram, Vimeo, dll) — fetch blob
+  try{
+    const r=await fetch(url,{mode:'cors',cache:'no-store'});
+    if(!r.ok)throw new Error(`HTTP ${r.status}`);
+    const blob=await r.blob();
+    if(blob.size<500)throw new Error('Empty');
+    const bu=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=bu;a.download=fname;a.style.display='none';
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(bu),20000);
+    btn.style.cssText='background:var(--gn);border-color:var(--gn);color:#fff';
+    if(dt)dt.textContent='✓ Selesai';
+    toast('Download berhasil! Cek folder unduhan kamu.','success');
+    setTimeout(reset,3000);
+    return;
+  }catch(e){
+    console.log('[VaultDL] blob failed:',e.message);
+  }
+
+  // Fallback: anchor download
+  const af=document.createElement('a');
+  af.href=url;af.download=fname;af.target='_blank';af.rel='noopener';af.style.display='none';
+  document.body.appendChild(af);af.click();document.body.removeChild(af);
+  btn.style.cssText='background:var(--gn);border-color:var(--gn);color:#fff';
+  if(dt)dt.textContent='↗ Dibuka';
+  showGuide('other');
+  toast('Link dibuka — atau gunakan 📋 salin link ke download manager','info');
+  setTimeout(reset,4000);
+
+  function reset(){
+    btn.style.cssText='';
+    if(dt)dt.textContent=orig;
+    btn.disabled=false;
+  }
+}
+
+function showGuide(type='other'){
+  const old=document.getElementById('dl-guide');
+  if(old)old.remove();
+  const g=document.createElement('div');
+  g.id='dl-guide';g.className='guide';
+
+  if(type==='yt'){
+    g.innerHTML=`<button class="guide-close" onclick="this.parentElement.remove()">✕</button>
+<span class="guide-title">📺 Cara simpan video YouTube</span>
+<div style="color:var(--t2);line-height:1.75">
+<strong>🖥 PC / Laptop:</strong><br>
+Tab sudah terbuka → klik kanan pada video → pilih <strong>"Simpan video sebagai..."</strong> / <strong>"Save video as..."</strong><br><br>
+<strong>📱 HP Android / iOS:</strong><br>
+Salin link (tombol 📋) → buka di aplikasi <strong>1DM / IDM+ / Shortcuts (iOS)</strong><br><br>
+<strong>⚡ Cara paling mudah:</strong><br>
+Klik 📋 di sebelah tombol → paste link ke <strong>IDM, Internet Download Manager, atau VLC</strong>
+</div>`;
+  } else {
+    g.innerHTML=`<button class="guide-close" onclick="this.parentElement.remove()">✕</button>
+<span class="guide-title">💡 Tip: Jika download tidak otomatis</span>
+<div style="color:var(--t2);line-height:1.75">
+Klik 📋 di sebelah tombol → salin link → paste di browser address bar atau <strong>IDM / download manager</strong>
+</div>`;
+  }
+
+  const z=$('zone');
+  z.insertBefore(g,z.firstChild);
+}
+
+async function copyLink(b64){
+  let url;
+  try{url=decodeURIComponent(escape(atob(b64)))}
+  catch{toast('URL tidak valid','error');return}
+  try{
+    await navigator.clipboard.writeText(url);
+    toast('Link disalin! Paste di IDM / download manager / address bar browser','success');
+  }catch{
+    const ta=document.createElement('textarea');
+    ta.value=url;ta.style.cssText='position:fixed;opacity:0;left:-9999px';
+    document.body.appendChild(ta);ta.select();
+    document.execCommand('copy');document.body.removeChild(ta);
+    toast('Link disalin!','success');
+  }
 }
 
 function showErr(title,sub=''){
   setZ(`<div class="ec"><div class="ei">⚠</div><div><div class="et">${esc(title)}</div>${sub?`<div class="es">${esc(sub)}</div>`:''}</div></div>`);
 }
 
-/* ── history ── */
+/* HISTORY */
 function saveHist(url,p,title){
   hist=hist.filter(h=>h.url!==url);
   hist.unshift({url,title,pn:p.n,pc:p.c,pb:p.bg,pi:p.ic,ts:Date.now()});
   if(hist.length>25)hist.pop();
-  localStorage.setItem('vdl7',JSON.stringify(hist));
+  localStorage.setItem('vdl9',JSON.stringify(hist));
   renderHist();
 }
 function renderHist(){
   const l=$('hl'),e=$('he');
-  if(!hist.length){l.innerHTML='';e.style.display='block';return;}
+  if(!hist.length){l.innerHTML='';e.style.display='block';return}
   e.style.display='none';
-  l.innerHTML=hist.map(h=>`
-    <div class="hi" onclick="loadHist('${encodeURIComponent(h.url)}')">
-      <div class="hic" style="background:${h.pb};color:${h.pc}">${esc(h.pi)}</div>
-      <div class="htt">${esc(h.title)}</div>
-      <div class="hm">${ago(h.ts)}</div>
-      <div class="hd"></div>
-    </div>`).join('');
+  l.innerHTML=hist.map(h=>`<div class="hi" onclick="loadHist('${encodeURIComponent(h.url)}')">
+    <div class="hic" style="background:${h.pb};color:${h.pc}">${esc(h.pi)}</div>
+    <div class="htt">${esc(h.title)}</div>
+    <div class="hm">${ago(h.ts)}</div>
+    <div class="hd"></div>
+  </div>`).join('');
 }
 function loadHist(enc){
   $('url-input').value=decodeURIComponent(enc);onIn();
@@ -695,28 +605,18 @@ function loadHist(enc){
   toast('URL dimuat dari riwayat','info');
 }
 
-/* ── init ── */
 document.addEventListener('DOMContentLoaded',()=>{
   renderHist();
-
-  // drag & drop
   document.body.addEventListener('dragover',e=>e.preventDefault());
   document.body.addEventListener('drop',e=>{
     e.preventDefault();
     const t=e.dataTransfer.getData('text');
     if(t&&isUrl(t)){$('url-input').value=t;onIn();toast('URL dari drag & drop','success')}
   });
-
-  // auto-paste on focus
   $('url-input').addEventListener('focus',async()=>{
     if($('url-input').value)return;
-    try{
-      const t=await navigator.clipboard.readText();
-      if(isUrl(t)){$('url-input').value=t;onIn();toast('URL otomatis ditempel','info')}
-    }catch{}
+    try{const t=await navigator.clipboard.readText();if(isUrl(t)){$('url-input').value=t;onIn();toast('URL otomatis ditempel','info')}}catch{}
   });
-
-  // draggable platform scroll
   const track=$('ptrack');
   let drag=false,sx=0,sl=0;
   track.addEventListener('mousedown',e=>{drag=true;sx=e.pageX-track.offsetLeft;sl=track.scrollLeft;track.style.cursor='grabbing'});
