@@ -282,77 +282,34 @@ function demo(k) { $('uf').value = DEMOS[k]; onIn(); }
 function clr()   { $('uf').value = ''; $('bgo').disabled = true; setZ(''); }
 
 // ── MAIN FETCH via /api/get proxy ──
-// Coba beberapa cara fetch Ryzumi — fallback otomatis
-async function fetchRyzumi(videoUrl) {
-  const ryzumiApi = `https://api.ryzumi.net/api/downloader/all-in-one?url=${encodeURIComponent(videoUrl)}`;
-
-  // Strategi 1: Lewat Vercel edge proxy (/api/get)
-  try {
-    const r = await fetch(`/api/get?url=${encodeURIComponent(videoUrl)}`);
-    if (r.ok) {
-      const d = await r.json();
-      if (d.medias) return d; // sukses
-    }
-  } catch {}
-
-  // Strategi 2: Langsung dari browser (Ryzumi mungkin allow browser CORS)
-  try {
-    const r = await fetch(ryzumiApi, {
-      headers: { 'Accept': 'application/json' },
-    });
-    if (r.ok) {
-      const d = await r.json();
-      if (d.medias) return d;
-    }
-  } catch {}
-
-  // Strategi 3: Lewat allorigins.win CORS proxy (free, reliable)
-  try {
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(ryzumiApi)}`;
-    const r = await fetch(proxyUrl);
-    if (r.ok) {
-      const wrapper = await r.json();
-      if (wrapper.contents) {
-        const d = JSON.parse(wrapper.contents);
-        if (d.medias) return d;
-      }
-    }
-  } catch {}
-
-  // Strategi 4: corsproxy.io
-  try {
-    const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(ryzumiApi)}`);
-    if (r.ok) {
-      const d = await r.json();
-      if (d.medias) return d;
-    }
-  } catch {}
-
-  throw new Error('Semua metode gagal menghubungi API');
-}
-
 async function go() {
   const url = $('uf').value.trim();
   if (!isUrl(url) || busy) return;
   busy = true;
 
   const p = getP(url);
-  setZ(`<div class="ls"><div class="sp"></div><p>Mengambil info video…</p><small>Mencoba beberapa metode koneksi</small></div>`);
+  setZ(`<div class="ls"><div class="sp"></div><p>Mengambil info video…</p><small>Menghubungi api.ryzumi.net</small></div>`);
 
   try {
-    const data = await fetchRyzumi(url);
+    const res = await fetch(`/api/get?url=${encodeURIComponent(url)}`);
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      showErr('Gagal mengambil video', data.error || data.detail || 'URL tidak didukung atau video privat/dihapus');
+      busy = false; return;
+    }
 
     if (!data.medias || !data.medias.length) {
-      showErr('Tidak ada format tersedia', 'Video mungkin privat, dihapus, atau platform tidak didukung');
+      showErr('Tidak ada format tersedia', 'Video mungkin privat atau platform tidak didukung');
       busy = false; return;
     }
 
     renderResult(data, url, p);
     addHist(url, p, data.title || 'Video');
-    toast(`${data.medias.length} format tersedia — pilih untuk download!`, 'success');
+    toast(`${data.medias.length} format tersedia!`, 'success');
 
   } catch (err) {
-    showErr('Gagal mengambil video', 'URL tidak didukung, video privat, atau semua server sedang sibuk. Coba beberapa saat lagi.');
+    showErr('Koneksi gagal', err.message);
   }
   busy = false;
 }
