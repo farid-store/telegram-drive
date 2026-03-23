@@ -9,7 +9,7 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#08080e;--s1:#10101a;--s2:#181826;--s3:#201e30;
+  --bg:#08080e;--s1:#10101a;--s2:#181826;
   --b1:rgba(255,255,255,.06);--b2:rgba(255,255,255,.11);
   --tx:#eeeef8;--t2:rgba(238,238,248,.52);--t3:rgba(238,238,248,.28);
   --bl:#5b8fff;--bl2:#93b8ff;--bg1:rgba(91,143,255,.13);--bg2:rgba(91,143,255,.06);
@@ -57,8 +57,6 @@ h1 em{font-style:normal;background:linear-gradient(135deg,var(--bl),var(--vi));-
 .err-title{font-size:.85rem;font-weight:600;color:rgba(255,77,109,.95)}
 .err-sub{font-size:.72rem;color:var(--t2);margin-top:3px;line-height:1.5}
 @keyframes up{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
-
-/* PREVIEW CARD */
 .pv{background:var(--s1);border:1px solid var(--b2);border-radius:var(--r);overflow:hidden;animation:up .22s ease}
 .pvhead{display:flex}
 .timg{position:relative;flex-shrink:0;width:200px;background:var(--s2)}
@@ -69,8 +67,6 @@ h1 em{font-style:normal;background:linear-gradient(135deg,var(--bl),var(--vi));-
 .ptitle{font-size:.9rem;font-weight:600;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .psource{font-size:.7rem;color:var(--t2)}
 .purl{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-/* FORMAT LIST */
 .flist{border-top:1px solid var(--b1)}
 .ftabs{display:flex;border-bottom:1px solid var(--b1)}
 .ftab{flex:1;padding:9px;background:none;border:none;font-family:'Space Grotesk',sans-serif;font-size:.75rem;font-weight:600;color:var(--t2);cursor:pointer;transition:.15s;border-bottom:2px solid transparent;margin-bottom:-1px}
@@ -82,25 +78,19 @@ h1 em{font-style:normal;background:linear-gradient(135deg,var(--bl),var(--vi));-
 .fi:hover{background:var(--s2)}
 .fi-l{display:flex;align-items:center;gap:9px}
 .fq{font-family:'JetBrains Mono',monospace;font-size:.73rem;font-weight:600;padding:3px 8px;border-radius:5px;text-align:center;white-space:nowrap}
-
-/* quality badge colors */
-.q4k  {background:rgba(34,214,238,.1); color:var(--cy); border:1px solid rgba(34,214,238,.22)}
-.q1440{background:rgba(91,143,255,.1); color:var(--bl2);border:1px solid rgba(91,143,255,.22)}
-.q1080{background:rgba(180,138,255,.1);color:var(--vi); border:1px solid rgba(180,138,255,.22)}
-.q720 {background:rgba(0,212,138,.1);  color:var(--gn); border:1px solid rgba(0,212,138,.22)}
-.q480 {background:rgba(255,176,64,.1); color:var(--am); border:1px solid rgba(255,176,64,.22)}
-.qlow {background:rgba(238,238,248,.06);color:var(--t2);border:1px solid var(--b2)}
+.q4k{background:rgba(34,214,238,.1);color:var(--cy);border:1px solid rgba(34,214,238,.22)}
+.q1440{background:rgba(91,143,255,.1);color:var(--bl2);border:1px solid rgba(91,143,255,.22)}
+.q1080{background:rgba(180,138,255,.1);color:var(--vi);border:1px solid rgba(180,138,255,.22)}
+.q720{background:rgba(0,212,138,.1);color:var(--gn);border:1px solid rgba(0,212,138,.22)}
+.q480{background:rgba(255,176,64,.1);color:var(--am);border:1px solid rgba(255,176,64,.22)}
+.qlow{background:rgba(238,238,248,.06);color:var(--t2);border:1px solid var(--b2)}
 .qaudio{background:rgba(238,238,248,.04);color:var(--t3);border:1px solid var(--b1)}
-/* TikTok special badges */
-.qhd  {background:rgba(0,212,138,.1);  color:var(--gn); border:1px solid rgba(0,212,138,.22)}
-.qnowm{background:rgba(91,143,255,.1); color:var(--bl2);border:1px solid rgba(91,143,255,.22)}
-.qwm  {background:rgba(238,238,248,.06);color:var(--t2);border:1px solid var(--b2)}
-
+.qhd{background:rgba(0,212,138,.1);color:var(--gn);border:1px solid rgba(0,212,138,.22)}
+.qnowm{background:rgba(91,143,255,.1);color:var(--bl2);border:1px solid rgba(91,143,255,.22)}
+.qwm{background:rgba(238,238,248,.06);color:var(--t2);border:1px solid var(--b2)}
 .fext{font-size:.7rem;color:var(--t2)}
 .bdl{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;background:var(--bg1);border:1px solid rgba(91,143,255,.28);border-radius:7px;color:var(--bl2);font-family:'Space Grotesk',sans-serif;font-size:.74rem;font-weight:600;text-decoration:none;transition:.15s;white-space:nowrap}
 .bdl:hover{background:var(--bl);border-color:var(--bl);color:#fff}
-
-/* SECTION / FEATURES / HISTORY */
 .sec{margin-top:36px}
 .sh{font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);margin-bottom:11px;display:flex;align-items:center;gap:8px}
 .sh::after{content:'';flex:1;height:1px;background:var(--b1)}
@@ -134,17 +124,15 @@ footer a:hover{color:var(--tx)}
 </head>
 <body>
 <div class="amb"></div><div class="grid"></div>
-
 <nav>
   <div class="logo">vault<i>dl</i></div>
-  <div class="nbadge">Powered by Ryzumi</div>
+  <div class="nbadge">api.ryzumi.net</div>
 </nav>
-
 <div class="pg">
   <div class="hero">
     <div class="ey"><div class="dot"></div>500+ Platform Didukung</div>
     <h1>Download video dari<br/><em>mana saja</em></h1>
-    <p class="sub">YouTube · TikTok · Instagram · Twitter/X · Facebook · Reddit · Vimeo dan masih banyak lagi. Gratis, cepat, tanpa watermark.</p>
+    <p class="sub">YouTube · TikTok · Instagram · Twitter/X · Facebook · Reddit · Vimeo dan masih banyak lagi.</p>
   </div>
   <div class="plts">
     <span class="pt">YouTube</span><span class="pt">TikTok</span><span class="pt">Instagram</span>
@@ -171,26 +159,23 @@ footer a:hover{color:var(--tx)}
     </div>
   </div>
   <div id="zone"></div>
-
   <div class="sec">
     <div class="sh">Cara Kerja</div>
     <div class="fg">
-      <div class="fc"><div class="fci">🔍</div><h4>Paste & Cari</h4><p>Tempel URL, klik Cari, semua format muncul sekaligus</p></div>
-      <div class="fc"><div class="fci">📊</div><h4>Semua Kualitas</h4><p>4K, 1080p, 720p, 480p, audio M4A & Opus</p></div>
-      <div class="fc"><div class="fci">🚫</div><h4>No Watermark</h4><p>TikTok & Instagram bersih tanpa logo platform</p></div>
+      <div class="fc"><div class="fci">🔍</div><h4>Paste & Cari</h4><p>Tempel URL, klik Cari, semua format muncul</p></div>
+      <div class="fc"><div class="fci">📊</div><h4>Semua Kualitas</h4><p>4K, 1080p, 720p, audio M4A & Opus</p></div>
+      <div class="fc"><div class="fci">🚫</div><h4>No Watermark</h4><p>TikTok & Instagram bersih tanpa logo</p></div>
       <div class="fc"><div class="fci">⚡</div><h4>Langsung Download</h4><p>Klik format → download langsung mulai</p></div>
       <div class="fc"><div class="fci">🔒</div><h4>Privasi Aman</h4><p>URL tidak disimpan di server manapun</p></div>
-      <div class="fc"><div class="fci">📱</div><h4>Mobile Friendly</h4><p>Bekerja sempurna di HP maupun desktop</p></div>
+      <div class="fc"><div class="fci">📱</div><h4>Mobile Friendly</h4><p>Bekerja di HP maupun desktop</p></div>
     </div>
   </div>
-
   <div class="sec">
     <div class="sh">Riwayat</div>
     <div class="hl" id="hl"></div>
     <div class="hem" id="hem">Belum ada riwayat</div>
   </div>
 </div>
-
 <div id="ts"></div>
 <footer>
   <p>VaultDL · API by <a href="https://api.ryzumi.net" target="_blank">api.ryzumi.net</a></p>
@@ -199,37 +184,36 @@ footer a:hover{color:var(--tx)}
 
 <script>
 const PM = {
-  'youtube.com':    {n:'YouTube',  c:'#ff3333',bg:'rgba(255,51,51,.15)',  ic:'YT'},
-  'youtu.be':       {n:'YouTube',  c:'#ff3333',bg:'rgba(255,51,51,.15)',  ic:'YT'},
-  'tiktok.com':     {n:'TikTok',  c:'#ff2d55',bg:'rgba(255,45,85,.15)',  ic:'TT'},
-  'instagram.com':  {n:'Instagram',c:'#e1306c',bg:'rgba(225,48,108,.15)',ic:'IG'},
-  'facebook.com':   {n:'Facebook', c:'#1877f2',bg:'rgba(24,119,242,.15)',ic:'FB'},
-  'fb.watch':       {n:'Facebook', c:'#1877f2',bg:'rgba(24,119,242,.15)',ic:'FB'},
-  'twitter.com':    {n:'Twitter',  c:'#1d9bf0',bg:'rgba(29,155,240,.15)',ic:'TW'},
-  'x.com':          {n:'Twitter',  c:'#1d9bf0',bg:'rgba(29,155,240,.15)',ic:'TW'},
-  'reddit.com':     {n:'Reddit',   c:'#ff4500',bg:'rgba(255,69,0,.15)',  ic:'RD'},
-  'vimeo.com':      {n:'Vimeo',   c:'#1ab7ea',bg:'rgba(26,183,234,.15)',ic:'VM'},
-  'twitch.tv':      {n:'Twitch',  c:'#9147ff',bg:'rgba(145,71,255,.15)',ic:'TV'},
-  'soundcloud.com': {n:'SoundCloud',c:'#ff5500',bg:'rgba(255,85,0,.15)',ic:'SC'},
-  'bilibili.com':   {n:'Bilibili',c:'#00a1d6',bg:'rgba(0,161,214,.15)', ic:'BL'},
+  'youtube.com':   {n:'YouTube',  c:'#ff3333',bg:'rgba(255,51,51,.15)',  ic:'YT'},
+  'youtu.be':      {n:'YouTube',  c:'#ff3333',bg:'rgba(255,51,51,.15)',  ic:'YT'},
+  'tiktok.com':    {n:'TikTok',  c:'#ff2d55',bg:'rgba(255,45,85,.15)',  ic:'TT'},
+  'instagram.com': {n:'Instagram',c:'#e1306c',bg:'rgba(225,48,108,.15)',ic:'IG'},
+  'facebook.com':  {n:'Facebook', c:'#1877f2',bg:'rgba(24,119,242,.15)',ic:'FB'},
+  'fb.watch':      {n:'Facebook', c:'#1877f2',bg:'rgba(24,119,242,.15)',ic:'FB'},
+  'twitter.com':   {n:'Twitter',  c:'#1d9bf0',bg:'rgba(29,155,240,.15)',ic:'TW'},
+  'x.com':         {n:'Twitter',  c:'#1d9bf0',bg:'rgba(29,155,240,.15)',ic:'TW'},
+  'reddit.com':    {n:'Reddit',   c:'#ff4500',bg:'rgba(255,69,0,.15)',  ic:'RD'},
+  'vimeo.com':     {n:'Vimeo',   c:'#1ab7ea',bg:'rgba(26,183,234,.15)',ic:'VM'},
+  'twitch.tv':     {n:'Twitch',  c:'#9147ff',bg:'rgba(145,71,255,.15)',ic:'TV'},
+  'soundcloud.com':{n:'SoundCloud',c:'#ff5500',bg:'rgba(255,85,0,.15)',ic:'SC'},
+  'bilibili.com':  {n:'Bilibili',c:'#00a1d6',bg:'rgba(0,161,214,.15)', ic:'BL'},
   'dailymotion.com':{n:'Dailymotion',c:'#0066dc',bg:'rgba(0,102,220,.15)',ic:'DM'},
-  'pinterest.com':  {n:'Pinterest',c:'#e60023',bg:'rgba(230,0,35,.15)', ic:'PT'},
+  'pinterest.com': {n:'Pinterest',c:'#e60023',bg:'rgba(230,0,35,.15)', ic:'PT'},
+};
+const QLABELS = {
+  'hd_no_watermark':{label:'HD · No WM',cls:'qhd'},
+  'no_watermark':   {label:'No WM',     cls:'qnowm'},
+  'watermark':      {label:'With WM',   cls:'qwm'},
+  'audio':          {label:'Audio',     cls:'qaudio'},
+  'hd':             {label:'HD',        cls:'qhd'},
+  'sd':             {label:'SD',        cls:'qlow'},
 };
 
-// ── Label mapping untuk quality string dari Ryzumi ──
-// YouTube: "mp4 (1080p)", "webm (720p)", "m4a (131kb/s)", "opus (49kb/s)"
-// TikTok:  "hd_no_watermark", "no_watermark", "watermark", "audio"
-// Instagram, dll: bervariasi
-const QUALITY_LABELS = {
-  'hd_no_watermark': { label: 'HD · No WM',  cls: 'qhd',   sort: 1 },
-  'no_watermark':    { label: 'No WM',        cls: 'qnowm', sort: 2 },
-  'watermark':       { label: 'With WM',      cls: 'qwm',   sort: 3 },
-  'audio':           { label: 'Audio',        cls: 'qaudio',sort: 4 },
-  'hd':              { label: 'HD',           cls: 'qhd',   sort: 1 },
-  'sd':              { label: 'SD',           cls: 'qlow',  sort: 2 },
-};
+// Ryzumi API endpoint — dipanggil langsung dari browser
+// Ryzumi punya access-control-allow-origin: * jadi CORS aman
+const RYZUMI = 'https://api.ryzumi.net/api/downloader/all-in-one';
 
-let hist = JSON.parse(localStorage.getItem('vdl4') || '[]');
+let hist = JSON.parse(localStorage.getItem('vdl5') || '[]');
 let busy = false;
 
 const isUrl = s => { try { new URL(s); return true } catch { return false } };
@@ -244,60 +228,63 @@ function getP(url) {
   } catch {}
   return {n:'Video',c:'#5b8fff',bg:'rgba(91,143,255,.15)',ic:'▶'};
 }
-
 function ago(ts) {
-  const d = Date.now() - ts;
-  if (d < 60000)    return 'baru saja';
-  if (d < 3600000)  return ~~(d/60000)+' mnt';
-  if (d < 86400000) return ~~(d/3600000)+' jam';
+  const d = Date.now()-ts;
+  if(d<60000) return 'baru saja';
+  if(d<3600000) return ~~(d/60000)+' mnt';
+  if(d<86400000) return ~~(d/3600000)+' jam';
   return ~~(d/86400000)+' hari';
 }
-
-function toast(m, t='info') {
-  const c = {success:'var(--gn)',error:'var(--rd)',info:'var(--bl2)',warn:'var(--am)'};
-  const el = document.createElement('div');
-  el.className = 'to';
-  el.innerHTML = `<div class="td" style="background:${c[t]||c.info}"></div><span>${esc(m)}</span>`;
+function toast(m,t='info') {
+  const c={success:'var(--gn)',error:'var(--rd)',info:'var(--bl2)',warn:'var(--am)'};
+  const el=document.createElement('div');
+  el.className='to';
+  el.innerHTML=`<div class="td" style="background:${c[t]||c.info}"></div><span>${esc(m)}</span>`;
   $('ts').appendChild(el);
-  setTimeout(() => el.remove(), 4000);
+  setTimeout(()=>el.remove(),4000);
 }
 
-// ── INPUT ──
-function onIn() { $('bgo').disabled = !isUrl($('uf').value.trim()); }
-
-async function paste() {
-  try {
-    const t = await navigator.clipboard.readText();
-    if (isUrl(t)) { $('uf').value = t; onIn(); toast('URL ditempel','success'); }
+function onIn(){ $('bgo').disabled=!isUrl($('uf').value.trim()) }
+async function paste(){
+  try{
+    const t=await navigator.clipboard.readText();
+    if(isUrl(t)){$('uf').value=t;onIn();toast('URL ditempel','success')}
     else toast('Bukan URL valid','warn');
-  } catch { toast('Tempel manual ya','warn'); }
+  }catch{toast('Tempel manual ya','warn')}
 }
-
-const DEMOS = {
-  yt: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-  tt: 'https://www.tiktok.com/@charlidamelio/video/7016895862693821701',
-  ig: 'https://www.instagram.com/p/CvZ8rlYNpqF/',
+const DEMOS={
+  yt:'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+  tt:'https://www.tiktok.com/@voidlane.cjo/video/7608076678421662994',
+  ig:'https://www.instagram.com/p/CvZ8rlYNpqF/',
 };
-function demo(k) { $('uf').value = DEMOS[k]; onIn(); }
-function clr()   { $('uf').value = ''; $('bgo').disabled = true; setZ(''); }
+function demo(k){ $('uf').value=DEMOS[k]; onIn(); }
+function clr(){ $('uf').value=''; $('bgo').disabled=true; setZ(''); }
 
-// ── MAIN FETCH via /api/get proxy ──
+// ══════════════════════════════════════════════
+// MAIN — Browser langsung fetch Ryzumi
+// Ryzumi sudah punya CORS header: access-control-allow-origin: *
+// sehingga tidak perlu server proxy
+// ══════════════════════════════════════════════
 async function go() {
   const url = $('uf').value.trim();
   if (!isUrl(url) || busy) return;
   busy = true;
 
   const p = getP(url);
-  setZ(`<div class="ls"><div class="sp"></div><p>Mengambil info video…</p><small>Menghubungi api.ryzumi.net</small></div>`);
+  setZ(`<div class="ls"><div class="sp"></div><p>Mengambil info video…</p><small>${esc(p.n)} · api.ryzumi.net</small></div>`);
 
   try {
-    const res = await fetch(`/api/get?url=${encodeURIComponent(url)}`);
-    const data = await res.json();
+    // Panggil langsung dari browser — tidak lewat server Vercel
+    const res = await fetch(`${RYZUMI}?url=${encodeURIComponent(url)}`, {
+      headers: { 'accept': 'application/json' },
+    });
 
-    if (!res.ok || data.error) {
-      showErr('Gagal mengambil video', data.error || data.detail || 'URL tidak didukung atau video privat/dihapus');
+    if (!res.ok) {
+      showErr(`Gagal: HTTP ${res.status}`, 'URL tidak didukung atau video privat/dihapus');
       busy = false; return;
     }
+
+    const data = await res.json();
 
     if (!data.medias || !data.medias.length) {
       showErr('Tidak ada format tersedia', 'Video mungkin privat atau platform tidak didukung');
@@ -309,23 +296,29 @@ async function go() {
     toast(`${data.medias.length} format tersedia!`, 'success');
 
   } catch (err) {
-    showErr('Koneksi gagal', err.message);
+    // Jika CORS error (kemungkinan kecil), tampilkan pesan jelas
+    showErr(
+      'Koneksi gagal',
+      'Coba buka halaman ini dengan HTTPS. Jika masih gagal, coba browser lain atau matikan ekstensi ad-blocker.'
+    );
+    console.error('[VaultDL]', err);
   }
   busy = false;
 }
 
-// ── RENDER RESULT ──
-// Handles both YouTube-style ("mp4 (1080p)") and TikTok-style ("hd_no_watermark") quality strings
+// ══════════════════════════════════════════════
+// RENDER RESULT
+// ══════════════════════════════════════════════
 function renderResult(data, url, p) {
-  const title  = data.title || 'Video';
+  const title  = data.title  || 'Video';
   const thumb  = data.thumbnail || '';
-  const source = data.source   || p.n;
+  const source = data.source || p.n;
 
   const videos = data.medias.filter(m => m.type === 'video');
   const audios  = data.medias.filter(m => m.type === 'audio');
 
-  // Sort: mp4 first, then by quality
-  const sortedVideos = [
+  // mp4 dulu baru format lain
+  const sortedV = [
     ...videos.filter(m => m.extension === 'mp4'),
     ...videos.filter(m => m.extension !== 'mp4'),
   ];
@@ -333,15 +326,6 @@ function renderResult(data, url, p) {
   const thumbHtml = thumb
     ? `<img src="${esc(thumb)}" alt="" onerror="this.parentElement.innerHTML='<div class=tph>🎬</div>'">`
     : `<div class="tph">🎬</div>`;
-
-  const videoRows = sortedVideos.map(m => fmtRow(m)).join('');
-  const audioRows  = audios.map(m => fmtRow(m)).join('');
-  const audioTab   = audios.length
-    ? `<button class="ftab" onclick="switchTab('audio',this)">🎵 Audio (${audios.length})</button>`
-    : '';
-  const audioPanel = audios.length
-    ? `<div class="fgroup" id="fg-audio">${audioRows}</div>`
-    : '';
 
   setZ(`
 <div class="pv">
@@ -358,34 +342,30 @@ function renderResult(data, url, p) {
   </div>
   <div class="flist">
     <div class="ftabs">
-      <button class="ftab on" onclick="switchTab('video',this)">🎬 Video (${sortedVideos.length})</button>
-      ${audioTab}
+      <button class="ftab on" onclick="switchTab('video',this)">🎬 Video (${sortedV.length})</button>
+      ${audios.length ? `<button class="ftab" onclick="switchTab('audio',this)">🎵 Audio (${audios.length})</button>` : ''}
     </div>
     <div class="fgroup on" id="fg-video">
-      ${videoRows || '<div style="padding:14px;text-align:center;font-size:.8rem;color:var(--t2)">Tidak ada format video</div>'}
+      ${sortedV.length ? sortedV.map(fmtRow).join('') : '<div style="padding:12px;text-align:center;font-size:.8rem;color:var(--t2)">Tidak ada format video</div>'}
     </div>
-    ${audioPanel}
+    ${audios.length ? `<div class="fgroup" id="fg-audio">${audios.map(fmtRow).join('')}</div>` : ''}
   </div>
 </div>`);
 }
 
 function switchTab(tab, btn) {
-  document.querySelectorAll('.ftab').forEach(b => b.classList.remove('on'));
-  document.querySelectorAll('.fgroup').forEach(g => g.classList.remove('on'));
+  document.querySelectorAll('.ftab').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.fgroup').forEach(g=>g.classList.remove('on'));
   btn.classList.add('on');
-  document.getElementById('fg-' + tab)?.classList.add('on');
+  document.getElementById('fg-'+tab)?.classList.add('on');
 }
 
-// ── FORMAT ROW ──
-// Normalise label + badge color untuk semua platform
 function fmtRow(m) {
-  const { label, cls } = parseQuality(m.quality, m.extension);
-  const extUpper = m.extension.toUpperCase();
-
+  const {label, cls} = parseQ(m.quality, m.extension);
   return `<div class="fi">
     <div class="fi-l">
       <span class="fq ${cls}">${esc(label)}</span>
-      <span class="fext">${esc(extUpper)}</span>
+      <span class="fext">${esc(m.extension.toUpperCase())}</span>
     </div>
     <a href="${esc(m.url)}" download target="_blank" rel="noopener" class="bdl">
       <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 1v6.5M3 5 5.5 8 8 5M1 10h9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -394,63 +374,43 @@ function fmtRow(m) {
   </div>`;
 }
 
-// ── PARSE QUALITY STRING ──
-// Handles:
-//   YouTube:   "mp4 (1080p)"  → "1080p"
-//              "webm (2160p)" → "2160p"
-//              "m4a (131kb/s)"→ "131 kb/s"
-//              "opus (49kb/s)"→ "49 kb/s"
-//   TikTok:    "hd_no_watermark" → "HD · No WM"
-//              "no_watermark"    → "No WM"
-//              "watermark"       → "With WM"
-//              "audio"           → "Audio"
-//   Fallback:  raw string as-is
-function parseQuality(q, ext) {
-  // Cek known TikTok/raw labels dulu
-  if (QUALITY_LABELS[q]) return QUALITY_LABELS[q];
-
-  // Coba extract dari format "ext (value)" → value
-  const match = q.match(/\(([^)]+)\)/);
-  if (match) {
-    const val = match[1]; // "1080p", "131kb/s", dll
-    return { label: val, cls: getQClass(val) };
-  }
-
-  // Fallback: tampilkan apa adanya
-  return { label: q, cls: 'qlow' };
+function parseQ(q, ext) {
+  if (QLABELS[q]) return QLABELS[q];
+  const m = q.match(/\(([^)]+)\)/);
+  if (m) return {label: m[1], cls: getQCls(m[1])};
+  return {label: q, cls: 'qlow'};
 }
-
-function getQClass(v) {
-  if (/2160|4k/i.test(v))  return 'q4k';
-  if (/1440/i.test(v))     return 'q1440';
-  if (/1080/i.test(v))     return 'q1080';
-  if (/720/i.test(v))      return 'q720';
-  if (/480/i.test(v))      return 'q480';
+function getQCls(v) {
+  if (/2160|4k/i.test(v)) return 'q4k';
+  if (/1440/i.test(v))    return 'q1440';
+  if (/1080/i.test(v))    return 'q1080';
+  if (/720/i.test(v))     return 'q720';
+  if (/480/i.test(v))     return 'q480';
   if (/360|240|144/i.test(v)) return 'qlow';
   return 'qaudio';
 }
-
 function showErr(title, sub) {
   setZ(`<div class="err"><div class="err-ico">⚠</div><div>
     <div class="err-title">${esc(title)}</div>
-    ${sub ? `<div class="err-sub">${esc(sub)}</div>` : ''}
+    ${sub?`<div class="err-sub">${esc(sub)}</div>`:''}
   </div></div>`);
 }
 
-// ── HISTORY ──
+// ══════════════════════════════════════════════
+// HISTORY
+// ══════════════════════════════════════════════
 function addHist(url, p, title) {
   hist = hist.filter(h => h.url !== url);
-  hist.unshift({url, title, pn:p.n, pc:p.c, pb:p.bg, pi:p.ic, ts:Date.now()});
+  hist.unshift({url,title,pn:p.n,pc:p.c,pb:p.bg,pi:p.ic,ts:Date.now()});
   if (hist.length > 20) hist.pop();
-  localStorage.setItem('vdl4', JSON.stringify(hist));
+  localStorage.setItem('vdl5', JSON.stringify(hist));
   renderHist();
 }
-
 function renderHist() {
-  const l = $('hl'), e = $('hem');
-  if (!hist.length) { l.innerHTML = ''; e.style.display = 'block'; return; }
-  e.style.display = 'none';
-  l.innerHTML = hist.map(h => `
+  const l=$('hl'),e=$('hem');
+  if(!hist.length){l.innerHTML='';e.style.display='block';return}
+  e.style.display='none';
+  l.innerHTML=hist.map(h=>`
     <div class="hi" onclick="reuse('${encodeURIComponent(h.url)}')">
       <div class="hic" style="background:${h.pb};color:${h.pc}">${esc(h.pi)}</div>
       <div class="htt">${esc(h.title)}</div>
@@ -458,22 +418,19 @@ function renderHist() {
       <div class="hdot"></div>
     </div>`).join('');
 }
-
 function reuse(enc) {
-  $('uf').value = decodeURIComponent(enc);
-  onIn();
+  $('uf').value=decodeURIComponent(enc);onIn();
   window.scrollTo({top:0,behavior:'smooth'});
-  toast('URL dimuat dari riwayat','info');
+  toast('URL dimuat','info');
 }
 
-// ── INIT ──
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded',()=>{
   renderHist();
-  document.body.addEventListener('dragover', e => e.preventDefault());
-  document.body.addEventListener('drop', e => {
+  document.body.addEventListener('dragover',e=>e.preventDefault());
+  document.body.addEventListener('drop',e=>{
     e.preventDefault();
-    const t = e.dataTransfer.getData('text');
-    if (t && isUrl(t)) { $('uf').value = t; onIn(); toast('URL dari drag & drop','success'); }
+    const t=e.dataTransfer.getData('text');
+    if(t&&isUrl(t)){$('uf').value=t;onIn();toast('URL dari drag & drop','success')}
   });
 });
 </script>
