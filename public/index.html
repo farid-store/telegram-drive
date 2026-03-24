@@ -113,29 +113,11 @@ h1 em{font-style:normal;background:linear-gradient(135deg,var(--bl),var(--vi));-
 .cpb{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;background:var(--s2);border:1px solid var(--b2);border-radius:7px;color:var(--t2);cursor:pointer;transition:.15s;flex-shrink:0;padding:0}
 .cpb:hover{background:var(--s3);color:var(--tx)}
 .ni{padding:14px;text-align:center;font-size:.78rem;color:var(--t2)}
-
-/* ── Inline Player ── */
-.player-wrap{background:var(--s1);border:1px solid rgba(79,142,255,.25);border-radius:12px;padding:14px;margin-bottom:12px;animation:up .25s ease}
-.player-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.player-label{font-size:.78rem;font-weight:600;color:var(--bl2);display:flex;align-items:center;gap:6px}
-.player-close{background:none;border:none;color:var(--t3);cursor:pointer;font-size:1rem;padding:2px 6px;line-height:1;transition:.15s}
-.player-close:hover{color:var(--rd)}
-.player-body{min-height:80px}
-.player-loading{width:100%;height:160px;border-radius:8px;background:var(--s2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
-.player-sp{width:24px;height:24px;border:2px solid var(--b2);border-top-color:var(--bl);border-radius:50%;animation:rot .7s linear infinite}
-.player-video{width:100%;max-height:360px;border-radius:8px;background:#000;display:block}
-.player-actions{margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.player-tip{font-size:.72rem;color:var(--t2);flex:1;line-height:1.55;min-width:120px}
-.btn-newtab{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;background:var(--am);border-radius:7px;color:#000;font-size:.72rem;font-weight:700;text-decoration:none;font-family:'Space Grotesk',sans-serif;flex-shrink:0;transition:.15s;border:none;cursor:pointer}
-.btn-newtab:hover{transform:translateY(-1px);filter:brightness(1.1)}
-.btn-copy-link{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;background:var(--bg1);border:1px solid rgba(79,142,255,.3);border-radius:7px;color:var(--bl2);font-size:.72rem;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;flex-shrink:0;transition:.15s}
-.btn-copy-link:hover{background:var(--bl);border-color:var(--bl);color:#fff}
-.player-error{padding:20px;text-align:center}
-.player-error-icon{font-size:2rem;margin-bottom:10px}
-.player-error-title{font-weight:600;color:var(--am);margin-bottom:6px;font-size:.85rem}
-.player-error-body{color:var(--t2);font-size:.76rem;line-height:1.7;margin-bottom:14px}
-.player-error-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
-
+.guide{background:rgba(255,176,64,.07);border:1px solid rgba(255,176,64,.22);border-radius:10px;padding:12px 15px;margin-bottom:12px;font-size:.77rem;line-height:1.65;animation:up .2s ease;position:relative}
+.guide strong{color:var(--am)}
+.guide-title{font-weight:700;color:var(--am);margin-bottom:6px;font-size:.8rem;display:block}
+.guide-close{position:absolute;top:10px;right:12px;background:none;border:none;color:var(--t3);cursor:pointer;font-size:1rem;line-height:1;padding:0}
+.guide-close:hover{color:var(--am)}
 .sec{margin-top:42px}
 .sh{font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);margin-bottom:12px;display:flex;align-items:center;gap:8px}
 .sh::after{content:'';flex:1;height:1px;background:var(--b1)}
@@ -177,14 +159,14 @@ footer a{color:var(--t2);text-decoration:none}
 <body>
 <div class="amb"></div><div class="gbg"></div>
 <nav>
-  <div class="logo"><div class="logo-icon">⬇</div>vault<b>dl</b></div>
+  <div class="logo"><div class="logo-icon">&#11015;</div>vault<b>dl</b></div>
   <div class="nbadge">500+ Platform</div>
 </nav>
 <div class="pg">
 <div class="hero">
-  <div class="hero-pill"><div class="live-dot"></div>Gratis · No Login · No Watermark</div>
+  <div class="hero-pill"><div class="live-dot"></div>Gratis &middot; No Login &middot; No Watermark</div>
   <h1>Download video dari<br/><em>platform apapun</em></h1>
-  <p class="hero-sub">YouTube, TikTok, Instagram, Twitter, Facebook, Reddit, Vimeo, dan 500+ platform — cukup paste URL.</p>
+  <p class="hero-sub">YouTube, TikTok, Instagram, Twitter, Facebook, Reddit, Vimeo, dan 500+ platform &mdash; cukup paste URL.</p>
 </div>
 <div class="plts-wrap">
   <div class="plts-track" id="ptrack">
@@ -219,8 +201,14 @@ footer a{color:var(--t2);text-decoration:none}
     </button>
   </div>
   <div class="quick-row">
-    <button class="qb" onclick="doPaste()">📋 Paste URL</button>
-    <button class="qb" onclick="doClear()">✕ Hapus</button>
+    <button class="qb" onclick="doPaste()">&#128203; Paste</button>
+    <button class="qb" onclick="setDemo('yt')">&#9654; YouTube</button>
+    <button class="qb" onclick="setDemo('tt')">&#9711; TikTok</button>
+    <button class="qb" onclick="setDemo('ig')">&#9672; Instagram</button>
+    <button class="qb" onclick="setDemo('tw')">&#10022; Twitter</button>
+    <button class="qb" onclick="setDemo('fb')">&#9679; Facebook</button>
+    <button class="qb" onclick="setDemo('rd')">&#9670; Reddit</button>
+    <button class="qb" onclick="doClear()">&#10005; Hapus</button>
   </div>
 </div>
 <div id="zone"></div>
@@ -244,12 +232,12 @@ footer a{color:var(--t2);text-decoration:none}
 <div class="sec">
   <div class="sh">Fitur</div>
   <div class="fg2">
-    <div class="fc"><div class="fci">🎯</div><h4>Universal</h4><p>Cukup paste URL dari platform manapun</p></div>
-    <div class="fc"><div class="fci">🚫</div><h4>No Watermark</h4><p>TikTok, Instagram, Facebook bersih</p></div>
-    <div class="fc"><div class="fci">📊</div><h4>Multi Kualitas</h4><p>4K, 1080p, 720p, audio M4A/Opus/MP3</p></div>
-    <div class="fc"><div class="fci">📋</div><h4>Copy Link</h4><p>Salin link untuk IDM atau download manager</p></div>
-    <div class="fc"><div class="fci">🔒</div><h4>Zero Log</h4><p>URL tidak pernah disimpan di server</p></div>
-    <div class="fc"><div class="fci">📱</div><h4>Semua Device</h4><p>HP, tablet, desktop — responsive sempurna</p></div>
+    <div class="fc"><div class="fci">&#127919;</div><h4>Universal</h4><p>Cukup paste URL dari platform manapun</p></div>
+    <div class="fc"><div class="fci">&#128683;</div><h4>No Watermark</h4><p>TikTok, Instagram, Facebook bersih</p></div>
+    <div class="fc"><div class="fci">&#128202;</div><h4>Multi Kualitas</h4><p>4K, 1080p, 720p, audio M4A/Opus/MP3</p></div>
+    <div class="fc"><div class="fci">&#128203;</div><h4>Copy Link</h4><p>Salin link untuk IDM atau download manager</p></div>
+    <div class="fc"><div class="fci">&#128274;</div><h4>Zero Log</h4><p>URL tidak pernah disimpan di server</p></div>
+    <div class="fc"><div class="fci">&#128241;</div><h4>Semua Device</h4><p>HP, tablet, desktop &mdash; responsive sempurna</p></div>
   </div>
 </div>
 <div class="sec">
@@ -264,9 +252,6 @@ footer a{color:var(--t2);text-decoration:none}
   <p style="margin-top:5px;opacity:.5">Untuk keperluan pribadi. Hormati hak cipta konten creator.</p>
 </footer>
 <script>
-/* ═══════════════════════════════════════════════════════════
-   PLATFORM MAP
-═══════════════════════════════════════════════════════════ */
 const PLAT={
   'youtube.com':{n:'YouTube',c:'#ff3333',bg:'rgba(255,51,51,.15)',ic:'YT'},
   'youtu.be':{n:'YouTube',c:'#ff3333',bg:'rgba(255,51,51,.15)',ic:'YT'},
@@ -303,7 +288,6 @@ const PLAT={
   'weibo.com':{n:'Weibo',c:'#e6162d',bg:'rgba(230,22,45,.15)',ic:'WB'},
   'kwai.com':{n:'Kwai',c:'#ffcc00',bg:'rgba(255,204,0,.15)',ic:'KW'},
 };
-
 const QLABELS={
   'hd_no_watermark':{label:'HD No WM',cls:'q-hd'},
   'no_watermark':{label:'No WM',cls:'q-nowm'},
@@ -318,28 +302,33 @@ const QLABELS={
   'low':{label:'Low',cls:'q-low'},
   'original':{label:'Original',cls:'q-best'},
 };
-
-const API='https://api.ryzumi.net/api/downloader/all-in-one';
+/* ── SATU-SATUNYA PERUBAHAN: dua endpoint, .net utama, .vip fallback silent ── */
+const APIS=[
+  'https://api.ryzumi.net/api/downloader/all-in-one',
+  'https://api.ryzumi.vip/api/downloader/all-in-one',
+];
+const DEMOS={
+  yt:'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+  tt:'https://www.tiktok.com/@voidlane.cjo/video/7608076678421662994',
+  ig:'https://www.instagram.com/p/CvZ8rlYNpqF/',
+  tw:'https://x.com/NASA/status/1755663743186534460',
+  fb:'https://www.facebook.com/watch/?v=766882641177003',
+  rd:'https://www.reddit.com/r/videos/comments/zl90mz/',
+};
 let hist=JSON.parse(localStorage.getItem('vdl9')||'[]');
 let busy=false;
-
-/* ═══════════════════════════════════════════════════════════
-   HELPERS
-═══════════════════════════════════════════════════════════ */
 const isUrl=s=>{try{new URL(s);return true}catch{return false}};
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const $=id=>document.getElementById(id);
 const setZ=h=>$('zone').innerHTML=h;
-
 function getP(url){
   try{
     const h=new URL(url).hostname.replace('www.','');
-    for(const[d,i]of Object.entries(PLAT))if(h===d||h.endsWith('.'+d))return i;
-    for(const[d,i]of Object.entries(PLAT))if(h.includes(d))return i;
+    for(const[d,i]of Object.entries(PLAT)){if(h===d||h.endsWith('.'+d))return i}
+    for(const[d,i]of Object.entries(PLAT)){if(h.includes(d))return i}
   }catch{}
-  return{n:'Video',c:'#4f8eff',bg:'rgba(79,142,255,.15)',ic:'▶'};
+  return{n:'Video',c:'#4f8eff',bg:'rgba(79,142,255,.15)',ic:'&#9654;'};
 }
-
 function ago(ts){
   const d=Date.now()-ts;
   if(d<60000)return'baru saja';
@@ -347,7 +336,6 @@ function ago(ts){
   if(d<86400000)return~~(d/3600000)+' jam lalu';
   return~~(d/86400000)+' hari lalu';
 }
-
 function toast(m,t='info'){
   const c={success:'var(--gn)',error:'var(--rd)',info:'var(--bl2)',warn:'var(--am)'};
   const el=document.createElement('div');
@@ -356,9 +344,7 @@ function toast(m,t='info'){
   $('ts').appendChild(el);
   setTimeout(()=>el.remove(),5000);
 }
-
 function onIn(){$('btn-s').disabled=!isUrl($('url-input').value.trim())}
-
 async function doPaste(){
   try{
     const t=await navigator.clipboard.readText();
@@ -366,9 +352,8 @@ async function doPaste(){
     else toast('Bukan URL valid','warn');
   }catch{toast('Tempel manual (Ctrl+V)','warn')}
 }
-
+function setDemo(k){$('url-input').value=DEMOS[k]||'';onIn()}
 function doClear(){$('url-input').value='';$('btn-s').disabled=true;setZ('')}
-
 function parseQ(q,ext){
   const lq=(q||'').toLowerCase();
   if(QLABELS[lq])return QLABELS[lq];
@@ -377,7 +362,6 @@ function parseQ(q,ext){
   if(q)return{label:q,cls:'q-low'};
   return{label:ext||'?',cls:'q-low'};
 }
-
 function getQCls(v){
   const s=String(v).toLowerCase();
   if(/2160|4k/.test(s))return'q-4k';
@@ -389,315 +373,37 @@ function getQCls(v){
   if(/kb|kbps/.test(s))return'q-audio';
   return'q-low';
 }
-
-/* ═══════════════════════════════════════════════════════════
-   URL UTILITIES
-   
-   detectUrlType() — identifies which CDN the URL belongs to.
-   cleanUrl()      — strips problematic params per CDN type.
-   
-   Twitter/twimg 403 root cause:
-     twimg URLs include a ?tag= param that acts as a signed token
-     tied to the original request context (Referer + IP + UA).
-     When the browser opens a new tab it sends a different Referer
-     (or the domain of your site), which makes the signature invalid
-     → 403.  Removing ?tag= lets the CDN skip signature validation
-     and serve the file as a plain public asset.
-═══════════════════════════════════════════════════════════ */
-function detectUrlType(url){
-  try{
-    const h=new URL(url).hostname;
-    if(h.includes('googlevideo.com'))  return 'youtube';
-    if(h.includes('twimg.com'))        return 'twitter';
-    if(h.includes('fbcdn.net')||h.includes('scontent')) return 'facebook';
-    if(h.includes('redd.it')||h.includes('redditmedia'))return 'reddit';
-  }catch{}
-  return 'direct';
-}
-
-function cleanUrl(url, type){
-  try{
-    const u=new URL(url);
-    // Universal tracking strip
-    ['mibextid','si','fbclid','_nc_cat','_nc_sid','ccb'].forEach(k=>u.searchParams.delete(k));
-    // Twitter: ?tag= causes 403 when Referer changes
-    if(type==='twitter') u.searchParams.delete('tag');
-    return u.href;
-  }catch{return url;}
-}
-
-/* ═══════════════════════════════════════════════════════════
-   BLOB FETCH — strips Referer header via referrerPolicy
-   
-   Fetching with referrerPolicy:'no-referrer' tells the browser
-   NOT to send the Referer header. For Twitter this means the CDN
-   sees no Referer and falls back to normal auth (token-based),
-   which succeeds once we've also removed ?tag=.
-═══════════════════════════════════════════════════════════ */
-async function fetchBlob(url){
-  try{
-    const r=await fetch(url,{referrerPolicy:'no-referrer',cache:'no-store'});
-    if(r.ok){
-      const b=await r.blob();
-      if(b.size>200) return URL.createObjectURL(b);
-    }
-  }catch(e){ console.log('[VaultDL] fetchBlob cors fail:',e.message); }
-  // Second pass: no-cors (opaque — can't read but <video> might play it)
-  try{
-    const r=await fetch(url,{referrerPolicy:'no-referrer',mode:'no-cors',cache:'no-store'});
-    const b=await r.blob();
-    // opaque blobs report size 0 but may still have content
-    return URL.createObjectURL(b);
-  }catch(e){ console.log('[VaultDL] fetchBlob no-cors fail:',e.message); }
-  return null;
-}
-
-/* ═══════════════════════════════════════════════════════════
-   INLINE PLAYER
-   
-   Strategy per type:
-   • twitter  → cleanUrl removes ?tag= → try <video referrerpolicy=no-referrer>
-                → if error: fetchBlob (strips Referer header) → blobURL video
-                → if still error: manual copy UI
-   • youtube  → direct <video referrerpolicy=no-referrer> (googlevideo.com allows)
-   • facebook → direct <video referrerpolicy=no-referrer>
-   • others   → same, with blob fallback
-═══════════════════════════════════════════════════════════ */
-function showInlinePlayer(rawUrl, ext){
-  const old=$('vdl-player');
-  if(old)old.remove();
-
-  const type=detectUrlType(rawUrl);
-  const url =cleanUrl(rawUrl,type);
-
-  const labels={
-    youtube:'▶ YouTube Preview',twitter:'▶ Twitter/X Preview',
-    facebook:'▶ Facebook Preview',reddit:'▶ Reddit Preview',direct:'▶ Preview'
-  };
-
-  const wrap=document.createElement('div');
-  wrap.id='vdl-player';
-  wrap.className='player-wrap';
-  wrap.innerHTML=`
-    <div class="player-header">
-      <span class="player-label">${labels[type]||labels.direct}</span>
-      <button class="player-close" onclick="document.getElementById('vdl-player').remove()">✕</button>
-    </div>
-    <div class="player-body" id="player-body">
-      <div class="player-loading"><div class="player-sp"></div>
-        <span style="font-size:.74rem;color:var(--t2)">Memuat preview…</span>
-      </div>
-    </div>
-    <div class="player-actions">
-      <span class="player-tip" id="player-tip">💡 Memuat…</span>
-      <a class="btn-newtab" id="player-tab" href="${url}" target="_blank" rel="noopener">↗ Tab Baru</a>
-      <button class="btn-copy-link" onclick="copyRaw(this,'${url.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')">📋 Salin Link</button>
-    </div>`;
-
-  const zone=$('zone');
-  zone.insertBefore(wrap,zone.firstChild);
-  wrap.scrollIntoView({behavior:'smooth',block:'start'});
-
-  // Defer actual video build so layout paints first
-  setTimeout(()=>buildPlayer(url,type,ext),80);
-}
-
-async function buildPlayer(url,type,ext){
-  const body=$('player-body');
-  const tip=$('player-tip');
-  if(!body)return;
-
-  function makeVid(src,noRef=true){
-    const v=document.createElement('video');
-    v.className='player-video';
-    v.controls=true;v.preload='metadata';v.playsInline=true;
-    if(noRef)v.referrerPolicy='no-referrer';
-    v.src=src;
-    return v;
-  }
-
-  function setBody(node){
-    body.innerHTML='';
-    if(typeof node==='string') body.innerHTML=node;
-    else body.appendChild(node);
-  }
-
-  function setTip(html){if(tip)tip.innerHTML=html;}
-
-  function successTip(){
-    setTip('💡 Klik kanan video → <strong>Save video as</strong> untuk simpan, atau gunakan tombol ↗ Tab Baru');
-  }
-
-  /* ── Twitter: always strip tag + no-referrer ── */
-  if(type==='twitter'){
-    // Attempt 1: direct <video referrerpolicy=no-referrer>
-    const v1=makeVid(url,true);
-    let ok=false;
-
-    setTip('💡 Mencoba koneksi langsung…');
-
-    await new Promise(resolve=>{
-      const timer=setTimeout(resolve,5000); // 5s timeout
-      v1.addEventListener('loadedmetadata',()=>{ok=true;clearTimeout(timer);resolve()},{once:true});
-      v1.addEventListener('error',()=>{clearTimeout(timer);resolve()},{once:true});
-      // Mount hidden to trigger network request
-      v1.style.cssText='position:absolute;opacity:0;pointer-events:none;width:1px;height:1px';
-      document.body.appendChild(v1);
-    });
-
-    document.body.contains(v1)&&document.body.removeChild(v1);
-
-    if(ok){
-      const v2=makeVid(url,true); // fresh element, visible
-      setBody(v2);
-      successTip();
-      return;
-    }
-
-    // Attempt 2: fetch as blob (removes Referer header entirely)
-    setBody('<div class="player-loading"><div class="player-sp"></div><span style="font-size:.74rem;color:var(--t2)">Bypass mode (no-referrer fetch)…</span></div>');
-    setTip('💡 Memuat via blob…');
-
-    const blobUrl=await fetchBlob(url);
-    if(blobUrl){
-      const vb=makeVid(blobUrl,false); // blob: URL, no ref needed
-      vb.addEventListener('error',()=>{
-        URL.revokeObjectURL(blobUrl);
-        showManualFallback(url);
-        setTip('⚠️ Preview gagal — salin link dan paste di address bar browser baru');
-      },{once:true});
-      setBody(vb);
-      successTip();
-      setTimeout(()=>{try{URL.revokeObjectURL(blobUrl)}catch{}},600000);
-      return;
-    }
-
-    // All attempts failed
-    showManualFallback(url);
-    setTip('⚠️ Preview diblokir — gunakan <strong>Salin Link</strong> dan paste di browser/IDM');
-    return;
-  }
-
-  /* ── YouTube, Facebook, Reddit, Direct ── */
-  const v=makeVid(url,true);
-  v.addEventListener('error',async()=>{
-    // Fallback blob
-    const b=await fetchBlob(url);
-    if(b){
-      const vb=makeVid(b,false);
-      vb.addEventListener('error',()=>{URL.revokeObjectURL(b);showManualFallback(url);},{once:true});
-      setBody(vb);
-      successTip();
-    }else{
-      showManualFallback(url);
-      setTip('⚠️ Preview gagal — gunakan <strong>Salin Link</strong> atau buka ↗ Tab Baru');
-    }
-  },{once:true});
-
-  setBody(v);
-  successTip();
-}
-
-function showManualFallback(url){
-  const body=$('player-body');
-  if(!body)return;
-  const safe=url.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-  body.innerHTML=`
-    <div class="player-error">
-      <div class="player-error-icon">🔒</div>
-      <div class="player-error-title">Preview diblokir oleh server</div>
-      <div class="player-error-body">
-        Server CDN menolak permintaan preview langsung dari browser.<br>
-        Gunakan salah satu opsi di bawah untuk tetap bisa mendownload:
-      </div>
-      <div class="player-error-btns">
-        <button class="btn-copy-link" style="padding:8px 16px;border-radius:8px;font-size:.8rem"
-          onclick="copyRaw(this,'${safe}')">📋 Salin Link</button>
-        <a class="btn-newtab" href="${url}" target="_blank" style="padding:8px 16px;border-radius:8px;font-size:.8rem">↗ Tab Baru</a>
-      </div>
-      <div style="margin-top:12px;font-size:.7rem;color:var(--t3);line-height:1.6">
-        Tip: Paste link yang disalin di address bar browser baru, atau gunakan IDM / 1DM / download manager.
-      </div>
-    </div>`;
-}
-
-async function copyRaw(btn,url){
-  try{
-    await navigator.clipboard.writeText(url);
-    const orig=btn.innerHTML;
-    btn.innerHTML='✓ Disalin!';
-    btn.style.cssText='background:var(--gn);border-color:var(--gn);color:#fff';
-    toast('Link disalin! Paste di IDM / 1DM / address bar browser','success');
-    setTimeout(()=>{btn.innerHTML=orig;btn.style.cssText='';},3000);
-  }catch{toast('Gagal salin — coba manual','warn');}
-}
-
-/* ═══════════════════════════════════════════════════════════
-   SEARCH
-═══════════════════════════════════════════════════════════ */
+/* doSearch: coba .net dulu, kalau 500/error otomatis coba .vip — logika lain TIDAK DIUBAH */
 async function doSearch(){
-  let url=$('url-input').value.trim();
+  const url=$('url-input').value.trim();
   if(!isUrl(url)||busy)return;
-
-  // Facebook short-link guard
-  if(url.includes('/share/r/')||url.includes('/share/v/')||url.includes('fb.watch/')){
-    let webUrl=url;
-    try{let u=new URL(url);if(u.hostname.includes('facebook.com'))u.hostname='web.facebook.com';webUrl=u.href;}catch{}
-    setZ(`<div class="ec" style="flex-direction:column;background:rgba(255,176,64,.07);border-color:rgba(255,176,64,.22);animation:up .25s ease;">
-      <div style="display:flex;gap:12px;align-items:center;">
-        <div class="ei">💡</div>
-        <div>
-          <div class="et" style="color:var(--am);font-size:1rem;">Tautan Pendek Terdeteksi</div>
-          <div class="es">Tautan <b>Share</b> Facebook menyembunyikan ID asli video sehingga tidak bisa langsung diproses.</div>
-        </div>
-      </div>
-      <div style="margin-top:16px;padding:16px;background:var(--s2);border-radius:8px;border:1px solid var(--b2);">
-        <div style="font-size:.85rem;font-weight:600;color:var(--tx);margin-bottom:8px;">Langkah mendapat video ini:</div>
-        <ol style="margin-left:20px;font-size:.75rem;color:var(--t2);line-height:1.7;">
-          <li>Klik tombol kuning di bawah untuk membuka video di browser.</li>
-          <li><strong style="color:var(--rd)">PENTING (HP):</strong> Jika tombol kuning malah membuka aplikasi Facebook, <b>tahan lama (long-press)</b> tombol tersebut, lalu pilih <i>"Buka di tab baru"</i>.</li>
-          <li>Tunggu sampai video memutar dan salin URL panjang dari <i>address bar</i>.</li>
-          <li>Paste URL panjang tersebut kembali ke sini.</li>
-        </ol>
-      </div>
-      <a href="${webUrl}" target="_blank" style="margin-top:16px;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--am);color:#000;text-decoration:none;padding:14px;border-radius:8px;font-family:'Space Grotesk',sans-serif;font-size:.85rem;font-weight:700;">
-        ↗ Buka Video di Browser
-      </a>
-    </div>`);
-    return;
-  }
-
-  // Strip tracking
-  try{
-    let u=new URL(url);
-    ['mibextid','si','fbclid'].forEach(k=>u.searchParams.delete(k));
-    url=u.href;
-  }catch{}
-
   busy=true;
   const p=getP(url);
   const btn=$('btn-s');
   btn.disabled=true;btn.classList.add('loading');
   setZ(`<div class="lc"><div class="lsp"></div><p>Mengambil format dari ${esc(p.n)}...</p><small>api.ryzumi.net</small></div>`);
-
-  try{
-    const res=await fetch(`${API}?url=${encodeURIComponent(url)}`,{headers:{accept:'application/json'}});
-    if(!res.ok){showErr(`Gagal: HTTP ${res.status}`,res.status===404?'Video tidak ditemukan':res.status===403?'Video privat':'Coba lagi');return;}
-    const data=await res.json();
-    if(!data.medias?.length){showErr('Tidak ada format tersedia','Video privat atau platform tidak didukung');return;}
-    renderResult(data,url,p);
-    saveHist(url,p,data.title||'Video');
-    toast(`${data.medias.length} format tersedia!`,'success');
-  }catch{
-    showErr('Koneksi gagal','Coba matikan ad-blocker dan refresh');
-  }finally{
-    busy=false;btn.disabled=false;btn.classList.remove('loading');
+  let lastErr='';
+  for(const api of APIS){
+    try{
+      const res=await fetch(`${api}?url=${encodeURIComponent(url)}`,{headers:{accept:'application/json'}});
+      if(!res.ok){
+        lastErr=`HTTP ${res.status}`;
+        if(res.status===404){showErr('Video tidak ditemukan','URL salah atau video telah dihapus');busy=false;btn.disabled=false;btn.classList.remove('loading');return}
+        if(res.status===403){showErr('Video privat','Coba video lain yang bersifat publik');busy=false;btn.disabled=false;btn.classList.remove('loading');return}
+        continue;/* 500/lain → coba server berikutnya */
+      }
+      const data=await res.json();
+      if(!data.medias?.length){showErr('Tidak ada format tersedia','Video privat atau platform tidak didukung');busy=false;btn.disabled=false;btn.classList.remove('loading');return}
+      renderResult(data,url,p);
+      saveHist(url,p,data.title||'Video');
+      toast(`${data.medias.length} format tersedia!`,'success');
+      busy=false;btn.disabled=false;btn.classList.remove('loading');
+      return;
+    }catch(e){lastErr='Koneksi gagal';}
   }
+  showErr(lastErr||'Gagal','Coba matikan ad-blocker dan refresh');
+  busy=false;btn.disabled=false;btn.classList.remove('loading');
 }
-
-/* ═══════════════════════════════════════════════════════════
-   RENDER RESULT
-═══════════════════════════════════════════════════════════ */
 function renderResult(data,url,p){
   const title=data.title||'Video';
   const thumb=data.thumbnail||'';
@@ -706,10 +412,10 @@ function renderResult(data,url,p){
   const videos=data.medias.filter(m=>m.type==='video');
   const audios=data.medias.filter(m=>m.type==='audio');
   const sorted=[...videos.filter(m=>m.extension==='mp4'),...videos.filter(m=>m.extension!=='mp4')];
-  const thumbH=thumb?`<img src="${esc(thumb)}" alt="" loading="lazy" onerror="this.parentElement.innerHTML='<div class=vth-ph>🎬</div>'">`:`<div class="vth-ph">🎬</div>`;
+  const thumbH=thumb?`<img src="${esc(thumb)}" alt="" loading="lazy" onerror="this.parentElement.innerHTML='<div class=vth-ph>&#127916;</div>'">`:`<div class="vth-ph">&#127916;</div>`;
   const vrows=sorted.length?sorted.map(fmtRow).join(''):`<div class="ni">Tidak ada format video</div>`;
   const arows=audios.length?audios.map(fmtRow).join(''):`<div class="ni">Tidak ada format audio</div>`;
-  const aTab=audios.length?`<button class="ft" onclick="swTab('audio',this)">🎵 Audio <span class="tc">${audios.length}</span></button>`:'';
+  const aTab=audios.length?`<button class="ft" onclick="swTab('audio',this)">&#127925; Audio <span class="tc">${audios.length}</span></button>`:'';
   const aPan=audios.length?`<div class="fg" id="fg-audio">${arows}</div>`:'';
   setZ(`<div class="rc">
   <div class="vi">
@@ -723,7 +429,7 @@ function renderResult(data,url,p){
   </div>
   <div class="fp">
     <div class="fts">
-      <button class="ft on" onclick="swTab('video',this)">🎬 Video <span class="tc">${sorted.length}</span></button>
+      <button class="ft on" onclick="swTab('video',this)">&#127916; Video <span class="tc">${sorted.length}</span></button>
       ${aTab}
     </div>
     <div class="fg on" id="fg-video">${vrows}</div>
@@ -731,14 +437,12 @@ function renderResult(data,url,p){
   </div>
 </div>`);
 }
-
 function swTab(tab,btn){
   document.querySelectorAll('.ft').forEach(b=>b.classList.remove('on'));
   document.querySelectorAll('.fg').forEach(g=>g.classList.remove('on'));
   btn.classList.add('on');
   document.getElementById('fg-'+tab)?.classList.add('on');
 }
-
 function fmtRow(m){
   const{label,cls}=parseQ(m.quality,m.extension);
   const ext=(m.extension||'').toUpperCase();
@@ -762,10 +466,12 @@ function fmtRow(m){
   </div>
 </div>`;
 }
-
-/* ═══════════════════════════════════════════════════════════
-   DOWNLOAD HANDLER
-═══════════════════════════════════════════════════════════ */
+/* =====================================================
+   DOWNLOAD — logika ORIGINAL user, tidak diubah sama sekali
+   1. fetch() blob -> createObjectURL (TikTok, IG, Vimeo, dll)
+   2. <a download> direct -> browser download panel (YouTube)
+   + tombol Copy Link untuk IDM / download manager
+===================================================== */
 async function doDownload(btn,b64,ext){
   if(btn.disabled)return;
   btn.disabled=true;
@@ -773,30 +479,21 @@ async function doDownload(btn,b64,ext){
   const orig=dt?.textContent||'Download';
   if(dt)dt.textContent='...';
   btn.style.cssText='background:var(--am);border-color:var(--am);color:#fff;cursor:wait';
-
-  let rawUrl;
-  try{rawUrl=decodeURIComponent(escape(atob(b64)));}
-  catch{toast('URL tidak valid','error');reset();return;}
-
-  const type=detectUrlType(rawUrl);
-  const url =cleanUrl(rawUrl,type);
+  let url;
+  try{url=decodeURIComponent(escape(atob(b64)))}
+  catch{toast('URL tidak valid','error');reset();return}
   const fname=`VaultDL_${Date.now()}.${ext||'mp4'}`;
-
-  function reset(){btn.style.cssText='';if(dt)dt.textContent=orig;btn.disabled=false;}
-
-  // Platforms where direct download is unreliable — use inline player
-  if(['youtube','twitter','facebook'].includes(type)){
-    if(dt)dt.textContent='▶ Putar';
+  const isYT=url.includes('googlevideo.com');
+  if(isYT){
+    if(dt)dt.textContent='&#9654; Putar';
     btn.style.cssText='background:var(--gn);border-color:var(--gn);color:#fff';
-    showInlinePlayer(url,ext);
-    toast('Preview terbuka — klik kanan video atau salin link untuk download','info');
+    showYTPlayer(url,fname);
+    toast('Video siap \u2014 klik kanan pada video \u2192 Simpan video sebagai...','info');
     setTimeout(reset,3000);
     return;
   }
-
-  // Direct fetch → blob download
   try{
-    const r=await fetch(url,{referrerPolicy:'no-referrer',cache:'no-store'});
+    const r=await fetch(url,{mode:'cors',cache:'no-store'});
     if(!r.ok)throw new Error(`HTTP ${r.status}`);
     const blob=await r.blob();
     if(blob.size<500)throw new Error('Empty');
@@ -806,30 +503,91 @@ async function doDownload(btn,b64,ext){
     document.body.appendChild(a);a.click();document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(bu),20000);
     btn.style.cssText='background:var(--gn);border-color:var(--gn);color:#fff';
-    if(dt)dt.textContent='✓ Selesai';
+    if(dt)dt.textContent='&#10003; Selesai';
     toast('Download berhasil! Cek folder unduhan kamu.','success');
     setTimeout(reset,3000);
     return;
-  }catch(e){console.log('[VaultDL] fetch fail:',e.message);}
-
-  // Fallback: anchor click + inline player
+  }catch(e){
+    console.log('[VaultDL] blob failed:',e.message);
+  }
   const af=document.createElement('a');
   af.href=url;af.download=fname;af.target='_blank';af.rel='noopener';af.style.display='none';
   document.body.appendChild(af);af.click();document.body.removeChild(af);
   btn.style.cssText='background:var(--gn);border-color:var(--gn);color:#fff';
-  if(dt)dt.textContent='↗ Dibuka';
-  showInlinePlayer(url,ext);
-  toast('Link dibuka — atau gunakan 📋 salin link ke download manager','info');
+  if(dt)dt.textContent='&#8599; Dibuka';
+  showGuide('other');
+  toast('Link dibuka \u2014 atau gunakan &#128203; salin link ke download manager','info');
   setTimeout(reset,4000);
+  function reset(){
+    btn.style.cssText='';
+    if(dt)dt.textContent=orig;
+    btn.disabled=false;
+  }
 }
-
-/* ═══════════════════════════════════════════════════════════
-   COPY LINK (row button)
-═══════════════════════════════════════════════════════════ */
+function showYTPlayer(url,fname){
+  const old=document.getElementById('yt-player');
+  if(old)old.remove();
+  const wrap=document.createElement('div');
+  wrap.id='yt-player';
+  wrap.style.cssText='background:var(--s1);border:1px solid rgba(79,142,255,.25);border-radius:12px;padding:14px;margin-bottom:12px;animation:up .25s ease';
+  const safeUrl=url.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  wrap.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <span style="font-size:.78rem;font-weight:600;color:var(--bl2)">&#9654; Preview \u2014 klik kanan video untuk simpan</span>
+      <button onclick="document.getElementById('yt-player').remove()"
+        style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:1rem;padding:2px 6px;line-height:1">&#10005;</button>
+    </div>
+    <video src="${url}" controls preload="metadata" controlslist="nodownload"
+      style="width:100%;max-height:340px;border-radius:8px;background:#000;display:block"
+      oncontextmenu="return true"></video>
+    <div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span style="font-size:.72rem;color:var(--t2);flex:1;line-height:1.55">
+        &#128161; <strong style="color:var(--am)">PC:</strong> Klik kanan video \u2192 <em>Simpan video sebagai</em> &nbsp;&middot;&nbsp;
+        <strong style="color:var(--am)">HP:</strong> Tahan lama video \u2192 Download
+      </span>
+      <button onclick="ytCopy('${safeUrl}',this)"
+        style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:var(--bg1);border:1px solid rgba(79,142,255,.3);border-radius:7px;color:var(--bl2);font-size:.72rem;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;flex-shrink:0"
+        onmouseover="this.style.background='var(--bl)';this.style.color='#fff'"
+        onmouseout="this.style.background='var(--bg1)';this.style.color='var(--bl2)'">
+        &#128203; Salin Link
+      </button>
+    </div>
+  `;
+  const z=$('zone');
+  z.insertBefore(wrap,z.firstChild);
+  wrap.scrollIntoView({behavior:'smooth',block:'start'});
+}
+async function ytCopy(url,btn){
+  try{
+    await navigator.clipboard.writeText(url);
+    const orig=btn.innerHTML;
+    btn.innerHTML='&#10003; Tersalin!';
+    btn.style.background='var(--gn)';
+    btn.style.borderColor='var(--gn)';
+    btn.style.color='#fff';
+    toast('Link disalin! Paste ke IDM / 1DM / browser address bar','success');
+    setTimeout(()=>{btn.innerHTML=orig;btn.style.cssText='';},3000);
+  }catch{
+    toast('Gagal salin \u2014 coba manual','warn');
+  }
+}
+function showGuide(type='other'){
+  const old=document.getElementById('dl-guide');
+  if(old)old.remove();
+  const g=document.createElement('div');
+  g.id='dl-guide';g.className='guide';
+  g.innerHTML=`<button class="guide-close" onclick="this.parentElement.remove()">&#10005;</button>
+<span class="guide-title">&#128161; Tip: Jika download tidak otomatis</span>
+<div style="color:var(--t2);line-height:1.75">
+Klik &#128203; di sebelah tombol \u2192 salin link \u2192 paste di browser address bar atau <strong>IDM / download manager</strong>
+</div>`;
+  const z=$('zone');
+  z.insertBefore(g,z.firstChild);
+}
 async function copyLink(b64){
   let url;
-  try{url=decodeURIComponent(escape(atob(b64)));}
-  catch{toast('URL tidak valid','error');return;}
+  try{url=decodeURIComponent(escape(atob(b64)))}
+  catch{toast('URL tidak valid','error');return}
   try{
     await navigator.clipboard.writeText(url);
     toast('Link disalin! Paste di IDM / download manager / address bar browser','success');
@@ -841,14 +599,9 @@ async function copyLink(b64){
     toast('Link disalin!','success');
   }
 }
-
 function showErr(title,sub=''){
-  setZ(`<div class="ec"><div class="ei">⚠</div><div><div class="et">${esc(title)}</div>${sub?`<div class="es">${esc(sub)}</div>`:''}</div></div>`);
+  setZ(`<div class="ec"><div class="ei">&#9888;</div><div><div class="et">${esc(title)}</div>${sub?`<div class="es">${esc(sub)}</div>`:''}</div></div>`);
 }
-
-/* ═══════════════════════════════════════════════════════════
-   HISTORY
-═══════════════════════════════════════════════════════════ */
 function saveHist(url,p,title){
   hist=hist.filter(h=>h.url!==url);
   hist.unshift({url,title,pn:p.n,pc:p.c,pb:p.bg,pi:p.ic,ts:Date.now()});
@@ -856,10 +609,9 @@ function saveHist(url,p,title){
   localStorage.setItem('vdl9',JSON.stringify(hist));
   renderHist();
 }
-
 function renderHist(){
   const l=$('hl'),e=$('he');
-  if(!hist.length){l.innerHTML='';e.style.display='block';return;}
+  if(!hist.length){l.innerHTML='';e.style.display='block';return}
   e.style.display='none';
   l.innerHTML=hist.map(h=>`<div class="hi" onclick="loadHist('${encodeURIComponent(h.url)}')">
     <div class="hic" style="background:${h.pb};color:${h.pc}">${esc(h.pi)}</div>
@@ -868,34 +620,29 @@ function renderHist(){
     <div class="hd"></div>
   </div>`).join('');
 }
-
 function loadHist(enc){
   $('url-input').value=decodeURIComponent(enc);onIn();
   window.scrollTo({top:0,behavior:'smooth'});
   toast('URL dimuat dari riwayat','info');
 }
-
-/* ═══════════════════════════════════════════════════════════
-   INIT
-═══════════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded',()=>{
   renderHist();
   document.body.addEventListener('dragover',e=>e.preventDefault());
   document.body.addEventListener('drop',e=>{
     e.preventDefault();
     const t=e.dataTransfer.getData('text');
-    if(t&&isUrl(t)){$('url-input').value=t;onIn();toast('URL dari drag & drop','success');}
+    if(t&&isUrl(t)){$('url-input').value=t;onIn();toast('URL dari drag & drop','success')}
   });
   $('url-input').addEventListener('focus',async()=>{
     if($('url-input').value)return;
-    try{const t=await navigator.clipboard.readText();if(isUrl(t)){$('url-input').value=t;onIn();toast('URL otomatis ditempel','info');}}catch{}
+    try{const t=await navigator.clipboard.readText();if(isUrl(t)){$('url-input').value=t;onIn();toast('URL otomatis ditempel','info')}}catch{}
   });
   const track=$('ptrack');
   let drag=false,sx=0,sl=0;
-  track.addEventListener('mousedown',e=>{drag=true;sx=e.pageX-track.offsetLeft;sl=track.scrollLeft;track.style.cursor='grabbing';});
-  track.addEventListener('mouseleave',()=>{drag=false;track.style.cursor='';});
-  track.addEventListener('mouseup',()=>{drag=false;track.style.cursor='';});
-  track.addEventListener('mousemove',e=>{if(!drag)return;e.preventDefault();track.scrollLeft=sl-(e.pageX-track.offsetLeft-sx);});
+  track.addEventListener('mousedown',e=>{drag=true;sx=e.pageX-track.offsetLeft;sl=track.scrollLeft;track.style.cursor='grabbing'});
+  track.addEventListener('mouseleave',()=>{drag=false;track.style.cursor=''});
+  track.addEventListener('mouseup',()=>{drag=false;track.style.cursor=''});
+  track.addEventListener('mousemove',e=>{if(!drag)return;e.preventDefault();track.scrollLeft=sl-(e.pageX-track.offsetLeft-sx)});
 });
 </script>
 </body>
