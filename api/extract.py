@@ -168,6 +168,11 @@ def medias_from(info, tag=""):
     return out
 
 
+def is_bot_check(e):
+    low = ANSI.sub("", str(e)).lower()
+    return "confirm you" in low and "bot" in low
+
+
 def extract(url):
     opts = {
         "quiet": True,
@@ -178,14 +183,26 @@ def extract(url):
         "cachedir": "/tmp/yt-dlp-cache",
         "retries": 2,
     }
+    has_cookies = False
     ck = cookie_file()
     if ck:
         opts["cookiefile"] = ck
+        has_cookies = True
     if os.environ.get("YTDLP_PROXY"):
         opts["proxy"] = os.environ["YTDLP_PROXY"]
 
-    with yt_dlp.YoutubeDL(opts) as ydl:
-        info = ydl.extract_info(url, download=False)
+    try:
+        with yt_dlp.YoutubeDL(opts) as ydl:
+            info = ydl.extract_info(url, download=False)
+    except Exception as e:
+        # YouTube bot check dari IP datacenter: coba sekali lagi dengan client alternatif
+        # (android_vr kadang lolos tanpa login). Tidak ada jaminan — tergantung kebijakan YouTube saat ini.
+        if not is_bot_check(e) or has_cookies:
+            raise
+        retry = dict(opts)
+        retry["extractor_args"] = {"youtube": {"player_client": ["android_vr", "tv"]}}
+        with yt_dlp.YoutubeDL(retry) as ydl:
+            info = ydl.extract_info(url, download=False)
 
     if not info:
         raise ValueError("yt-dlp tidak mengembalikan data")
