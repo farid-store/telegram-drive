@@ -1,17 +1,18 @@
-// api/get.js — Serverless (Node, region sin1)
-// Ekstraktor utama. Browser HANYA memanggil endpoint ini (same-origin, tanpa CORS proxy).
-// Urutan provider:
-//   1. Spesifik platform : Terabox, Doodstream, TikTok (tikwm), Twitter/X (fxtwitter)
-//   2. Ryzumi all-in-one (YouTube, IG, FB, dll)
-//   3. Cobalt (opsional, aktif kalau COBALT_API_URL di-set)
+// api/get.js — Serverless (Node, region sin1) — ORKESTRATOR ekstraksi
+// Browser HANYA memanggil endpoint ini (same-origin). Urutan provider (semuanya gratis):
+//   1. Spesifik : Terabox (worker), Doodstream (scrape langsung),
+//                 TikTok (tikwm → no-watermark HD), Twitter/X (fxtwitter, open source FixTweet)
+//   2. yt-dlp   : /api/extract (Python, open source, 1000+ situs)  ← mesin utama
+//   3. Cobalt   : opsional, aktif bila COBALT_API_URL di-set (open source, bisa self-host)
 // Setiap media dikembalikan dengan field `dl` = link proxy /api/dl (streaming, bypass CORS/Referer).
 //
 // ENV (semua opsional):
-//   SIGN_SECRET     string acak panjang — mengunci /api/dl supaya tidak bisa dipakai orang lain sebagai open proxy
-//   COBALT_API_URL  mis. https://cobalt.domainmu.com   (self-host Cobalt)
-//   COBALT_API_KEY  API key Cobalt bila instance-nya butuh
-//   TERABOX_API     override endpoint worker Terabox
-//   RYZUMI_BASE     override domain Ryzumi (default: api.ryzumi.vip lalu api.ryzumi.net)
+//   SIGN_SECRET        string acak panjang — mengunci /api/dl & /api/extract
+//   YTDLP_COOKIES_B64  cookies.txt (Netscape) base64 — dibaca extract.py (YouTube/IG yang minta login)
+//   YTDLP_PROXY        proxy untuk yt-dlp (mis. residential) — dibaca extract.py
+//   COBALT_API_URL     mis. https://cobalt.domainmu.com   (instance Cobalt)
+//   COBALT_API_KEY     API key Cobalt bila instance-nya butuh
+//   TERABOX_API        override endpoint worker Terabox
 
 const crypto = require('crypto');
 
@@ -32,7 +33,6 @@ const IMAGE_EXT = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
 
 const hostOf = u => { try { return new URL(u).hostname.replace(/^www\./, '').toLowerCase(); } catch { return ''; } };
 const inList = (h, list) => list.some(d => h === d || h.endsWith('.' + d));
-const sig = () => AbortSignal.timeout(15000);
 
 // ---------- helpers ----------
 function cleanUrl(raw) {
@@ -109,44 +109,29 @@ function dlLink(m, title) {
 }
 
 // ---------- providers ----------
-// Ryzumi pindah domain: api.ryzumi.vip (baru) — api.ryzumi.net (lama) kini sering 403.
-// Bisa di-override lewat env RYZUMI_BASE (pisahkan dengan koma bila lebih dari satu).
-const RYZUMI_BASES = (process.env.RYZUMI_BASE || 'https://api.ryzumi.vip,https://api.ryzumi.net')
-  .split(',').map(x => x.trim().replace(/\/$/, '')).filter(Boolean);
-
-async function viaRyzumi(url) {
-  const errs = [];
-  for (const base of RYZUMI_BASES) {
-    try {
-      const r = await fetch(`${base}/api/downloader/all-in-one?url=${encodeURIComponent(url)}`, {
-        headers: { accept: 'application/json', 'User-Agent': 'curl/8.7.1' },
-        signal: AbortSignal.timeout(25000),
-      });
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      const d = await r.json();
-      const list = d.medias || d.data?.medias || d.result?.medias || [];
-      if (!list.length) throw new Error('tidak ada media di respons');
-      const a = d.author;
-      return {
-        title: d.title || d.data?.title,
-        thumbnail: d.thumbnail || d.thumb || d.data?.thumbnail,
-        source: d.source,
-        author: typeof a === 'string' ? a : a?.name,
-        medias: list,
-      };
-    } catch (e) {
-      errs.push(`${new URL(base).hostname} → ${e.message}`);
-    }
+async function viaYtdlp(url, ctx) {
+  const headers = { accept: 'application/json' };
+  if (SIGN_SECRET) headers['x-internal-key'] = SIGN_SECRET;
+  const r = await fetch(`https://${ctx.host}/api/extract?url=${encodeURIComponent(url)}`, {
+    headers, signal: ctx.t(38000),
+  });
+  const text = await r.text();
+  let j = {};
+  try { j = JSON.parse(text); } catch { /* bukan JSON */ }
+  if (!r.ok) {
+    if (!j.error) throw new Error(`HTTP ${r.status} — /api/extract belum ter-deploy? (butuh requirements.txt + api/extract.py)`);
+    const e = new Error(j.error); e.kind = j.kind; throw e;
   }
-  throw new Error(errs.join(' | '));
+  if (!j.medias?.length) throw new Error('tidak ada media');
+  return j;
 }
 
-async function viaTikwm(url) {
+async function viaTikwm(url, ctx) {
   const r = await fetch('https://www.tikwm.com/api/', {
     method: 'POST',
     headers: { 'content-type': 'application/x-www-form-urlencoded', 'user-agent': UA },
     body: new URLSearchParams({ url, hd: '1' }),
-    signal: sig(),
+    signal: ctx.t(12000),
   });
   const j = await r.json();
   if (j.code !== 0 || !j.data) throw new Error(j.msg || 'gagal');
@@ -164,10 +149,10 @@ async function viaTikwm(url) {
   return { title: d.title, thumbnail: abs(d.cover || d.origin_cover), source: 'TikTok', author: d.author?.nickname, medias };
 }
 
-async function viaFxTwitter(url) {
+async function viaFxTwitter(url, ctx) {
   const id = new URL(url).pathname.match(/\/status(?:es)?\/(\d+)/)?.[1];
   if (!id) throw new Error('ID tweet tidak ditemukan');
-  const r = await fetch('https://api.fxtwitter.com/i/status/' + id, { headers: { 'user-agent': UA }, signal: sig() });
+  const r = await fetch('https://api.fxtwitter.com/i/status/' + id, { headers: { 'user-agent': UA }, signal: ctx.t(12000) });
   if (!r.ok) throw new Error('HTTP ' + r.status);
   const j = await r.json();
   const t = j.tweet;
@@ -191,12 +176,12 @@ async function viaFxTwitter(url) {
   };
 }
 
-async function viaCobalt(url) {
+async function viaCobalt(url, ctx) {
   if (!COBALT_API_URL) throw new Error('belum dikonfigurasi (COBALT_API_URL)');
   const headers = { accept: 'application/json', 'content-type': 'application/json' };
   if (COBALT_API_KEY) headers.authorization = 'Api-Key ' + COBALT_API_KEY;
   const r = await fetch(COBALT_API_URL + '/', {
-    method: 'POST', headers, signal: AbortSignal.timeout(25000),
+    method: 'POST', headers, signal: ctx.t(20000),
     body: JSON.stringify({ url, videoQuality: '1080', filenameStyle: 'basic' }),
   });
   const j = await r.json().catch(() => ({}));
@@ -213,8 +198,8 @@ async function viaCobalt(url) {
   return { title: j.filename ? j.filename.replace(/\.[a-z0-9]+$/i, '') : undefined, medias };
 }
 
-async function viaTerabox(url) {
-  const r = await fetch(TERABOX_API + '?url=' + encodeURIComponent(url), { headers: { accept: 'application/json' }, signal: AbortSignal.timeout(25000) });
+async function viaTerabox(url, ctx) {
+  const r = await fetch(TERABOX_API + '?url=' + encodeURIComponent(url), { headers: { accept: 'application/json' }, signal: ctx.t(20000) });
   if (!r.ok) throw new Error('HTTP ' + r.status);
   const j = await r.json();
   if (!j.success || !j.files?.length) throw new Error(j.error || 'tidak ada file');
@@ -226,12 +211,12 @@ async function viaTerabox(url) {
   return { title: j.files.length === 1 ? j.files[0].file_name : `${j.files.length} file Terabox`, source: 'Terabox', medias };
 }
 
-async function viaDood(url) {
+async function viaDood(url, ctx) {
   const u = new URL(url);
   const code = u.pathname.match(/\/[def]\/([a-z0-9]+)/i)?.[1];
   if (!code) throw new Error('ID video tidak ditemukan di URL');
   const r = await fetch(`https://${u.hostname}/e/${code}`, {
-    headers: { 'user-agent': UA, referer: `https://${u.hostname}/` }, redirect: 'follow', signal: sig(),
+    headers: { 'user-agent': UA, referer: `https://${u.hostname}/` }, redirect: 'follow', signal: ctx.t(12000),
   });
   const html = await r.text();
   const host = new URL(r.url).hostname; // Dood sering redirect ke mirror lain
@@ -239,7 +224,7 @@ async function viaDood(url) {
   if (!pm) throw new Error('pass_md5 tidak ditemukan (kemungkinan diblok Cloudflare)');
   const token = html.match(/[?&]token=([a-z0-9]+)/i)?.[1] || pm[0].split('/').pop();
   const base = (await (await fetch(`https://${host}${pm[0]}`, {
-    headers: { 'user-agent': UA, referer: `https://${host}/e/${code}` }, signal: sig(),
+    headers: { 'user-agent': UA, referer: `https://${host}/e/${code}` }, signal: ctx.t(12000),
   })).text()).trim();
   if (!/^https?:\/\//.test(base)) throw new Error('pass_md5 tidak mengembalikan URL');
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -272,20 +257,29 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'URL tidak valid' });
   }
 
+  const deadline = Date.now() + 54000;
   url = await resolveShort(url);
   const h = hostOf(url);
+
+  const ctx = {
+    host: ((req.headers || {})['x-forwarded-host'] || (req.headers || {}).host || '').split(',')[0].trim(),
+    t: ms => AbortSignal.timeout(Math.max(1500, Math.min(ms, deadline - Date.now() - 800))),
+  };
 
   const chain = [];
   if (inList(h, TERABOX)) chain.push(['terabox', viaTerabox]);
   else if (inList(h, DOOD) || /^dood\.[a-z]{2,6}$/.test(h)) chain.push(['dood', viaDood]);
   else if (inList(h, TIKTOK)) chain.push(['tikwm', viaTikwm]);
   else if (inList(h, TWITTER)) chain.push(['fxtwitter', viaFxTwitter]);
-  chain.push(['ryzumi', viaRyzumi], ['cobalt', viaCobalt]);
+  chain.push(['yt-dlp', viaYtdlp], ['cobalt', viaCobalt]);
 
   const errors = [];
+  let kinds = [];
   for (const [name, fn] of chain) {
+    if (deadline - Date.now() < 3000) { errors.push(`${name}: dilewati (waktu habis)`); continue; }
+    if (name === 'cobalt' && !COBALT_API_URL) { errors.push('cobalt: tidak dikonfigurasi (opsional)'); continue; }
     try {
-      const out = await fn(url);
+      const out = await fn(url, ctx);
       const medias = (out.medias || []).map(normMedia).filter(Boolean);
       if (!medias.length) throw new Error('media kosong');
       const title = out.title || 'Video';
@@ -305,13 +299,21 @@ module.exports = async function handler(req, res) {
         })),
       });
     } catch (e) {
+      if (e.kind) kinds.push(e.kind);
       errors.push(`${name}: ${e.message}`);
     }
   }
 
+  let hint = 'Pastikan video publik (bukan privat / terhapus) lalu coba lagi.';
+  if (kinds.includes('bot_check') || kinds.includes('login_required')) {
+    hint = 'Platform ini memblokir IP server (YouTube/Instagram sering begini). Solusi: isi YTDLP_COOKIES_B64 (cookies akun), YTDLP_PROXY (proxy residential), atau COBALT_API_URL di Environment Variables Vercel lalu redeploy.';
+  } else if (kinds.includes('unavailable')) {
+    hint = 'Video privat, dihapus, atau dibatasi wilayah.';
+  }
+
   return res.status(502).json({
     error: 'Semua provider gagal mengambil video ini',
-    hint: 'Pastikan video publik (bukan privat / terhapus) lalu coba lagi. Untuk Instagram/YouTube yang sering diblok, set COBALT_API_URL (self-host Cobalt).',
+    hint,
     details: errors,
   });
 };
