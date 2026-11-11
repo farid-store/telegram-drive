@@ -1,8 +1,7 @@
 {
   "regions": ["sin1"],
   "functions": {
-    "api/get.js": {
-      "maxDuration": 30
-    }
+    "api/get.js": { "maxDuration": 60 },
+    "api/analyze.js": { "maxDuration": 15 }
   }
 }
