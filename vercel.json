@@ -2,6 +2,7 @@
   "regions": ["sin1"],
   "functions": {
     "api/get.js": { "maxDuration": 60 },
+    "api/extract.py": { "maxDuration": 50 },
     "api/analyze.js": { "maxDuration": 15 }
   }
 }
