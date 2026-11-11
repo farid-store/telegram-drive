@@ -11,6 +11,7 @@
 //   COBALT_API_URL  mis. https://cobalt.domainmu.com   (self-host Cobalt)
 //   COBALT_API_KEY  API key Cobalt bila instance-nya butuh
 //   TERABOX_API     override endpoint worker Terabox
+//   RYZUMI_BASE     override domain Ryzumi (default: api.ryzumi.vip lalu api.ryzumi.net)
 
 const crypto = require('crypto');
 
@@ -108,23 +109,36 @@ function dlLink(m, title) {
 }
 
 // ---------- providers ----------
+// Ryzumi pindah domain: api.ryzumi.vip (baru) — api.ryzumi.net (lama) kini sering 403.
+// Bisa di-override lewat env RYZUMI_BASE (pisahkan dengan koma bila lebih dari satu).
+const RYZUMI_BASES = (process.env.RYZUMI_BASE || 'https://api.ryzumi.vip,https://api.ryzumi.net')
+  .split(',').map(x => x.trim().replace(/\/$/, '')).filter(Boolean);
+
 async function viaRyzumi(url) {
-  const r = await fetch('https://api.ryzumi.net/api/downloader/all-in-one?url=' + encodeURIComponent(url), {
-    headers: { accept: 'application/json', 'User-Agent': 'curl/8.7.1' },
-    signal: AbortSignal.timeout(25000),
-  });
-  if (!r.ok) throw new Error('HTTP ' + r.status);
-  const d = await r.json();
-  const list = d.medias || d.data?.medias || d.result?.medias || [];
-  if (!list.length) throw new Error('tidak ada media di respons');
-  const a = d.author;
-  return {
-    title: d.title || d.data?.title,
-    thumbnail: d.thumbnail || d.thumb || d.data?.thumbnail,
-    source: d.source,
-    author: typeof a === 'string' ? a : a?.name,
-    medias: list,
-  };
+  const errs = [];
+  for (const base of RYZUMI_BASES) {
+    try {
+      const r = await fetch(`${base}/api/downloader/all-in-one?url=${encodeURIComponent(url)}`, {
+        headers: { accept: 'application/json', 'User-Agent': 'curl/8.7.1' },
+        signal: AbortSignal.timeout(25000),
+      });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const d = await r.json();
+      const list = d.medias || d.data?.medias || d.result?.medias || [];
+      if (!list.length) throw new Error('tidak ada media di respons');
+      const a = d.author;
+      return {
+        title: d.title || d.data?.title,
+        thumbnail: d.thumbnail || d.thumb || d.data?.thumbnail,
+        source: d.source,
+        author: typeof a === 'string' ? a : a?.name,
+        medias: list,
+      };
+    } catch (e) {
+      errs.push(`${new URL(base).hostname} → ${e.message}`);
+    }
+  }
+  throw new Error(errs.join(' | '));
 }
 
 async function viaTikwm(url) {
