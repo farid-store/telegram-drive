@@ -30,6 +30,9 @@ Mesin utama: **yt-dlp** (open source). Ada sistem iklan yang bisa dihidupkan/dim
 
 ### Monetisasi
 - **Slot iklan:** sidebar kiri & kanan (portrait), tengah (di bawah hasil), dan **pop-up** saat tombol Cari/Download ditekan (ada tombol tutup).
+- **Direct Link (Monetag):** tab baru terbuka tepat saat pengguna menekan Download/Cari, dengan jeda dan batas per kunjungan; download tetap berjalan.
+- **Script global:** tempel tag zona Monetag (OnClick, Vignette, In-Page Push, dll.) di admin; disisipkan ke `<head>` dan bisa di-ON/OFF tanpa deploy ulang.
+- **Preset & ringkasan:** tombol Ringan / Seimbang / Maksimal / Matikan semua, plus indikator apa saja yang sedang aktif.
 - **Banner gambar sendiri:** isi URL gambar + link tujuan → kode dibuat otomatis; klik gambar membuka link di tab baru (cocok untuk iklan langsung/sponsor).
 - **Admin tersembunyi** dengan password: saklar utama, per-slot (aktif, ukuran, mode, kode iklan), pengaturan pop-up, tombol tes, dan statistik.
 - Dirancang tidak mengganggu — lihat bagian 6.
@@ -75,7 +78,7 @@ Browser **hanya** bicara ke domain-mu sendiri (tanpa CORS proxy publik).
 ├── public/
 │   ├── index.html      Seluruh antarmuka
 │   ├── manifest.webmanifest   PWA + share target
-│   ├── sw.js           Service worker
+│   ├── sw.js           Service worker (PWA) + bagian opsional untuk Monetag Push
 │   ├── icons/          icon-192, icon-512, maskable-512, apple-touch-icon
 │   ├── ads/            contoh banner (160x600, 728x90, 300x250) — hapus/ganti dengan banner sendiri
 │   ├── terms.html  privacy.html  dmca.html
@@ -172,6 +175,37 @@ Env baru **hanya berlaku untuk deployment baru** → **Deployments → … → R
 3. Pilih **Ukuran** yang sama dengan unit di jaringan iklan, pilih **Mode**, pastikan kotak slot dicentang, klik **💾 Simpan**. Pengunjung melihat perubahan dalam ±15 detik.
 4. Gunakan **▶ Tes tampilan** untuk melihat pop-up.
 
+### Integrasi Monetag (OnClick, Direct Link, Vignette, dll.)
+
+**Di mana menempel apa:**
+
+| Kebutuhan | Tempat | Catatan |
+|---|---|---|
+| **Verifikasi situs** Monetag / tag zona yang diminta ada di HTML awal | **Statis** di `public/index.html`, di blok bertanda tepat setelah `<head>` | Pengecekan instalasi Monetag membaca HTML mentah, jadi tag verifikasi tidak boleh hanya disisipkan lewat JavaScript. Tidak bisa di-ON/OFF dari admin. |
+| Tag zona lain: OnClick/Popunder, Vignette, In-Page Push, Multitag | **Admin → Script global** | Disisipkan ke `<head>` saat halaman dimuat; bisa dimatikan dari admin. Script bersumber sama yang sudah ada statis tidak dimuat dua kali. |
+| **Direct Link** (tab baru saat klik) | **Admin → Direct Link** | Isi URL dari Monetag, pilih pemicu (Download / Cari), jeda, dan maksimum per kunjungan. Tombol **↗ Tes** untuk mencoba. |
+| **Push Notifications** | Bagian "MONETAG PUSH" paling bawah `public/sw.js` | Monetag meminta `/sw.js`; file itu juga dipakai PWA, jadi isinya digabung di sana. Kosongkan bila tidak memakai Push. |
+| Banner gambar / kode banner | Admin → slot kiri/kanan/tengah/pop-up | Lihat bagian di atas. |
+
+**Penting saat mengganti `index.html`:** bila kamu sebelumnya menempel tag Monetag di `<head>` file lama, **salin ulang ke blok bertanda** di file baru. Begitu juga bila kamu memakai Push: salin ulang isi `sw.js` Monetag ke bagian bawah `public/sw.js`.
+
+**Cara kerja Direct Link:**
+- Dibuka dengan `window.open(url,'_blank','noopener')` **sinkron saat klik**, sehingga tidak diblok pop-up blocker. Pemicu otomatis tanpa klik (mis. hasil Bagikan) tidak membukanya.
+- Bawaan: hanya saat tombol **Download**, jeda 120 detik, maksimum 3 kali per kunjungan.
+- **Satu iklan per aksi:** bila Direct Link baru saja terbuka, pop-up iklan tidak ikut muncul pada aksi yang sama.
+- **Tidak aktif selama kamu login admin**, supaya kamu tidak membuat impresi/klik sendiri. Jangan juga mengklik iklan di situsmu sendiri.
+- Download dan pencarian tetap berjalan di tab asal.
+
+**Menghindari terlalu banyak iklan:** tag OnClick/Popunder Monetag sudah aktif di **setiap klik** di seluruh halaman, termasuk tombol Download. Memakainya bersamaan dengan Direct Link dan pop-up akan menumpuk beberapa iklan dalam sekali klik. Pilih salah satu pemicu untuk tombol Download, lalu atur lewat preset. Cek aturan Monetag untuk tiap format sebelum mengaktifkannya.
+
+**Preset cepat** (hanya mengubah saklar, tidak menghapus kode/URL, tidak menyentuh Script global):
+- **Ringan** — hanya banner.
+- **Seimbang** — banner + pop-up saat Download.
+- **Maksimal** — banner + pop-up (Cari & Download) + Direct Link (perlu URL terisi).
+- **Matikan semua** — saklar utama OFF.
+
+Perubahan Direct Link/banner terlihat pengunjung dalam ±15 detik; **Script global** berlaku saat halaman dimuat ulang. Statistik dan ringkasan status ada di atas panel.
+
 ### Banner gambar sendiri (klik → menuju link)
 Cocok untuk iklan langsung dari sponsor atau promosi produkmu sendiri — tanpa jaringan iklan.
 
@@ -225,6 +259,8 @@ Tidak semua jaringan menerima situs downloader dan aturan tiap jaringan berubah.
 | Download 403 / "terikat IP" | Link media terikat IP pengambil (umum di YouTube) | Pakai Cobalt; atau buka link asli di tab baru |
 | "Signature tidak valid" saat memakai situs | `SIGN_SECRET` baru diganti | Cari ulang videonya |
 | HTTP 429 | Rate limit | Tunggu hitung mundur |
+| Direct Link tidak terbuka | Jeda/maks. per kunjungan tercapai, sedang login admin, saklar mati, atau pemblokir pop-up | Tes dengan tombol ↗ Tes; buka di jendela incognito tanpa login admin; cek pengaturan jeda |
+| Tag Monetag termuat dua kali | Ditempel di `index.html` **dan** di Script global dengan `src` berbeda | Pakai salah satu; `src` yang sama otomatis tidak digandakan |
 | Iklan tidak muncul | Situs belum disetujui, ukuran tidak cocok, adblock, layar sempit (sidebar), atau slot kosong | Cek di incognito tanpa adblock; samakan ukuran |
 | "Penyimpanan belum terhubung" di admin | Env Redis tidak terbaca | Cek nama env di Settings, pastikan redeploy Production |
 | Fungsi timeout | Platform lambat | Coba lagi; turunkan `maxDuration` di `vercel.json` jika Vercel menolak nilainya untuk plan-mu |
