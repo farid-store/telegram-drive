@@ -2,8 +2,10 @@
 api/extract.py — Ekstraktor berbasis yt-dlp (open source, 1000+ situs), Vercel Python function.
 Dipanggil INTERNAL oleh /api/get (tidak dipanggil langsung oleh browser).
 
-GET /api/extract?url=<video url>
+GET /api/extract?url=<video url>[&playlist=1]
   -> 200 {title, thumbnail, source, author, medias:[{url,type,extension,quality,size,ref}]}
+     (type: video | audio | image | subtitle)
+  -> 200 (playlist=1) {playlist:true, title, source, entries:[{title,url,thumbnail,duration}]}
   -> 4xx/5xx {error, kind}
 
 ENV (semua opsional):
@@ -168,6 +170,97 @@ def medias_from(info, tag=""):
     return out
 
 
+LANG_PREF = ["id", "en"]
+SUB_EXT_PREF = ["srt", "vtt", "ttml"]
+
+
+def pick_sub(fmts):
+    by = {(f.get("ext") or "").lower(): f for f in fmts if f.get("url")}
+    for e in SUB_EXT_PREF:
+        if e in by:
+            return by[e]
+    return next(iter(by.values()), None)
+
+
+def subtitle_medias(info):
+    """Subtitle manual (maks 6 bahasa, id & en lebih dulu) + auto-caption hanya id/en."""
+    out = []
+    subs = {k: v for k, v in (info.get("subtitles") or {}).items() if k != "live_chat" and v}
+    auto = {k: v for k, v in (info.get("automatic_captions") or {}).items() if v}
+
+    def order(k):
+        base = k.split("-")[0].lower()
+        return (0 if base in LANG_PREF else 1, LANG_PREF.index(base) if base in LANG_PREF else 99, k)
+
+    for lang in sorted(subs, key=order)[:6]:
+        f = pick_sub(subs[lang])
+        if f:
+            out.append({"url": f["url"], "type": "subtitle", "extension": (f.get("ext") or "vtt").lower(),
+                        "quality": lang.upper(), "size": f.get("name"), "ref": ref_of(f)})
+    for lang in LANG_PREF:
+        if lang in subs:
+            continue
+        cand = auto.get(lang) or auto.get(lang + "-orig")
+        f = pick_sub(cand) if cand else None
+        if f:
+            out.append({"url": f["url"], "type": "subtitle", "extension": (f.get("ext") or "vtt").lower(),
+                        "quality": lang.upper() + " (auto)", "size": None, "ref": ref_of(f)})
+    return out
+
+
+def thumbnail_media(info):
+    """Thumbnail resolusi tertinggi (utamakan jpg/png agar mudah dibuka)."""
+    thumbs = [t for t in (info.get("thumbnails") or []) if t.get("url")]
+    if not thumbs:
+        return None
+
+    def score(t):
+        url = t["url"].lower().split("?")[0]
+        fmt = 1 if url.endswith((".jpg", ".jpeg", ".png")) else 0
+        return (fmt, (t.get("width") or 0) * (t.get("height") or 0), t.get("preference") or 0)
+
+    best = max(thumbs, key=score)
+    ext = best["url"].lower().split("?")[0].rsplit(".", 1)[-1]
+    if ext not in IMG_EXT:
+        ext = "jpg"
+    w, h = best.get("width"), best.get("height")
+    return {"url": best["url"], "type": "image", "extension": ext,
+            "quality": "Thumbnail HD" + (f" {w}x{h}" if w and h else ""), "size": None, "ref": None}
+
+
+def playlist_info(url):
+    opts = {
+        "quiet": True, "no_warnings": True, "skip_download": True,
+        "extract_flat": "in_playlist", "playlistend": 25,
+        "socket_timeout": 20, "cachedir": "/tmp/yt-dlp-cache", "retries": 2,
+    }
+    ck = cookie_file()
+    if ck:
+        opts["cookiefile"] = ck
+    if os.environ.get("YTDLP_PROXY"):
+        opts["proxy"] = os.environ["YTDLP_PROXY"]
+    with yt_dlp.YoutubeDL(opts) as ydl:
+        info = ydl.extract_info(url, download=False)
+    entries = []
+    for e in (info or {}).get("entries") or []:
+        if not e:
+            continue
+        link = e.get("webpage_url") or e.get("url") or ""
+        if not link.startswith("http"):
+            if (e.get("ie_key") or "").lower() == "youtube" and e.get("id"):
+                link = "https://www.youtube.com/watch?v=" + e["id"]
+            else:
+                continue
+        thumbs = e.get("thumbnails") or []
+        entries.append({"title": (e.get("title") or "Video")[:120], "url": link,
+                        "thumbnail": e.get("thumbnail") or (thumbs[-1].get("url") if thumbs else None),
+                        "duration": e.get("duration")})
+    if not entries:
+        raise ValueError("playlist kosong / tidak didukung")
+    return {"playlist": True, "title": (info.get("title") or "Playlist")[:150],
+            "source": info.get("extractor_key") or info.get("extractor"), "entries": entries}
+
+
 def is_bot_check(e):
     low = ANSI.sub("", str(e)).lower()
     return "confirm you" in low and "bot" in low
@@ -218,6 +311,14 @@ def extract(url):
         raise ValueError("tidak ada format yang bisa diunduh langsung")
 
     first = info if not info.get("entries") else next((x for x in info["entries"] if x), {})
+
+    if not info.get("entries"):
+        has_av = any(m["type"] in ("video", "audio") for m in medias)
+        if has_av:
+            th = thumbnail_media(info)
+            if th:
+                medias.append(th)
+            medias.extend(subtitle_medias(info))
     return {
         "title": (info.get("title") or first.get("title") or "Video")[:150],
         "thumbnail": info.get("thumbnail") or first.get("thumbnail"),
@@ -259,6 +360,8 @@ class handler(BaseHTTPRequestHandler):
         if not re.match(r"^https?://", url or ""):
             return self._send(400, {"error": "URL tidak valid", "kind": "bad_request"})
         try:
+            if (qs.get("playlist") or [""])[0] == "1":
+                return self._send(200, playlist_info(url))
             return self._send(200, extract(url))
         except Exception as e:  # yt_dlp.utils.DownloadError, ValueError, dll
             kind, msg = explain(e)
