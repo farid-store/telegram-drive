@@ -30,6 +30,7 @@ Mesin utama: **yt-dlp** (open source). Ada sistem iklan yang bisa dihidupkan/dim
 
 ### Monetisasi
 - **Slot iklan:** sidebar kiri & kanan (portrait), tengah (di bawah hasil), dan **pop-up** saat tombol Cari/Download ditekan (ada tombol tutup).
+- **Banner gambar sendiri:** isi URL gambar + link tujuan → kode dibuat otomatis; klik gambar membuka link di tab baru (cocok untuk iklan langsung/sponsor).
 - **Admin tersembunyi** dengan password: saklar utama, per-slot (aktif, ukuran, mode, kode iklan), pengaturan pop-up, tombol tes, dan statistik.
 - Dirancang tidak mengganggu — lihat bagian 6.
 
@@ -76,6 +77,7 @@ Browser **hanya** bicara ke domain-mu sendiri (tanpa CORS proxy publik).
 │   ├── manifest.webmanifest   PWA + share target
 │   ├── sw.js           Service worker
 │   ├── icons/          icon-192, icon-512, maskable-512, apple-touch-icon
+│   ├── ads/            contoh banner (160x600, 728x90, 300x250) — hapus/ganti dengan banner sendiri
 │   ├── terms.html  privacy.html  dmca.html
 ├── requirements.txt    yt-dlp
 ├── vercel.json         Region sin1 + durasi fungsi + header
@@ -169,6 +171,21 @@ Env baru **hanya berlaku untuk deployment baru** → **Deployments → … → R
 
 3. Pilih **Ukuran** yang sama dengan unit di jaringan iklan, pilih **Mode**, pastikan kotak slot dicentang, klik **💾 Simpan**. Pengunjung melihat perubahan dalam ±15 detik.
 4. Gunakan **▶ Tes tampilan** untuk melihat pop-up.
+
+### Banner gambar sendiri (klik → menuju link)
+Cocok untuk iklan langsung dari sponsor atau promosi produkmu sendiri — tanpa jaringan iklan.
+
+1. **Siapkan gambar** dengan ukuran persis sama dengan slot (160×600, 728×90, 300×250, dst.). Format jpg/png/webp/gif (gif animasi boleh); usahakan < 150 KB.
+2. **Letakkan gambar** di folder `public/ads/` repo-mu (mis. `public/ads/promo.jpg`) lalu deploy; atau pakai URL gambar di hosting lain. Gambar di `public/ads/promo.jpg` beralamat `https://domainmu.com/ads/promo.jpg`.
+3. Admin → buka slot yang diinginkan → klik **🖼 Banner gambar sendiri** → isi **URL gambar** dan **Link tujuan** → **Buat kode** → **💾 Simpan**.
+4. Hasilnya: gambar yang bila diklik membuka link tujuan di **tab baru** (`rel="sponsored noopener noreferrer"`). Label "Iklan" tampil di atas slot.
+
+Catatan:
+- Pilih **Ukuran** slot lebih dulu, baru klik *Buat kode* (kode mengikuti ukuran yang dipilih).
+- URL hanya diterima bila diawali `https://` / `http://` (gambar boleh juga `/ads/nama.jpg`). Link `javascript:` dan karakter pemecah atribut ditolak.
+- Fitur ini **tidak menghitung jumlah klik**. Untuk melacak, pakai link pelacak/UTM dari sponsor atau layanan pemendek link yang punya statistik.
+- Kamu juga bisa menulis HTML sendiri di kolom kode, mis. `<a href="https://tujuan.com" target="_blank" rel="sponsored noopener"><img src="https://domainmu.com/ads/b.jpg" width="160" height="600" alt="Iklan"></a>`.
+- Tiga gambar `contoh-*.png` di `public/ads/` hanya contoh uji coba — hapus bila tidak dipakai.
 
 ### Mode iklan
 - **Aman (iframe terisolasi)** — bawaan. Kode iklan berjalan di iframe ber-sandbox tanpa akses ke halaman ini dan tanpa hak menavigasi halaman utama. Cocok untuk kebanyakan jaringan banner.
