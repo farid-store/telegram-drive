@@ -19,7 +19,9 @@ const MIME = {
   mp4: 'video/mp4', webm: 'video/webm', mkv: 'video/x-matroska', mov: 'video/quicktime', m4v: 'video/mp4',
   mp3: 'audio/mpeg', m4a: 'audio/mp4', aac: 'audio/aac', opus: 'audio/ogg', ogg: 'audio/ogg', flac: 'audio/flac', wav: 'audio/wav', weba: 'audio/webm',
   jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif',
+  vtt: 'text/vtt', srt: 'application/x-subrip', ttml: 'application/ttml+xml', ass: 'text/x-ssa',
 };
+const TEXT_OK = new Set(['vtt', 'srt', 'ttml', 'ass']); // file subtitle memang berupa teks
 
 const json = (status, obj) => new Response(JSON.stringify(obj), {
   status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
@@ -115,7 +117,8 @@ export default async function handler(req) {
   }
 
   const upstreamType = (resp.headers.get('content-type') || '').toLowerCase();
-  if (/^(text\/html|application\/json|text\/plain)/.test(upstreamType)) {
+  const wantExt = (name.match(/\.([a-z0-9]{2,5})$/i) || [])[1]?.toLowerCase();
+  if (!TEXT_OK.has(wantExt) && /^(text\/html|application\/json|text\/plain)/.test(upstreamType)) {
     return json(502, { error: 'Server file tidak mengirim media (kemungkinan link kedaluwarsa / diblok). Cari ulang videonya.' });
   }
 
