@@ -183,8 +183,12 @@ footer a{color:var(--t2);text-decoration:none}
   .btn-search{justify-content:center}
 }
 
-/* === REVISI: state tombol, tag HLS, error actions === */
-.dlb.busy{background:var(--am);border-color:var(--am);color:#000;cursor:wait}
+/* ================= REVISI v2 ================= */
+[hidden]{display:none!important}
+.fi{position:relative;overflow:hidden}
+.pgb{position:absolute;left:0;right:0;bottom:0;height:2px}
+.pgb i{display:block;height:100%;width:0;background:var(--gn);transition:width .15s linear}
+.dlb.busy{background:var(--am);border-color:var(--am);color:#000}
 .dlb.ok{background:var(--gn);border-color:var(--gn);color:#fff}
 .dlb.err{background:rgba(255,77,109,.15);border-color:rgba(255,77,109,.4);color:var(--rd)}
 .hls-tag{font-size:.58rem;font-weight:700;padding:2px 6px;border-radius:4px;background:rgba(255,176,64,.12);color:var(--am);border:1px solid rgba(255,176,64,.25);flex-shrink:0}
@@ -195,19 +199,117 @@ footer a{color:var(--t2);text-decoration:none}
 details.dtl{margin-top:8px;font-size:.68rem;color:var(--t3)}
 details.dtl summary{cursor:pointer;color:var(--t2)}
 .guide a{font-weight:600}
+.pwa-btn{font-family:'Space Grotesk',sans-serif;font-size:.66rem;font-weight:700;padding:4px 10px;border-radius:20px;border:1px solid rgba(0,212,138,.35);background:rgba(0,212,138,.1);color:var(--gn);cursor:pointer}
+footer a{color:var(--t2);text-decoration:none;margin:0 6px}
+footer a:hover{color:var(--bl2);text-decoration:underline}
+
+/* ---- iklan ---- */
+.ad-lbl{display:block;font-size:.55rem;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-bottom:4px;text-align:center}
+.ad-side{position:fixed;top:84px;z-index:3;width:var(--adw,160px);animation:up .3s ease}
+.ad-l{left:calc(50% - 390px - 16px - var(--adw,160px))}
+.ad-r{right:calc(50% - 390px - 16px - var(--adw,160px))}
+.ad-box{display:flex;justify-content:center;margin:0 auto;overflow:hidden;border-radius:8px;max-width:100%}
+.ad-mid{position:relative;z-index:1;margin:22px auto 0;max-width:100%;text-align:center}
+.ad-ph{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:1px dashed var(--b2);border-radius:8px;background:var(--s1);color:var(--t3);font-size:.7rem;max-width:100%;text-align:center}
+.ad-ph small{font-size:.58rem;opacity:.7;padding:0 8px}
+.ad-ov{position:fixed;inset:0;z-index:900;background:rgba(3,3,8,.72);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:16px;animation:up .2s ease}
+.ad-modal{background:var(--s1);border:1px solid var(--b2);border-radius:14px;padding:10px 12px 12px;max-width:min(96vw,780px);box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.ad-mtop{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--t3)}
+.ad-x{font-family:'Space Grotesk',sans-serif;font-size:.72rem;font-weight:700;padding:6px 12px;border-radius:7px;border:1px solid var(--b2);background:var(--s2);color:var(--tx);cursor:pointer}
+.ad-x:disabled{opacity:.5;cursor:not-allowed}
+.ad-x:not(:disabled):hover{background:var(--bl);border-color:var(--bl)}
+.ad-mbody{display:flex;justify-content:center;min-width:min(260px,80vw)}
+.ad-mfoot{margin-top:8px;font-size:.62rem;color:var(--t3);text-align:center}
+
+/* ---- mode tab + multi link ---- */
+.mode-tabs{display:flex;gap:6px;margin-bottom:12px}
+.mt{flex:1;padding:10px 12px;border-radius:10px;border:1px solid var(--b2);background:var(--s1);color:var(--t2);font-family:'Space Grotesk',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;transition:.15s}
+.mt.on{background:var(--bg1);border-color:rgba(79,142,255,.4);color:var(--bl2)}
+#m-urls{width:100%;min-height:120px;resize:vertical;background:var(--bg);border:1px solid var(--b2);border-radius:var(--r2);padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:.76rem;color:var(--tx);outline:none;line-height:1.6}
+#m-urls:focus{border-color:var(--bl);box-shadow:0 0 0 3px var(--bg1)}
+.m-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.m-row select{flex:1;min-width:150px;background:var(--bg);border:1px solid var(--b2);border-radius:var(--r2);padding:10px 12px;color:var(--tx);font-family:'Space Grotesk',sans-serif;font-size:.8rem}
+.m-hint{margin-top:8px;font-size:.66rem;color:var(--t3);line-height:1.6}
+#m-list{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.mi{position:relative;overflow:hidden;display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--b1);border-radius:10px;background:var(--bg)}
+.mi-th{width:46px;height:34px;border-radius:6px;overflow:hidden;background:var(--s2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.8rem}
+.mi-th img{width:100%;height:100%;object-fit:cover}
+.mi-info{flex:1;min-width:0}
+.mi-t{font-size:.76rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mi-s{font-size:.64rem;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mi-wait{color:var(--t3)}.mi-load{color:var(--am)}.mi-ok{color:var(--gn)}.mi-err{color:var(--rd)}
+.mi-ctl{display:flex;gap:6px;align-items:center;flex-shrink:0}
+.mi-sel{max-width:150px;background:var(--s2);border:1px solid var(--b2);border-radius:7px;padding:6px 8px;color:var(--tx);font-family:'Space Grotesk',sans-serif;font-size:.68rem}
+#m-actions{display:none;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;flex-wrap:wrap}
+#m-count{font-size:.7rem;color:var(--t3)}
+@media(max-width:540px){.mi{flex-wrap:wrap}.mi-ctl{width:100%;justify-content:flex-end}.mi-sel{max-width:none;flex:1}}
+
+/* ---- panel admin ---- */
+.adm-ov{position:fixed;inset:0;z-index:1000;background:rgba(3,3,8,.8);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:14px}
+.adm-modal{background:var(--s1);border:1px solid var(--b2);border-radius:14px;width:min(100%,660px);max-height:92vh;display:flex;flex-direction:column;overflow:hidden;font-size:.8rem}
+.adm-h{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--b1);font-size:.92rem}
+.adm-x{background:none;border:none;color:var(--t2);font-size:1.05rem;cursor:pointer}
+.adm-tabs{display:flex;gap:4px;padding:8px 12px 0;border-bottom:1px solid var(--b1)}
+.adm-tab{padding:8px 14px;background:none;border:none;border-bottom:2px solid transparent;color:var(--t2);font-family:'Space Grotesk',sans-serif;font-size:.76rem;font-weight:700;cursor:pointer;margin-bottom:-1px}
+.adm-tab.on{color:var(--bl2);border-bottom-color:var(--bl)}
+.adm-body{padding:14px 16px;overflow:auto;flex:1}
+.adm-f{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--b1);flex-wrap:wrap}
+.adm-btn{padding:9px 14px;border-radius:8px;border:1px solid var(--b2);background:var(--s2);color:var(--tx);font-family:'Space Grotesk',sans-serif;font-size:.76rem;font-weight:700;cursor:pointer}
+.adm-btn.pri{background:var(--bl);border-color:var(--bl);color:#fff}
+.adm-btn.dng{margin-left:auto;color:var(--rd);border-color:rgba(255,77,109,.3)}
+.adm-btn:disabled{opacity:.5;cursor:wait}
+.adm-login{padding:18px 16px;display:flex;flex-direction:column;gap:10px}
+.adm-login label{font-size:.7rem;color:var(--t2)}
+.adm-login input{background:var(--bg);border:1px solid var(--b2);border-radius:8px;padding:11px 13px;color:var(--tx);font-size:.9rem;outline:none}
+.adm-login input:focus{border-color:var(--bl)}
+.adm-err{min-height:1em;color:var(--rd);font-size:.72rem}
+.adm-warn{background:rgba(255,176,64,.08);border:1px solid rgba(255,176,64,.25);border-radius:8px;padding:9px 11px;margin-bottom:10px;font-size:.72rem;line-height:1.6;color:var(--am)}
+.adm-warn code{background:rgba(255,255,255,.08);padding:1px 5px;border-radius:4px}
+.adm-master{display:flex;align-items:center;gap:8px;padding:11px 12px;border:1px solid rgba(0,212,138,.25);background:rgba(0,212,138,.06);border-radius:10px;margin-bottom:12px;flex-wrap:wrap}
+.adm-master span{color:var(--t3);font-size:.68rem}
+.adm-card{border:1px solid var(--b2);border-radius:10px;padding:11px 12px;margin-bottom:10px;background:var(--bg)}
+.adm-ch{margin-bottom:8px}
+.adm-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:8px;font-size:.72rem;color:var(--t2)}
+.adm-row label{display:flex;align-items:center;gap:6px}
+.adm-ck{cursor:pointer}
+.adm-card select,.adm-card input[type=number]{background:var(--s2);border:1px solid var(--b2);border-radius:6px;padding:5px 7px;color:var(--tx);font-family:'Space Grotesk',sans-serif;font-size:.72rem}
+.adm-card input[type=number]{width:64px}
+.adm-card textarea{width:100%;background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:9px 10px;color:var(--tx);font-family:'JetBrains Mono',monospace;font-size:.68rem;line-height:1.5;resize:vertical;outline:none}
+.adm-card textarea:focus{border-color:var(--bl)}
+.adm-note{font-size:.68rem;color:var(--t3);line-height:1.65;margin-top:4px}
+.adm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.adm-st{background:var(--bg);border:1px solid var(--b1);border-radius:10px;padding:11px;text-align:center}
+.adm-st b{display:block;font-size:1.15rem}
+.adm-st span{font-size:.62rem;color:var(--t3)}
+.adm-sh{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);margin:12px 0 6px}
+.adm-tb{width:100%;border-collapse:collapse;font-size:.72rem}
+.adm-tb th,.adm-tb td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--b1)}
+.adm-tb th{color:var(--t3);font-weight:600}
+.adm-er{font-size:.68rem;padding:7px 0;border-bottom:1px solid var(--b1);color:var(--t2);word-break:break-word}
+.adm-er span{color:var(--t3)}
+.adm-er div{margin-top:2px;color:var(--rd)}
+@media(max-width:540px){.adm-grid{grid-template-columns:repeat(2,1fr)}}
 </style>
+
+<meta name="theme-color" content="#07070d">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="VaultDL">
 </head>
 <body>
 <div class="amb"></div><div class="gbg"></div>
 <nav>
   <div class="logo"><div class="logo-icon">⬇</div>vault<b>dl</b></div>
-  <div class="nbadge">500+ Platform</div>
+  <div style="display:flex;gap:8px;align-items:center"><button class="pwa-btn" id="pwa-btn" hidden onclick="installPwa()" type="button">📲 Pasang</button><div class="nbadge">1000+ Platform</div></div>
 </nav>
 <div class="pg">
 <div class="hero">
   <div class="hero-pill"><div class="live-dot"></div>Gratis · No Login · No Watermark</div>
   <h1>Download video dari<br/><em>platform apapun</em></h1>
-  <p class="hero-sub">YouTube, TikTok, Instagram, Twitter, Facebook, Reddit, Vimeo, dan 500+ platform — cukup paste URL.</p>
+  <p class="hero-sub">YouTube, TikTok, Instagram, Twitter, Facebook, Reddit, Vimeo, dan 1000+ situs lainnya — cukup paste URL.</p>
 </div>
 <div class="plts-wrap">
   <div class="plts-track" id="ptrack">
@@ -228,10 +330,14 @@ details.dtl summary{cursor:pointer;color:var(--t2)}
     <div class="pt"><div class="pt-ic" style="background:rgba(38,165,228,.2);color:#26a5e4">TG</div>Telegram</div>
     <div class="pt"><div class="pt-ic" style="background:rgba(0,180,120,.2);color:#00b478">TB</div>Terabox</div>
     <div class="pt"><div class="pt-ic" style="background:rgba(255,107,53,.2);color:#ff6b35">DS</div>Doodstream</div>
-    <div class="pt"><div class="pt-ic" style="background:rgba(100,100,100,.2);color:#aaa">+</div>+500 lainnya</div>
+    <div class="pt"><div class="pt-ic" style="background:rgba(100,100,100,.2);color:#aaa">+</div>+1000 situs lainnya</div>
   </div>
 </div>
-<div class="main-card">
+<div class="mode-tabs">
+  <button class="mt on" id="mt-single" type="button" onclick="setMode('single')">🔗 Satu Link</button>
+  <button class="mt" id="mt-multi" type="button" onclick="setMode('multi')">📚 Multi Link &amp; Playlist</button>
+</div>
+<div class="main-card" id="single-card">
   <div class="search-row">
     <input class="url-input" id="url-input" type="url"
       placeholder="Paste URL video dari platform manapun..."
@@ -248,7 +354,31 @@ details.dtl summary{cursor:pointer;color:var(--t2)}
     <button class="qb" onclick="doClear()">✕ Hapus</button>
   </div>
 </div>
+<div class="main-card" id="multi-card" style="display:none">
+  <textarea id="m-urls" spellcheck="false" placeholder="Tempel banyak link — satu per baris (maks 15).&#10;Link playlist (YouTube, SoundCloud, dll) otomatis diuraikan menjadi daftar video."></textarea>
+  <div class="m-row">
+    <select id="m-preset" onchange="multiRepick()" aria-label="Pilihan kualitas">
+      <option value="best">🎬 Video kualitas terbaik</option>
+      <option value="720">🎬 Video maks. 720p</option>
+      <option value="480">🎬 Video maks. 480p</option>
+      <option value="audio">🎵 Audio saja</option>
+    </select>
+    <button class="btn-search" id="m-go" type="button" onclick="multiStart()">
+      <div class="spsm"></div>Proses Semua
+    </button>
+  </div>
+  <div class="m-hint">Kualitas dipilih otomatis (video + suara) dan bisa diganti per item. “Download Semua” memakai download bawaan browser — izinkan bila browser menanyakan unduhan beberapa file.</div>
+  <div id="m-list"></div>
+  <div id="m-actions">
+    <span id="m-count"></span>
+    <div style="display:flex;gap:6px">
+      <button class="dlb" id="m-all" type="button" onclick="multiDownloadAll()" disabled><span class="dt">⬇ Download Semua</span></button>
+      <button class="qb" type="button" onclick="multiClear()">✕ Hapus</button>
+    </div>
+  </div>
+</div>
 <div id="zone"></div>
+<div class="ad-mid" id="ad-mid" hidden aria-label="Iklan"><span class="ad-lbl">Iklan</span><div class="ad-box"></div></div>
 <div class="sec">
   <div class="sh">Platform Didukung</div>
   <div class="pg2">
@@ -266,6 +396,7 @@ details.dtl summary{cursor:pointer;color:var(--t2)}
     <div class="pc"><div class="pc-ic" style="background:rgba(230,0,35,.15);color:#e60023">PT</div><div><div class="pc-n">Pinterest</div><div class="pc-c">Video &amp; GIF</div></div></div>
     <div class="pc"><div class="pc-ic" style="background:rgba(0,180,120,.15);color:#00b478">TB</div><div><div class="pc-n">Terabox</div><div class="pc-c">File &amp; Video</div></div></div>
     <div class="pc"><div class="pc-ic" style="background:rgba(255,107,53,.15);color:#ff6b35">DS</div><div><div class="pc-n">Doodstream</div><div class="pc-c">Embed &amp; Direct</div></div></div>
+    <div class="pc"><div class="pc-ic" style="background:rgba(160,160,160,.15);color:#aaa">+</div><div><div class="pc-n">1000+ situs lain</div><div class="pc-c">Coba paste saja</div></div></div>
   </div>
 </div>
 <div class="sec">
@@ -275,8 +406,11 @@ details.dtl summary{cursor:pointer;color:var(--t2)}
     <div class="fc"><div class="fci">🚫</div><h4>No Watermark</h4><p>TikTok, Instagram, Facebook bersih</p></div>
     <div class="fc"><div class="fci">📊</div><h4>Multi Kualitas</h4><p>4K, 1080p, 720p, audio M4A/Opus/MP3</p></div>
     <div class="fc"><div class="fci">📋</div><h4>Copy Link</h4><p>Salin link untuk IDM atau download manager</p></div>
-    <div class="fc"><div class="fci">🔒</div><h4>Zero Log</h4><p>URL tidak pernah disimpan di server</p></div>
+    <div class="fc"><div class="fci">🔒</div><h4>Privasi</h4><p>Riwayat hanya di browser-mu. Baca Kebijakan Privasi</p></div>
     <div class="fc"><div class="fci">📱</div><h4>Semua Device</h4><p>HP, tablet, desktop — responsive sempurna</p></div>
+    <div class="fc"><div class="fci">📝</div><h4>Subtitle &amp; Thumbnail HD</h4><p>Unduh subtitle (SRT/VTT) dan gambar sampul resolusi tinggi</p></div>
+    <div class="fc"><div class="fci">📚</div><h4>Multi Link &amp; Playlist</h4><p>Tempel banyak link atau satu playlist sekaligus</p></div>
+    <div class="fc"><div class="fci">📲</div><h4>Pasang di HP</h4><p>Pasang seperti aplikasi, lalu Bagikan link langsung ke VaultDL</p></div>
   </div>
 </div>
 <div class="sec">
@@ -285,9 +419,12 @@ details.dtl summary{cursor:pointer;color:var(--t2)}
   <div class="he" id="he">Belum ada riwayat. Download video pertamamu!</div>
 </div>
 </div>
+<aside class="ad-side ad-l" id="ad-left" hidden aria-label="Iklan"><span class="ad-lbl">Iklan</span><div class="ad-box"></div></aside>
+<aside class="ad-side ad-r" id="ad-right" hidden aria-label="Iklan"><span class="ad-lbl">Iklan</span><div class="ad-box"></div></aside>
 <div id="ts"></div>
 <footer>
   <p>VaultDL &middot; Server-side extractor &amp; streaming proxy</p>
+  <p style="margin-top:6px"><a href="/terms.html">Syarat Penggunaan</a>·<a href="/privacy.html">Kebijakan Privasi</a>·<a href="/dmca.html">DMCA / Takedown</a></p>
   <p style="margin-top:5px;opacity:.5">Untuk keperluan pribadi. Hormati hak cipta konten creator.</p>
 </footer>
 <script>
@@ -369,8 +506,9 @@ const QLABELS={
 };
 
 // ============================================================
-// KONFIGURASI DETEKSI (hanya untuk tampilan & tombol fallback)
-// Semua proses ekstraksi & download terjadi di server: /api/get, /api/dl, /api/analyze
+// VaultDL — frontend
+// Semua ekstraksi & download terjadi di server: /api/get, /api/dl, /api/analyze
+// Iklan & admin: /api/config, /api/admin
 // ============================================================
 const TERABOX_DOMAINS=['terabox.com','terabox.app','1024terabox.com','freeterabox.com','terabox.tech','teraboxapp.com','dubox.com','4funbox.com','mirrobox.com','nephobox.com'];
 const DOOD_DOMAINS=['doodstream.com','dood.watch','dood.to','dood.so','dood.la','dood.ws','dood.sh','dood.pm','dood.wf','dood.cx','dood.li','dooood.com','doods.pro','ds2play.com','ds2video.com','d0o0d.com','do7go.com','d000d.com','d0000d.com'];
@@ -390,6 +528,9 @@ const isUrl=s=>{try{const u=new URL(s);return /^https?:$/.test(u.protocol)}catch
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const $=id=>document.getElementById(id);
 const setZ=h=>{$('zone').innerHTML=h};
+const debounce=(fn,ms)=>{let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms)}};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const fmtBytes=n=>{n=+n||0;const u=['B','KB','MB','GB'];let i=0;while(n>=1024&&i<3){n/=1024;i++}return(i?n.toFixed(1):n)+' '+u[i]};
 
 function cleanUrl(raw){
   try{
@@ -450,6 +591,381 @@ async function doPaste(){
 function doClear(){$('url-input').value='';$('btn-s').disabled=true;setZ('')}
 
 // ============================================================
+// IKLAN — slot kiri/kanan (portrait), tengah, dan pop-up (interstitial)
+// Dikontrol dari /api/config (diatur lewat panel admin tersembunyi)
+// ============================================================
+let ADS=null;          // config iklan dari server
+let PREVIEW=false;     // admin: tampilkan kotak placeholder untuk slot kosong (hanya di browser admin)
+const PAGE_W=780, SIDE_GAP=16;
+
+const adDims=s=>{const m=String((s&&s.size)||'').match(/^(\d+)x(\d+)$/);return m?[+m[1],+m[2]]:[300,250]};
+const slotOn=k=>{const s=ADS&&ADS.enabled&&ADS[k];return!!(s&&s.enabled&&(String(s.code||'').trim()||PREVIEW))};
+const sideFits=s=>{const[w,h]=adDims(s);return innerWidth>=PAGE_W+2*(w+SIDE_GAP)+24&&innerHeight>=h+110};
+
+// Pasang kode iklan ke dalam `box`.
+//  mode 'safe'  : iframe ber-sandbox (kode iklan tidak bisa menyentuh halaman ini) — default, aman
+//  mode 'inline': langsung di halaman (perlu untuk AdSense & jaringan yang melarang iframe)
+function mountAd(box,slot){
+  box.innerHTML='';box._fit=null;
+  const[w,h]=adDims(slot);
+  const code=String(slot.code||'').trim();
+  if(!code){
+    box.innerHTML=`<div class="ad-ph" style="width:${w}px;height:${h}px">Iklan ${esc(slot.size)}<small>Slot kosong — tempel kode iklan di panel admin</small></div>`;
+    return;
+  }
+  if(slot.mode==='inline'){
+    const wrap=document.createElement('div');
+    wrap.innerHTML=code;
+    box.appendChild(wrap);
+    // <script> dari innerHTML tidak dieksekusi — buat ulang agar jalan
+    wrap.querySelectorAll('script').forEach(old=>{
+      const s=document.createElement('script');
+      [...old.attributes].forEach(a=>s.setAttribute(a.name,a.value));
+      s.text=old.textContent;
+      old.replaceWith(s);
+    });
+    return;
+  }
+  const f=document.createElement('iframe');
+  f.setAttribute('sandbox','allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms');
+  f.setAttribute('scrolling','no');
+  f.setAttribute('title','Iklan');
+  f.setAttribute('loading','lazy');
+  f.width=w;f.height=h;
+  f.style.cssText=`border:0;display:block;width:${w}px;height:${h}px;overflow:hidden;background:transparent`;
+  f.srcdoc=`<!doctype html><html><head><meta charset="utf-8"><base target="_blank"><style>html,body{margin:0;padding:0;background:transparent;overflow:hidden}</style></head><body>${code}</body></html>`;
+  box.appendChild(f);
+  // Layar sempit: kecilkan agar tidak terpotong
+  box._fit=()=>{
+    const avail=(box.parentElement&&box.parentElement.clientWidth)||w;
+    const sc=Math.min(1,avail/w);
+    f.style.transformOrigin='0 0';
+    f.style.transform=sc<1?`scale(${sc})`:'';
+    box.style.width=Math.ceil(w*sc)+'px';
+    box.style.height=Math.ceil(h*sc)+'px';
+  };
+  box._fit();
+}
+
+function setSlot(k,allowed){
+  const el=$('ad-'+k);if(!el)return;
+  const box=el.querySelector('.ad-box');
+  const slot=ADS&&ADS[k];
+  if(!(allowed&&slotOn(k))){el.hidden=true;box.innerHTML='';el.dataset.sig='';box._fit=null;return}
+  el.hidden=false;
+  el.style.setProperty('--adw',adDims(slot)[0]+'px');
+  const sig=JSON.stringify([slot.code,slot.mode,slot.size,PREVIEW]);
+  if(el.dataset.sig===sig){box._fit&&box._fit();return} // sudah tampil — jangan muat ulang (hindari impresi ganda)
+  el.dataset.sig=sig;
+  mountAd(box,slot);
+}
+
+function renderAds(){
+  setSlot('left',!!(ADS&&ADS.left&&sideFits(ADS.left)));
+  setSlot('right',!!(ADS&&ADS.right&&sideFits(ADS.right)));
+  setSlot('mid',true);
+}
+
+async function loadAds(bust){
+  try{
+    const r=await fetch('/api/config?t='+(bust?Date.now():Math.floor(Date.now()/15000)),{headers:{accept:'application/json'}});
+    const j=await r.json();
+    ADS=j&&j.ads&&j.ads.enabled!==false?j.ads:null;
+  }catch{ADS=null}
+  renderAds();
+}
+
+// ---- Pop-up (interstitial): tidak pernah memblokir proses Cari/Download ----
+let interOpen=false,interTimer=null;
+
+function maybeInterstitial(trigger){
+  if(interOpen||!ADS||!ADS.enabled)return;
+  const s=ADS.inter;
+  if(!s||!s.enabled)return;
+  if(trigger==='search'&&!s.onSearch)return;
+  if(trigger==='download'&&!s.onDownload)return;
+  if(!String(s.code||'').trim()&&!PREVIEW)return;
+  let last=0;try{last=+sessionStorage.getItem('adLast')||0}catch{}
+  if(Date.now()-last<(s.cooldown||90)*1000)return;
+  openInterstitial(s);
+}
+
+function openInterstitial(s,force){
+  if(interOpen)return;
+  interOpen=true;
+  if(!force){try{sessionStorage.setItem('adLast',String(Date.now()))}catch{}}
+  const ov=document.createElement('div');
+  ov.className='ad-ov';ov.id='ad-ov';
+  ov.setAttribute('role','dialog');ov.setAttribute('aria-modal','true');ov.setAttribute('aria-label','Iklan');
+  ov.innerHTML=`<div class="ad-modal">
+    <div class="ad-mtop"><span>Iklan</span><button class="ad-x" id="ad-x" type="button" disabled>Tutup</button></div>
+    <div class="ad-mbody"><div class="ad-box" id="ad-ibox"></div></div>
+    <div class="ad-mfoot">Prosesmu tetap berjalan di latar belakang.</div>
+  </div>`;
+  document.body.appendChild(ov);
+  mountAd($('ad-ibox'),s);
+  const x=$('ad-x');
+  let left=Math.max(0,s.delay|0);
+  const close=()=>{
+    clearInterval(interTimer);interTimer=null;
+    ov.remove();interOpen=false;
+    document.removeEventListener('keydown',onKey);
+  };
+  const onKey=e=>{if(e.key==='Escape'&&!x.disabled)close()};
+  document.addEventListener('keydown',onKey);
+  x.addEventListener('click',close);
+  const enable=()=>{x.disabled=false;x.textContent='Tutup ✕';x.focus()};
+  if(left<=0)enable();
+  else{
+    x.textContent=`Tutup (${left})`;
+    interTimer=setInterval(()=>{left--;if(left<=0){clearInterval(interTimer);interTimer=null;enable()}else x.textContent=`Tutup (${left})`},1000);
+  }
+}
+
+// ============================================================
+// PANEL ADMIN TERSEMBUNYI (password diverifikasi di server: /api/admin)
+// Buka: klik logo 3x cepat, atau tekan Alt+Shift+A
+// Password disimpan hanya di memori (closure) selama tab terbuka
+// ============================================================
+const Admin=(()=>{
+  let pw=null,cfg=null,persistent=true,defaultPw=false,ov=null,tab='ads';
+  const SIZES={
+    left:['160x600','120x600','300x600'],right:['160x600','120x600','300x600'],
+    mid:['728x90','468x60','320x100','320x50','300x250','336x280'],
+    inter:['300x250','336x280','320x480','300x600','728x90','250x250'],
+  };
+  const TITLES={left:'Sidebar kiri (portrait)',right:'Sidebar kanan (portrait)',mid:'Tengah (di bawah hasil)',inter:'Pop-up saat Cari / Download'};
+
+  async function api(action,extra={},pass=pw){
+    try{
+      const r=await fetch('/api/admin',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({password:pass,action,...extra})});
+      const j=await r.json().catch(()=>({}));
+      return{ok:r.ok,status:r.status,j};
+    }catch{return{ok:false,status:0,j:{error:'Koneksi gagal'}}}
+  }
+
+  function close(){if(ov){ov.remove();ov=null}document.removeEventListener('keydown',onKey)}
+  const onKey=e=>{if(e.key==='Escape')close()};
+
+  function shell(inner){
+    close();
+    ov=document.createElement('div');ov.className='adm-ov';
+    ov.innerHTML=`<div class="adm-modal" role="dialog" aria-modal="true" aria-label="Panel admin">${inner}</div>`;
+    ov.addEventListener('mousedown',e=>{if(e.target===ov)close()});
+    document.body.appendChild(ov);
+    document.addEventListener('keydown',onKey);
+  }
+
+  function showLogin(msg){
+    shell(`<div class="adm-h"><b>🔐 Admin</b><button class="adm-x" data-a="close" type="button">✕</button></div>
+      <form class="adm-login" id="adm-form">
+        <label>Password</label>
+        <input id="adm-pw" type="password" autocomplete="current-password" autofocus />
+        <div class="adm-err" id="adm-err">${esc(msg||'')}</div>
+        <button class="adm-btn pri" type="submit">Masuk</button>
+      </form>`);
+    ov.querySelector('[data-a="close"]').onclick=close;
+    ov.querySelector('#adm-form').onsubmit=async e=>{
+      e.preventDefault();
+      const v=ov.querySelector('#adm-pw').value;
+      const btn=ov.querySelector('.adm-btn');btn.disabled=true;btn.textContent='Memeriksa…';
+      const r=await api('get',{},v);
+      if(r.ok&&r.j.ok){pw=v;cfg=r.j.config;persistent=r.j.persistent;defaultPw=!!r.j.defaultPassword;PREVIEW=true;renderAds();showPanel(r.j.stats)}
+      else{
+        const left=r.j&&typeof r.j.left==='number'?` (sisa percobaan: ${r.j.left})`:'';
+        showLogin((r.j&&r.j.error||'Gagal masuk')+left);
+      }
+    };
+    setTimeout(()=>{const i=ov&&ov.querySelector('#adm-pw');i&&i.focus()},30);
+  }
+
+  const opt=(list,cur)=>list.map(x=>`<option value="${x}"${x===cur?' selected':''}>${x}</option>`).join('');
+
+  function slotCard(k){
+    const s=cfg.ads[k];
+    const extra=k==='inter'?`<div class="adm-row">
+        <label>Tombol tutup aktif setelah <input type="number" min="0" max="15" data-f="delay" value="${s.delay}"> detik</label>
+        <label>Jeda antar pop-up <input type="number" min="10" max="3600" data-f="cooldown" value="${s.cooldown}"> detik</label>
+      </div>
+      <div class="adm-row">
+        <label class="adm-ck"><input type="checkbox" data-f="onSearch"${s.onSearch?' checked':''}> Muncul saat tombol Cari</label>
+        <label class="adm-ck"><input type="checkbox" data-f="onDownload"${s.onDownload?' checked':''}> Muncul saat tombol Download</label>
+        <button class="adm-btn" type="button" data-a="test">▶ Tes tampilan</button>
+      </div>`:'';
+    return `<div class="adm-card" data-slot="${k}">
+      <div class="adm-ch"><label class="adm-ck"><input type="checkbox" data-f="enabled"${s.enabled?' checked':''}> <b>${TITLES[k]}</b></label></div>
+      <div class="adm-row">
+        <label>Ukuran <select data-f="size">${opt(SIZES[k],s.size)}</select></label>
+        <label>Mode <select data-f="mode">
+          <option value="safe"${s.mode==='safe'?' selected':''}>Aman — iframe terisolasi</option>
+          <option value="inline"${s.mode==='inline'?' selected':''}>Langsung — untuk AdSense</option>
+        </select></label>
+      </div>
+      <textarea data-f="code" rows="4" spellcheck="false" placeholder="Tempel kode iklan dari jaringan iklan (HTML/JS). Kosong = slot tidak tampil untuk pengunjung."></textarea>
+      ${extra}
+    </div>`;
+  }
+
+  function collect(){
+    const out={ads:{enabled:ov.querySelector('#adm-master').checked}};
+    ov.querySelectorAll('[data-slot]').forEach(card=>{
+      const k=card.dataset.slot,o={};
+      card.querySelectorAll('[data-f]').forEach(el=>{
+        const f=el.dataset.f;
+        o[f]=el.type==='checkbox'?el.checked:el.type==='number'?Number(el.value):el.value;
+      });
+      out.ads[k]=o;
+    });
+    return out;
+  }
+
+  function showPanel(stats){
+    const warn=[];
+    if(!persistent)warn.push('⚠ Penyimpanan (Upstash Redis / Vercel KV) belum terhubung — pengaturan TIDAK permanen dan bisa hilang. Lihat panduan pemasangan.');
+    if(defaultPw)warn.push('⚠ Kamu masih memakai password bawaan. Ganti lewat env <code>ADMIN_PASSWORD</code> di Vercel (PIN 6 digit mudah ditebak).');
+    shell(`<div class="adm-h"><b>⚙ Panel Admin</b><button class="adm-x" data-a="close" type="button">✕</button></div>
+      <div class="adm-tabs"><button class="adm-tab${tab==='ads'?' on':''}" data-t="ads">Iklan</button><button class="adm-tab${tab==='stats'?' on':''}" data-t="stats">Statistik</button></div>
+      <div class="adm-body">
+        ${warn.map(w=>`<div class="adm-warn">${w}</div>`).join('')}
+        <div id="adm-ads" style="display:${tab==='ads'?'block':'none'}">
+          <label class="adm-master"><input type="checkbox" id="adm-master"${cfg.ads.enabled?' checked':''}> <b>Iklan aktif</b> <span>(matikan untuk menyembunyikan SEMUA iklan)</span></label>
+          ${['left','right','mid','inter'].map(slotCard).join('')}
+          <div class="adm-note">Slot yang kodenya kosong tidak tampil untuk pengunjung. Kotak placeholder hanya terlihat olehmu selama panel ini terbuka. Mode <b>Langsung</b> menjalankan kode iklan di halaman ini — pakai hanya untuk jaringan tepercaya.</div>
+        </div>
+        <div id="adm-stats" style="display:${tab==='stats'?'block':'none'}">${statsHtml(stats)}</div>
+      </div>
+      <div class="adm-f">
+        <button class="adm-btn pri" data-a="save" type="button">💾 Simpan</button>
+        <button class="adm-btn" data-a="refresh" type="button">↻ Muat ulang</button>
+        <button class="adm-btn dng" data-a="logout" type="button">Keluar</button>
+      </div>`);
+    ['left','right','mid','inter'].forEach(k=>{ov.querySelector(`[data-slot="${k}"] [data-f="code"]`).value=cfg.ads[k].code||''});
+    ov.querySelector('[data-a="close"]').onclick=close;
+    ov.querySelectorAll('.adm-tab').forEach(b=>b.onclick=()=>{
+      tab=b.dataset.t;
+      ov.querySelectorAll('.adm-tab').forEach(x=>x.classList.toggle('on',x===b));
+      ov.querySelector('#adm-ads').style.display=tab==='ads'?'block':'none';
+      ov.querySelector('#adm-stats').style.display=tab==='stats'?'block':'none';
+    });
+    ov.querySelector('[data-a="test"]').onclick=()=>{
+      const c=collect().ads.inter;
+      close();
+      openInterstitial(c,true);
+    };
+    ov.querySelector('[data-a="save"]').onclick=async e=>{
+      const btn=e.currentTarget;btn.disabled=true;btn.textContent='Menyimpan…';
+      const r=await api('save',{config:collect()});
+      btn.disabled=false;btn.textContent='💾 Simpan';
+      if(r.ok&&r.j.ok){
+        cfg=r.j.config;persistent=r.j.persistent;
+        ADS=cfg.ads.enabled?cfg.ads:null;
+        ['left','right','mid'].forEach(k=>{const el=$('ad-'+k);if(el)el.dataset.sig=''});
+        renderAds();
+        toast(persistent?'Pengaturan iklan disimpan — pengunjung melihatnya dalam ±15 detik':'Tersimpan sementara (Redis belum terhubung)',persistent?'success':'warn');
+      }else toast((r.j&&r.j.error)||'Gagal menyimpan','error');
+    };
+    ov.querySelector('[data-a="refresh"]').onclick=async()=>{
+      const r=await api('get');
+      if(r.ok){cfg=r.j.config;persistent=r.j.persistent;showPanel(r.j.stats)}
+    };
+    ov.querySelector('[data-a="logout"]').onclick=()=>{pw=null;cfg=null;PREVIEW=false;close();renderAds();toast('Keluar dari admin','info')};
+  }
+
+  function statsHtml(st){
+    if(!st)return'<div class="adm-note">Belum ada data.</div>';
+    const t=st.today||{},y=st.yesterday||{};
+    const n=v=>(v||0).toLocaleString('id-ID');
+    const rate=(t.ok+t.fail)?Math.round(100*(t.ok||0)/((t.ok||0)+(t.fail||0))):null;
+    const rows=(st.hosts||[]).map(h=>`<tr><td>${esc(h.host)}</td><td>${n(h.ok)}</td><td>${n(h.fail)}</td></tr>`).join('')||'<tr><td colspan="3">—</td></tr>';
+    const errs=(st.errors||[]).map(e=>`<div class="adm-er"><span>${new Date(e.t).toLocaleString('id-ID')}</span> <b>${esc(e.host)}</b><div>${esc(e.msg)}</div></div>`).join('')||'<div class="adm-note">Tidak ada error tercatat.</div>';
+    return `<div class="adm-grid">
+        <div class="adm-st"><b>${n(t.ok)}</b><span>Berhasil hari ini</span></div>
+        <div class="adm-st"><b>${n(t.fail)}</b><span>Gagal hari ini</span></div>
+        <div class="adm-st"><b>${n(t.cache)}</b><span>Dari cache</span></div>
+        <div class="adm-st"><b>${n(t.rl)}</b><span>Ditolak (rate limit)</span></div>
+        <div class="adm-st"><b>${rate==null?'—':rate+'%'}</b><span>Tingkat sukses</span></div>
+        <div class="adm-st"><b>${n((y.ok||0)+(y.fail||0)+(y.cache||0))}</b><span>Total kemarin</span></div>
+      </div>
+      <div class="adm-sh">Per platform (kumulatif)</div>
+      <table class="adm-tb"><thead><tr><th>Platform</th><th>OK</th><th>Gagal</th></tr></thead><tbody>${rows}</tbody></table>
+      <div class="adm-sh">Error terbaru</div>${errs}`;
+  }
+
+  return{open(){
+    if(pw&&cfg){
+      showPanel(null);
+      api('stats').then(r=>{if(r.ok&&ov){const el=ov.querySelector('#adm-stats');if(el)el.innerHTML=statsHtml(r.j.stats)}});
+    }else showLogin();
+  }};
+})();
+
+function openAdmin(){Admin.open()}
+
+// ============================================================
+// PENCARIAN → /api/get
+// ============================================================
+async function doSearch(fresh){
+  const url=cleanUrl($('url-input').value.trim());
+  if(!isUrl(url)||busy)return;
+  busy=true;
+  const p=getP(url);
+  const btn=$('btn-s');
+  btn.disabled=true;btn.classList.add('loading');
+  setZ(`<div class="lc"><div class="lsp"></div><p>Mengambil format dari ${esc(p.n)}...</p><small>Server mencoba beberapa provider — bisa sampai 30 detik</small></div>`);
+  maybeInterstitial('search'); // tidak memblokir pencarian
+
+  const ac=new AbortController();
+  const to=setTimeout(()=>ac.abort(),65000);
+  try{
+    const res=await fetch('/api/get?url='+encodeURIComponent(url)+(fresh===true?'&fresh=1':''),{signal:ac.signal,headers:{accept:'application/json'}});
+    const text=await res.text();
+    let data=null;
+    try{data=JSON.parse(text)}catch{}
+
+    if(!data){
+      showErr('Endpoint /api/get tidak membalas JSON',
+        `HTTP ${res.status}. Pastikan folder api/ berada di ROOT project (sejajar dengan public/, bukan di dalamnya), lalu deploy ulang.`,url);
+      return;
+    }
+    if(res.status===429){
+      showErr('Terlalu banyak permintaan',data.error||'Tunggu sebentar lalu coba lagi.',url);
+      return;
+    }
+    if(!res.ok||!data.medias?.length){
+      showErr(data.error||`Gagal: HTTP ${res.status}`,data.hint||'',url,data.details);
+      return;
+    }
+    renderResult(data,url,p);
+    saveHist(url,p,data.title||'Video');
+    toast(`${data.medias.length} format tersedia`+(data.cached?' · dari cache':data.provider?` · via ${data.provider}`:''),'success');
+    if(!data.thumbnail)fillMeta(url);
+  }catch(err){
+    showErr(err.name==='AbortError'?'Timeout — server terlalu lama merespons':'Koneksi ke server gagal',
+      'Cek koneksi internet lalu coba lagi.',url);
+  }finally{
+    clearTimeout(to);
+    busy=false;
+    btn.disabled=!isUrl($('url-input').value.trim());
+    btn.classList.remove('loading');
+  }
+}
+
+async function fillMeta(url){
+  try{
+    const r=await fetch('/api/analyze?url='+encodeURIComponent(url));
+    const d=await r.json();
+    const box=$('vth-box');
+    if(d.thumb&&box){
+      const flg=box.querySelector('.vflg');
+      const flgHtml=flg?flg.outerHTML:'';
+      box.innerHTML=`<img src="${esc(d.thumb)}" alt="" referrerpolicy="no-referrer" onerror="this.outerHTML='<div class=vth-ph>🎬</div>'">${flgHtml}`;
+    }
+    const t=document.querySelector('.rc .vtl');
+    if(d.title&&t&&t.textContent==='Video')t.textContent=d.title;
+  }catch{}
+}
+
+// ============================================================
 // LABEL KUALITAS
 // ============================================================
 function getQCls(v){
@@ -469,7 +985,6 @@ function parseQ(q,ext){
   if(QLABELS[lq])return QLABELS[lq];
   const m=String(q||'').match(/\(([^)]+)\)/);
   if(m){
-    // Ambil bagian yang berisi resolusi/bitrate, entah di dalam atau di luar kurung
     const inner=m[1],outer=String(q).replace(/\([^)]+\)/,'').trim();
     const pick=/\d{3,4}p|4k|kbps|kb/i.test(inner)?inner:(outer||inner);
     return{label:pick,cls:getQCls(pick)};
@@ -481,67 +996,7 @@ function parseQ(q,ext){
 const resOf=m=>{const x=String(m.quality||'').match(/(\d{3,4})p?/);return x?+x[1]:0};
 
 // ============================================================
-// PENCARIAN → /api/get
-// ============================================================
-async function doSearch(){
-  const url=cleanUrl($('url-input').value.trim());
-  if(!isUrl(url)||busy)return;
-  busy=true;
-  const p=getP(url);
-  const btn=$('btn-s');
-  btn.disabled=true;btn.classList.add('loading');
-  setZ(`<div class="lc"><div class="lsp"></div><p>Mengambil format dari ${esc(p.n)}...</p><small>Server mencoba beberapa provider — bisa sampai 30 detik</small></div>`);
-
-  const ac=new AbortController();
-  const to=setTimeout(()=>ac.abort(),65000);
-  try{
-    const res=await fetch('/api/get?url='+encodeURIComponent(url),{signal:ac.signal,headers:{accept:'application/json'}});
-    const text=await res.text();
-    let data=null;
-    try{data=JSON.parse(text)}catch{}
-
-    if(!data){
-      showErr('Endpoint /api/get tidak membalas JSON',
-        `HTTP ${res.status}. Pastikan folder api/ berada di ROOT project (sejajar dengan public/, bukan di dalamnya), lalu deploy ulang.`,url);
-      return;
-    }
-    if(!res.ok||!data.medias?.length){
-      showErr(data.error||`Gagal: HTTP ${res.status}`,data.hint||'',url,data.details);
-      return;
-    }
-    renderResult(data,url,p);
-    saveHist(url,p,data.title||'Video');
-    toast(`${data.medias.length} format tersedia`+(data.provider?` · via ${data.provider}`:''),'success');
-    if(!data.thumbnail)fillMeta(url);
-  }catch(err){
-    showErr(err.name==='AbortError'?'Timeout — server terlalu lama merespons':'Koneksi ke server gagal',
-      'Cek koneksi internet lalu coba lagi.',url);
-  }finally{
-    clearTimeout(to);
-    busy=false;
-    btn.disabled=!isUrl($('url-input').value.trim());
-    btn.classList.remove('loading');
-  }
-}
-
-// Lengkapi thumbnail/judul via /api/analyze bila provider tidak menyediakan
-async function fillMeta(url){
-  try{
-    const r=await fetch('/api/analyze?url='+encodeURIComponent(url));
-    const d=await r.json();
-    const box=$('vth-box');
-    if(d.thumb&&box){
-      const flg=box.querySelector('.vflg');
-      const flgHtml=flg?flg.outerHTML:'';
-      box.innerHTML=`<img src="${esc(d.thumb)}" alt="" referrerpolicy="no-referrer" onerror="this.outerHTML='<div class=vth-ph>🎬</div>'">${flgHtml}`;
-    }
-    const t=document.querySelector('.rc .vtl');
-    if(d.title&&t&&t.textContent==='Video')t.textContent=d.title;
-  }catch{}
-}
-
-// ============================================================
-// RENDER HASIL
+// RENDER HASIL (Video / Audio / Gambar / Subtitle)
 // ============================================================
 function renderResult(data,url,p){
   CUR={medias:data.medias,title:data.title||'Video'};
@@ -552,8 +1007,9 @@ function renderResult(data,url,p){
     ((b.m.extension==='mp4')-(a.m.extension==='mp4'))||(resOf(b.m)-resOf(a.m)));
   const auds=idx.filter(x=>x.m.type==='audio');
   const imgs=idx.filter(x=>x.m.type==='image');
+  const subs=idx.filter(x=>x.m.type==='subtitle');
 
-  const tabs=[['video','🎬 Video',vids],['audio','🎵 Audio',auds],['image','🖼 Gambar',imgs]].filter(t=>t[2].length);
+  const tabs=[['video','🎬 Video',vids],['audio','🎵 Audio',auds],['image','🖼 Gambar',imgs],['subtitle','📝 Subtitle',subs]].filter(t=>t[2].length);
 
   const thumbH=data.thumbnail
     ?`<img src="${esc(data.thumbnail)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.outerHTML='<div class=vth-ph>🎬</div>'">`
@@ -595,7 +1051,7 @@ function fmtRow({m,i}){
   const{label,cls}=parseQ(m.quality,m.extension);
   const ext=(m.extension||'').toUpperCase();
   const info=m.filename||m.size||'';
-  const canPlay=m.type!=='image'&&m.dl;
+  const canPlay=(m.type==='video'||m.type==='audio')&&m.dl;
   return `<div class="fi">
   <div class="fl">
     <span class="qb2 ${cls}">${esc(label)}</span>
@@ -613,66 +1069,162 @@ function fmtRow({m,i}){
       <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="4.5" y="4.5" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M8.5 4.5V3A1.5 1.5 0 0 0 7 1.5H3A1.5 1.5 0 0 0 1.5 3v4A1.5 1.5 0 0 0 3 8.5h1.5" stroke="currentColor" stroke-width="1.3"/></svg>
     </button>
   </div>
+  <div class="pgb"><i></i></div>
 </div>`;
 }
 
 // ============================================================
-// DOWNLOAD → /api/dl (streaming, Content-Disposition: attachment)
+// DOWNLOAD DENGAN PROGRESS
+//  - Pra-cek ke /api/dl (Range 0-0) → tahu ukuran file & apakah link valid
+//  - File ≤ 150 MB : stream dengan indikator persen → disimpan lewat Blob
+//  - File lebih besar: Chrome/Edge desktop → tulis langsung ke disk (File System Access API);
+//    browser lain → download bawaan browser (tanpa persen, tanpa memakai memori)
 // ============================================================
+const MAX_BLOB=150*1024*1024;
+const DL_ACTIVE=new Map();
+
 function setBtn(btn,state,label){
+  if(!btn)return;
   btn.className='dlb'+(state?' '+state:'');
   const dt=btn.querySelector('.dt');
   if(dt)dt.textContent=label;
 }
 
+const dlName=dl=>{try{return new URL(dl,location.origin).searchParams.get('name')||'download'}catch{return'download'}};
+
+function cdName(resp){
+  const cd=resp.headers.get('content-disposition')||'';
+  let m=cd.match(/filename\*=UTF-8''([^;]+)/i);
+  if(m){try{return decodeURIComponent(m[1])}catch{}}
+  m=cd.match(/filename="([^"]+)"/i);
+  return m?m[1]:null;
+}
+
+function triggerSave(href,name,revoke){
+  const a=document.createElement('a');
+  a.href=href;a.download=name||'';a.rel='noopener';a.style.display='none';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  if(revoke)setTimeout(()=>URL.revokeObjectURL(href),60000);
+}
+
+async function probe(dl,parent){
+  const ac=new AbortController();
+  const t=setTimeout(()=>ac.abort(),20000);
+  const onAbort=()=>ac.abort();
+  parent&&parent.addEventListener('abort',onAbort);
+  try{
+    const r=await fetch(dl,{headers:{Range:'bytes=0-0'},signal:ac.signal,cache:'no-store'});
+    if(r.ok||r.status===206){
+      let total=0;
+      const m=(r.headers.get('content-range')||'').match(/\/(\d+)$/);
+      if(m)total=+m[1];else if(r.status===200)total=+r.headers.get('content-length')||0;
+      ac.abort();
+      return{ok:true,total};
+    }
+    let msg='HTTP '+r.status;
+    try{const j=await r.json();if(j.error)msg=j.error}catch{}
+    return{ok:false,error:msg};
+  }catch(e){
+    if(parent&&parent.aborted)return{ok:false,cancelled:true};
+    return{ok:true,total:0}; // timeout/jaringan: tetap coba download
+  }finally{clearTimeout(t);parent&&parent.removeEventListener('abort',onAbort)}
+}
+
+async function saveStream(dl,name,ui,signal,fsa){
+  const resp=await fetch(dl,{signal,cache:'no-store'});
+  if(!resp.ok)throw new Error('HTTP '+resp.status);
+  const total=ui.total||+resp.headers.get('content-length')||0;
+  const reader=resp.body.getReader();
+  const writable=fsa?await fsa.createWritable():null;
+  const chunks=[];let got=0,last=0;
+  try{
+    for(;;){
+      const{done,value}=await reader.read();
+      if(done)break;
+      got+=value.length;
+      if(writable)await writable.write(value);else chunks.push(value);
+      const now=Date.now();
+      if(now-last>120){last=now;ui.progress(got,total)}
+    }
+  }catch(e){
+    if(writable)try{await writable.abort()}catch{}
+    throw e;
+  }
+  ui.progress(got,total||got);
+  if(writable){await writable.close();return}
+  const blob=new Blob(chunks,{type:resp.headers.get('content-type')||'application/octet-stream'});
+  triggerSave(URL.createObjectURL(blob),cdName(resp)||name,true);
+}
+
+// ui = {state(st,label), progress(got,total)}  →  {status:'ok'|'cancel'|'error', msg?}
+async function runDownload(dl,key,ui){
+  const slot={ac:new AbortController()};
+  DL_ACTIVE.set(key,slot);
+  const name=dlName(dl);
+  try{
+    ui.state('busy','⏳ Cek...');
+    const pr=await probe(dl,slot.ac.signal);
+    if(pr.cancelled){ui.state('','Download');return{status:'cancel'}}
+    if(!pr.ok){ui.state('err','✕ Gagal');return{status:'error',msg:pr.error}}
+    maybeInterstitial('download'); // muncul bersamaan dengan download, tidak menundanya
+
+    const total=pr.total||0;
+    const useStream=total>0&&total<=MAX_BLOB;
+    const useFsa=total>MAX_BLOB&&typeof window.showSaveFilePicker==='function';
+    if(!useStream&&!useFsa){triggerSave(dl,name);ui.state('ok','✓ Mulai');return{status:'ok',native:true}}
+
+    let fsa=null;
+    if(useFsa){
+      try{fsa=await window.showSaveFilePicker({suggestedName:name})}
+      catch(e){
+        if(e&&e.name==='AbortError'){ui.state('','Download');return{status:'cancel'}}
+        triggerSave(dl,name);ui.state('ok','✓ Mulai');return{status:'ok',native:true};
+      }
+    }
+    ui.total=total;
+    await saveStream(dl,name,{total,progress:ui.progress},slot.ac.signal,fsa);
+    ui.state('ok','✓ Selesai');
+    return{status:'ok'};
+  }catch(e){
+    if(slot.ac.signal.aborted){ui.state('','Download');return{status:'cancel'}}
+    ui.state('err','✕ Gagal');
+    return{status:'error',msg:(e&&e.message)||'Download terputus'};
+  }finally{DL_ACTIVE.delete(key)}
+}
+
+function mkUI(btn,bar){
+  return{
+    state:(st,l)=>{setBtn(btn,st,l);if(bar)bar.style.width=st==='ok'?'100%':(st==='busy'?bar.style.width||'0':'0')},
+    progress:(g,t)=>{
+      if(t){const p=Math.min(100,Math.round(g/t*100));if(bar)bar.style.width=p+'%';setBtn(btn,'busy',`⬇ ${p}% ✕`)}
+      else setBtn(btn,'busy',`⬇ ${fmtBytes(g)} ✕`);
+    },
+  };
+}
+
 async function doDownload(i,btn){
   const m=CUR.medias[i];
-  if(!m||btn.disabled)return;
-
-  // Format playlist (HLS/DASH) tidak bisa dijadikan satu file lewat proxy
+  if(!m)return;
   if(!m.dl){
     await copyText(m.url);
     toast('Format streaming (HLS/DASH) tidak bisa diunduh langsung. Link disalin — buka dengan VLC, IDM, atau yt-dlp.','warn');
     return;
   }
-
+  const key='s'+i;
+  if(DL_ACTIVE.has(key)){DL_ACTIVE.get(key).ac.abort();return} // klik lagi = batal
+  const bar=btn.closest('.fi')?.querySelector('.pgb i');
   const orig=btn.querySelector('.dt')?.textContent||'Download';
-  btn.disabled=true;
-  setBtn(btn,'busy','⏳ Cek...');
-
-  // Pra-cek: pastikan server file merespons media sungguhan sebelum memicu download
-  let failMsg=null;
-  const ac=new AbortController();
-  const timer=setTimeout(()=>ac.abort(),20000);
-  try{
-    const r=await fetch(m.dl,{headers:{Range:'bytes=0-0'},signal:ac.signal,cache:'no-store'});
-    if(r.ok||r.status===206){
-      ac.abort(); // cukup header-nya saja
-    }else{
-      failMsg=`HTTP ${r.status}`;
-      try{const j=await r.json();if(j.error)failMsg=j.error}catch{}
-    }
-  }catch{/* timeout / jaringan: tetap coba download langsung */}
-  clearTimeout(timer);
-
-  if(failMsg){
-    setBtn(btn,'err','✕ Gagal');
-    toast(failMsg,'error');
-    // Fallback: tombol berubah jadi buka link asli di tab baru
-    setTimeout(()=>{
-      setBtn(btn,'',orig);btn.disabled=false;
-    },6000);
+  const res=await runDownload(m.dl,key,mkUI(btn,bar));
+  if(res.status==='ok'){
+    toast(res.native?'Download dimulai — cek notifikasi / folder unduhan browser.':'File tersimpan.','success');
+    setTimeout(()=>{setBtn(btn,'',orig);if(bar)bar.style.width='0'},3500);
+  }else if(res.status==='error'){
+    toast(res.msg||'Download gagal','error');
     showFallbackHint(m);
-    return;
+    setTimeout(()=>{setBtn(btn,'',orig);if(bar)bar.style.width='0'},6000);
+  }else{
+    if(bar)bar.style.width='0';
   }
-
-  const a=document.createElement('a');
-  a.href=m.dl;a.download='';a.rel='noopener';a.style.display='none';
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
-
-  setBtn(btn,'ok','✓ Mulai');
-  toast('Download dimulai — cek notifikasi / folder unduhan browser.','success');
-  setTimeout(()=>{setBtn(btn,'',orig);btn.disabled=false},3500);
 }
 
 function showFallbackHint(m){
@@ -749,7 +1301,7 @@ function fallbackActions(url){
     const code=doodCode(url);
     if(code)b.push(`<button class="eb" onclick="openEmbed('https://${esc(hostOf(url))}/e/${esc(code)}')">▶ Buka Embed</button>`);
   }
-  b.push(`<button class="eb" onclick="doSearch()">🔄 Coba Lagi</button>`);
+  b.push(`<button class="eb" onclick="doSearch(true)">🔄 Coba Lagi</button>`);
   b.push(`<a class="eb" href="${esc(url)}" target="_blank" rel="noopener noreferrer">↗ Buka Link Asli</a>`);
   return `<div class="errbtns">${b.join('')}</div>`;
 }
@@ -763,6 +1315,217 @@ function showErr(title,sub='',url='',details=[]){
     ${fallbackActions(url)}
   </div>`);
 }
+
+// ============================================================
+// MULTI LINK & PLAYLIST
+// ============================================================
+const MAX_MULTI=15,MAX_TOTAL=30;
+let MQ=[],mid=0,mBusy=false;
+
+function setMode(mode){
+  const multi=mode==='multi';
+  $('single-card').style.display=multi?'none':'';
+  $('zone').style.display=multi?'none':'';
+  $('multi-card').style.display=multi?'':'none';
+  $('mt-single').classList.toggle('on',!multi);
+  $('mt-multi').classList.toggle('on',multi);
+}
+
+const parseUrls=t=>[...new Set((String(t).match(/https?:\/\/[^\s<>"']+/g)||[]).map(cleanUrl).filter(isUrl))];
+
+function looksPlaylist(u){
+  try{
+    const x=new URL(u),h=hostOf(u),p=x.pathname;
+    if(/(^|\.)youtube\.com$/.test(h))return(p==='/playlist'||(x.searchParams.has('list')&&!x.searchParams.has('v')));
+    if(/soundcloud\.com$/.test(h))return/\/sets\//.test(p);
+    if(/bilibili\.com$/.test(h))return/\/(medialist|favlist|channel)/.test(p);
+    if(/vimeo\.com$/.test(h))return/\/(showcase|album|channels)\//.test(p);
+    if(/dailymotion\.com$/.test(h))return/\/playlist\//.test(p);
+    if(/tiktok\.com$/.test(h))return/^\/@[^/]+\/?$/.test(p);
+  }catch{}
+  return false;
+}
+
+function pickFormat(medias,preset){
+  const ok=m=>m.dl&&(m.type==='video'||m.type==='audio');
+  const withSound=medias.filter(m=>ok(m)&&m.type==='video'&&!/tanpa audio/i.test(m.size||''));
+  const audios=medias.filter(m=>ok(m)&&m.type==='audio');
+  if(preset==='audio')return audios[0]||withSound[0]||medias.find(ok)||null;
+  const sorted=[...withSound].sort((a,b)=>((b.extension==='mp4')-(a.extension==='mp4'))||(resOf(b)-resOf(a)));
+  if(preset==='720'||preset==='480'){
+    const cap=+preset;
+    const under=sorted.filter(m=>resOf(m)&&resOf(m)<=cap);
+    if(under.length)return under[0];
+    return sorted[sorted.length-1]||audios[0]||medias.find(ok)||null;
+  }
+  return sorted[0]||audios[0]||medias.find(ok)||null;
+}
+
+async function getJson(url,extra=''){
+  const res=await fetch('/api/get?url='+encodeURIComponent(url)+extra,{headers:{accept:'application/json'}});
+  const text=await res.text();
+  let data=null;try{data=JSON.parse(text)}catch{}
+  return{res,data};
+}
+
+// Ambil data; bila kena rate limit (429) tunggu lalu ulangi
+async function getWithRetry(it,extra=''){
+  for(let attempt=0;attempt<4;attempt++){
+    const{res,data}=await getJson(it.url,extra);
+    if(res.status!==429)return{res,data};
+    const wait=Math.min(70,(data&&data.retryAfter)||20);
+    it.status='rl';renderItem(it);
+    await sleep((wait+1)*1000);
+    it.status='load';renderItem(it);
+  }
+  return{res:{ok:false,status:429},data:{error:'Antrean penuh — coba lagi sebentar'}};
+}
+
+async function multiProcess(it,queue,skipPl){
+  if(!skipPl&&looksPlaylist(it.url)&&MQ.length<MAX_TOTAL){
+    it.status='load';renderItem(it);
+    try{
+      const{res,data}=await getWithRetry(it,'&playlist=1');
+      if(res.ok&&data&&data.playlist&&data.entries?.length){
+        const room=Math.max(0,MAX_TOTAL-(MQ.length-1));
+        const fresh=data.entries.slice(0,room).map(e=>({id:++mid,url:cleanUrl(e.url),title:e.title,status:'wait'})).filter(x=>isUrl(x.url));
+        const at=MQ.indexOf(it);
+        MQ.splice(at,1,...fresh);
+        fresh.forEach(f=>queue.push(f));
+        renderMulti();
+        toast(`Playlist "${data.title}": ${fresh.length} video ditambahkan`,'success');
+        return;
+      }
+    }catch{}
+    // gagal dibaca sebagai playlist → perlakukan sebagai link biasa
+  }
+  it.status='load';renderItem(it);
+  try{
+    const{res,data}=await getWithRetry(it);
+    if(res.ok&&data&&data.medias?.length){
+      it.data=data;
+      it.pick=pickFormat(data.medias,$('m-preset').value);
+      it.status=it.pick?'ready':'fail';
+      if(!it.pick)it.error='Tidak ada format yang bisa diunduh langsung';
+    }else{
+      it.status='fail';
+      it.error=(data&&(data.error||data.hint))||`HTTP ${res.status}`;
+    }
+  }catch(e){it.status='fail';it.error='Koneksi gagal'}
+  renderItem(it);
+}
+
+async function multiStart(){
+  if(mBusy)return;
+  let urls=parseUrls($('m-urls').value);
+  if(!urls.length){toast('Tempel minimal satu link','warn');return}
+  if(urls.length>MAX_MULTI){toast(`Maksimal ${MAX_MULTI} link per proses — sisanya diabaikan`,'warn');urls=urls.slice(0,MAX_MULTI)}
+  maybeInterstitial('search');
+  mBusy=true;
+  const go=$('m-go');go.disabled=true;go.classList.add('loading');
+  MQ=urls.map(u=>({id:++mid,url:u,status:'wait'}));
+  renderMulti();
+  const queue=[...MQ];
+  const worker=async()=>{while(queue.length){const it=queue.shift();await multiProcess(it,queue)}};
+  await Promise.all([worker(),worker()]);
+  mBusy=false;go.disabled=false;go.classList.remove('loading');
+  renderMulti();
+  const ready=MQ.filter(x=>x.status==='ready').length,failed=MQ.filter(x=>x.status==='fail').length;
+  toast(`${ready} siap diunduh`+(failed?` · ${failed} gagal`:''),failed?'warn':'success');
+}
+
+function mItemHtml(it){
+  const d=it.data,p=getP(it.url);
+  const th=d&&d.thumbnail?`<img src="${esc(d.thumbnail)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">`:`<span>${esc(p.ic)}</span>`;
+  const title=d?d.title:(it.title||it.url);
+  const st={wait:['Menunggu','mi-wait'],load:['Mencari format…','mi-load'],rl:['Antre (batas permintaan)…','mi-load'],ready:['Siap','mi-ok'],done:['Selesai ✓','mi-ok'],fail:[it.error||'Gagal','mi-err']}[it.status]||['',''];
+  let ctrl='';
+  if(it.status==='ready'||it.status==='done'){
+    const opts=(d.medias||[]).filter(m=>m.dl&&(m.type==='video'||m.type==='audio')).map(m=>{
+      const{label}=parseQ(m.quality,m.extension);
+      const sel=it.pick&&m.url===it.pick.url?' selected':'';
+      return `<option value="${esc(m.url)}"${sel}>${m.type==='audio'?'🎵':'🎬'} ${esc(label)} ${esc((m.extension||'').toUpperCase())}${m.size?' · '+esc(m.size):''}</option>`;
+    }).join('');
+    ctrl=`<select class="mi-sel" data-act="sel">${opts}</select>
+      <button class="dlb" data-act="dl" type="button"><span class="dt">Download</span></button>`;
+  }else if(it.status==='fail'){
+    ctrl=`<button class="dlb err" data-act="retry" type="button"><span class="dt">↻ Ulangi</span></button>`;
+  }
+  return `<div class="mi" id="mi-${it.id}" data-id="${it.id}">
+    <div class="mi-th">${th}</div>
+    <div class="mi-info"><div class="mi-t" title="${esc(title)}">${esc(title)}</div><div class="mi-s ${st[1]}" title="${esc(st[0])}">${esc(st[0])}</div></div>
+    <div class="mi-ctl">${ctrl}</div>
+    <div class="pgb"><i></i></div>
+  </div>`;
+}
+
+function renderItem(it){
+  const old=$('mi-'+it.id);
+  if(!old){renderMulti();return}
+  const tmp=document.createElement('div');tmp.innerHTML=mItemHtml(it);
+  old.replaceWith(tmp.firstElementChild);
+  updateMultiBar();
+}
+
+function renderMulti(){
+  $('m-list').innerHTML=MQ.map(mItemHtml).join('');
+  updateMultiBar();
+}
+
+function updateMultiBar(){
+  const bar=$('m-actions');
+  bar.style.display=MQ.length?'flex':'none';
+  const ready=MQ.filter(x=>x.status==='ready'||x.status==='done').length;
+  $('m-count').textContent=`${MQ.length} link · ${ready} siap`;
+  $('m-all').disabled=!ready;
+}
+
+async function multiDl(id){
+  const it=MQ.find(x=>x.id===id);
+  if(!it||!it.pick)return;
+  const key='m'+id;
+  if(DL_ACTIVE.has(key)){DL_ACTIVE.get(key).ac.abort();return}
+  const row=$('mi-'+id);
+  const btn=row.querySelector('[data-act="dl"]'),bar=row.querySelector('.pgb i');
+  const res=await runDownload(it.pick.dl,key,mkUI(btn,bar));
+  if(res.status==='ok'){it.status='done';setTimeout(()=>{const r=$('mi-'+id);if(r)renderItem(it)},2500)}
+  else if(res.status==='error'){toast(res.msg||'Download gagal','error');setTimeout(()=>{if($('mi-'+id))renderItem(it)},4000)}
+}
+
+async function multiDownloadAll(){
+  const items=MQ.filter(x=>x.status==='ready'&&x.pick&&x.pick.dl);
+  if(!items.length)return;
+  maybeInterstitial('download');
+  toast(`Memulai ${items.length} download… izinkan "unduh beberapa file" bila browser menanyakan.`,'info');
+  for(const it of items){
+    triggerSave(it.pick.dl,dlName(it.pick.dl));
+    it.status='done';renderItem(it);
+    await sleep(1600);
+  }
+}
+
+function multiClear(){MQ=[];$('m-urls').value='';renderMulti()}
+
+function multiRepick(){
+  const preset=$('m-preset').value;
+  MQ.forEach(it=>{if(it.data&&(it.status==='ready'||it.status==='done')){it.pick=pickFormat(it.data.medias,preset);renderItem(it)}});
+}
+
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-act]');
+  if(!t||!t.closest('#m-list'))return;
+  const row=t.closest('.mi');if(!row)return;
+  const id=+row.dataset.id,it=MQ.find(x=>x.id===id);
+  if(!it)return;
+  if(t.dataset.act==='dl')multiDl(id);
+  if(t.dataset.act==='retry'){it.status='wait';it.error='';renderItem(it);multiProcess(it,[],true).then(()=>updateMultiBar())}
+});
+document.addEventListener('change',e=>{
+  const t=e.target.closest('[data-act="sel"]');
+  if(!t||!t.closest('#m-list'))return;
+  const it=MQ.find(x=>x.id===+t.closest('.mi').dataset.id);
+  if(it&&it.data){const m=it.data.medias.find(x=>x.url===t.value);if(m)it.pick=m}
+});
 
 // ============================================================
 // RIWAYAT
@@ -788,11 +1551,42 @@ function renderHist(){
 }
 
 function loadHist(enc){
+  setMode('single');
   $('url-input').value=decodeURIComponent(enc);onIn();
   window.scrollTo({top:0,behavior:'smooth'});
   toast('URL dimuat dari riwayat','info');
 }
 
+// ============================================================
+// PWA: pasang di layar utama + terima "Bagikan" dari aplikasi lain
+// ============================================================
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;const b=$('pwa-btn');if(b)b.hidden=false});
+window.addEventListener('appinstalled',()=>{const b=$('pwa-btn');if(b)b.hidden=true;deferredPrompt=null});
+function installPwa(){
+  if(!deferredPrompt)return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.finally(()=>{deferredPrompt=null;const b=$('pwa-btn');if(b)b.hidden=true});
+}
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js').catch(()=>{})});
+}
+
+// Share target: /?url=...&text=...&title=...
+function handleShare(){
+  const p=new URLSearchParams(location.search);
+  const raw=[p.get('url'),p.get('text'),p.get('title')].filter(Boolean).join(' ');
+  const m=raw.match(/https?:\/\/[^\s]+/);
+  if(!m)return;
+  history.replaceState(null,'',location.pathname);
+  $('url-input').value=cleanUrl(m[0]);onIn();
+  setTimeout(()=>doSearch(),300);
+}
+
+// ============================================================
+// INIT
+// ============================================================
 document.addEventListener('DOMContentLoaded',()=>{
   renderHist();
   onIn();
@@ -812,6 +1606,20 @@ document.addEventListener('DOMContentLoaded',()=>{
   track.addEventListener('mouseleave',()=>{drag=false;track.style.cursor=''});
   track.addEventListener('mouseup',()=>{drag=false;track.style.cursor=''});
   track.addEventListener('mousemove',e=>{if(!drag)return;e.preventDefault();track.scrollLeft=sl-(e.pageX-track.offsetLeft-sx)});
+
+  // Admin tersembunyi: klik logo 3x cepat, atau Alt+Shift+A
+  let clicks=0,ct=null;
+  document.querySelector('.logo').addEventListener('click',()=>{
+    clicks++;clearTimeout(ct);ct=setTimeout(()=>{clicks=0},1200);
+    if(clicks>=3){clicks=0;openAdmin()}
+  });
+  document.addEventListener('keydown',e=>{if(e.altKey&&e.shiftKey&&(e.key==='A'||e.key==='a')){e.preventDefault();openAdmin()}});
+
+  window.addEventListener('resize',debounce(renderAds,200));
+  const kick=()=>loadAds(false);
+  if('requestIdleCallback' in window)requestIdleCallback(kick,{timeout:2500});else setTimeout(kick,600);
+
+  handleShare();
 });
 
 </script>
