@@ -276,6 +276,10 @@ footer a:hover{color:var(--bl2);text-decoration:underline}
 .adm-card input[type=number]{width:64px}
 .adm-card textarea{width:100%;background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:9px 10px;color:var(--tx);font-family:'JetBrains Mono',monospace;font-size:.68rem;line-height:1.5;resize:vertical;outline:none}
 .adm-card textarea:focus{border-color:var(--bl)}
+.adm-img{margin-bottom:8px;border:1px dashed var(--b2);border-radius:8px;padding:8px 10px}
+.adm-img summary{cursor:pointer;font-size:.72rem;color:var(--bl2);font-weight:600}
+.adm-img[open] summary{margin-bottom:8px}
+.adm-card input[type=text]{min-width:240px;flex:1;background:var(--s2);border:1px solid var(--b2);border-radius:6px;padding:6px 8px;color:var(--tx);font-family:'Space Grotesk',sans-serif;font-size:.72rem}
 .adm-note{font-size:.68rem;color:var(--t3);line-height:1.65;margin-top:4px}
 .adm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
 .adm-st{background:var(--bg);border:1px solid var(--b1);border-radius:10px;padding:11px;text-align:center}
@@ -801,6 +805,13 @@ const Admin=(()=>{
           <option value="inline"${s.mode==='inline'?' selected':''}>Langsung — untuk AdSense</option>
         </select></label>
       </div>
+      <details class="adm-img">
+        <summary>🖼 Banner gambar sendiri (tanpa kode) — klik gambar menuju link</summary>
+        <div class="adm-row"><label>URL gambar <input type="text" data-g="img" placeholder="https://domainmu.com/ads/banner.jpg"></label></div>
+        <div class="adm-row"><label>Link tujuan <input type="text" data-g="href" placeholder="https://sponsor.com/promo"></label>
+          <button class="adm-btn" type="button" data-a="mkimg">Buat kode</button></div>
+        <div class="adm-note">Gambar sebaiknya berukuran persis sama dengan pilihan <b>Ukuran</b> di atas. Kode akan mengisi kolom di bawah; lalu klik Simpan.</div>
+      </details>
       <textarea data-f="code" rows="4" spellcheck="false" placeholder="Tempel kode iklan dari jaringan iklan (HTML/JS). Kosong = slot tidak tampil untuk pengunjung."></textarea>
       ${extra}
     </div>`;
@@ -840,6 +851,21 @@ const Admin=(()=>{
         <button class="adm-btn dng" data-a="logout" type="button">Keluar</button>
       </div>`);
     ['left','right','mid','inter'].forEach(k=>{ov.querySelector(`[data-slot="${k}"] [data-f="code"]`).value=cfg.ads[k].code||''});
+    ov.querySelectorAll('[data-a="mkimg"]').forEach(btn=>btn.onclick=()=>{
+      const card=btn.closest('[data-slot]');
+      const img=card.querySelector('[data-g="img"]').value.trim();
+      const href=card.querySelector('[data-g="href"]').value.trim();
+      const okUrl=u=>/^(https?:\/\/|\/)[^\s"'<>]+$/i.test(u);
+      if(!okUrl(img)||!/^https?:\/\/[^\s"'<>]+$/i.test(href)){
+        toast('URL gambar dan link tujuan harus diawali https:// (gambar boleh juga / untuk file di situsmu)','warn');
+        return;
+      }
+      const[w,h]=card.querySelector('[data-f="size"]').value.split('x').map(Number);
+      card.querySelector('[data-f="code"]').value=
+        `<a href="${esc(href)}" target="_blank" rel="sponsored noopener noreferrer"><img src="${esc(img)}" width="${w}" height="${h}" alt="Iklan" style="display:block;border:0;width:${w}px;height:${h}px;object-fit:cover"></a>`;
+      card.querySelector('[data-f="mode"]').value='safe';
+      toast('Kode banner dibuat — klik 💾 Simpan untuk menerapkan','success');
+    });
     ov.querySelector('[data-a="close"]').onclick=close;
     ov.querySelectorAll('.adm-tab').forEach(b=>b.onclick=()=>{
       tab=b.dataset.t;
