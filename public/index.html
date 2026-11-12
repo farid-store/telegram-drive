@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+<!-- ================================================================
+     TAG IKLAN STATIS (mis. Monetag) — TEMPEL TEPAT DI BAWAH BARIS INI
+     Untuk verifikasi situs & tag yang harus ada di HTML awal.
+     Tag zona lain bisa dipasang / di-ON-OFF lewat panel admin (Script global).
+     ================================================================ -->
+
+<!-- ======================= AKHIR TAG STATIS ======================= -->
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>VaultDL — Universal Video Downloader</title>
@@ -292,6 +299,15 @@ footer a:hover{color:var(--bl2);text-decoration:underline}
 .adm-er{font-size:.68rem;padding:7px 0;border-bottom:1px solid var(--b1);color:var(--t2);word-break:break-word}
 .adm-er span{color:var(--t3)}
 .adm-er div{margin-top:2px;color:var(--rd)}
+/* ---- ringkasan + preset admin ---- */
+.adm-sumbar{border:1px solid var(--b2);border-radius:10px;padding:10px 12px;margin-bottom:12px;background:var(--bg)}
+#adm-sum{margin-bottom:8px;display:flex;gap:6px;flex-wrap:wrap}
+.adm-chip{font-size:.66rem;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid var(--b2);color:var(--t3)}
+.adm-chip.on{color:var(--gn);border-color:rgba(0,212,138,.35);background:rgba(0,212,138,.08)}
+.adm-chip.off{color:var(--rd);border-color:rgba(255,77,109,.35)}
+.adm-presets{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:.7rem;color:var(--t2)}
+.adm-presets .adm-btn{padding:6px 10px;font-size:.7rem}
+.adm-presets .adm-btn.dng{margin-left:0}
 @media(max-width:540px){.adm-grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 
@@ -303,8 +319,6 @@ footer a:hover{color:var(--bl2);text-decoration:underline}
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="VaultDL">
 </head>
-  <script>(function(s){s.dataset.zone='12245395',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
-  <script>(function(s){s.dataset.zone='12245784',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
 <body>
 <div class="amb"></div><div class="gbg"></div>
 <nav>
@@ -314,7 +328,7 @@ footer a:hover{color:var(--bl2);text-decoration:underline}
 <div class="pg">
 <div class="hero">
   <div class="hero-pill"><div class="live-dot"></div>Gratis · No Login · No Watermark</div>
-  <h1>Download Video Dari<br/><em>Platform Apapun</em></h1>
+  <h1>Download video dari<br/><em>platform apapun</em></h1>
   <p class="hero-sub">YouTube, TikTok, Instagram, Twitter, Facebook, Reddit, Vimeo, dan 1000+ situs lainnya — cukup paste URL.</p>
 </div>
 <div class="plts-wrap">
@@ -678,7 +692,52 @@ async function loadAds(bust){
     const j=await r.json();
     ADS=j&&j.ads&&j.ads.enabled!==false?j.ads:null;
   }catch{ADS=null}
+  applyHead();
   renderAds();
+}
+
+// ---- Script global (mis. tag zona Monetag: OnClick, Vignette, In-Page Push) disisipkan ke <head> ----
+// Dijalankan sekali per pemuatan halaman. Script yang sudah ada di HTML (src sama) tidak dimuat ulang.
+let headDone=false;
+function applyHead(){
+  if(headDone||!ADS||!ADS.enabled||!ADS.head||!ADS.head.enabled)return;
+  const code=String(ADS.head.code||'').trim();
+  if(!code)return;
+  headDone=true;
+  const tpl=document.createElement('template');
+  tpl.innerHTML=code;
+  tpl.content.childNodes.forEach(n=>{
+    if(n.nodeType!==1)return;
+    const tag=n.tagName.toLowerCase();
+    if(tag==='script'){
+      const src=n.getAttribute('src');
+      if(src&&[...document.scripts].some(x=>x.getAttribute('src')===src))return;
+      const sc=document.createElement('script');
+      [...n.attributes].forEach(a=>sc.setAttribute(a.name,a.value));
+      sc.text=n.textContent;
+      document.head.appendChild(sc);
+    }else if(tag==='meta'||tag==='link'||tag==='style'){
+      document.head.appendChild(n.cloneNode(true));
+    }
+  });
+}
+
+// ---- Direct Link: buka tab baru TEPAT saat pengguna menekan tombol (Download/Cari) ----
+// Dibatasi jeda + maksimum per kunjungan. Tidak aktif saat admin login (jangan membuat impresi/klik sendiri).
+let lastDirect=0;
+function fireDirect(trigger){
+  const d=ADS&&ADS.enabled&&ADS.direct;
+  if(!d||!d.enabled||!d.url||PREVIEW)return false;
+  if(trigger==='search'&&!d.onSearch)return false;
+  if(trigger==='download'&&!d.onDownload)return false;
+  if(navigator.userActivation&&!navigator.userActivation.isActive)return false; // tanpa interaksi pengguna browser memblokir pop-up
+  let last=0,n=0;
+  try{last=+sessionStorage.getItem('dLast')||0;n=+sessionStorage.getItem('dCount')||0}catch{}
+  if(n>=(d.maxPerSession||3)||Date.now()-last<(d.cooldown||120)*1000)return false;
+  try{sessionStorage.setItem('dLast',String(Date.now()));sessionStorage.setItem('dCount',String(n+1))}catch{}
+  lastDirect=Date.now();
+  window.open(d.url,'_blank','noopener');
+  return true;
 }
 
 // ---- Pop-up (interstitial): tidak pernah memblokir proses Cari/Download ----
@@ -686,6 +745,7 @@ let interOpen=false,interTimer=null;
 
 function maybeInterstitial(trigger){
   if(interOpen||!ADS||!ADS.enabled)return;
+  if(Date.now()-lastDirect<6000)return; // satu iklan per aksi: baru saja membuka Direct Link
   const s=ADS.inter;
   if(!s||!s.enabled)return;
   if(trigger==='search'&&!s.onSearch)return;
@@ -776,7 +836,7 @@ const Admin=(()=>{
       const v=ov.querySelector('#adm-pw').value;
       const btn=ov.querySelector('.adm-btn');btn.disabled=true;btn.textContent='Memeriksa…';
       const r=await api('get',{},v);
-      if(r.ok&&r.j.ok){pw=v;cfg=r.j.config;persistent=r.j.persistent;defaultPw=!!r.j.defaultPassword;PREVIEW=true;renderAds();showPanel(r.j.stats)}
+      if(r.ok&&r.j.ok){pw=v;cfg=norm(r.j.config);persistent=r.j.persistent;defaultPw=!!r.j.defaultPassword;PREVIEW=true;renderAds();showPanel(r.j.stats)}
       else{
         const left=r.j&&typeof r.j.left==='number'?` (sisa percobaan: ${r.j.left})`:'';
         showLogin((r.j&&r.j.error||'Gagal masuk')+left);
@@ -819,6 +879,76 @@ const Admin=(()=>{
     </div>`;
   }
 
+  function headCard(){
+    const h=cfg.ads.head;
+    return `<div class="adm-card" data-slot="head">
+      <div class="adm-ch"><label class="adm-ck"><input type="checkbox" data-f="enabled"${h.enabled?' checked':''}> <b>Script global — tag zona Monetag (OnClick, Vignette, In-Page Push, dll.)</b></label></div>
+      <textarea data-f="code" rows="4" spellcheck="false" placeholder="Tempel tag zona dari Monetag (baris &lt;script … data-zone=… async&gt;&lt;/script&gt;)."></textarea>
+      <div class="adm-note">Disisipkan ke &lt;head&gt; tiap halaman dibuka; script yang <b>sudah ada</b> di index.html tidak dimuat dua kali. Tag untuk <b>verifikasi situs</b> Monetag tetap harus ditempel statis di index.html (tepat setelah &lt;head&gt;) karena verifikasi membaca HTML mentah. Perubahan di sini berlaku saat halaman dimuat ulang.</div>
+    </div>`;
+  }
+
+  function directCard(){
+    const d=cfg.ads.direct;
+    return `<div class="adm-card" data-slot="direct">
+      <div class="adm-ch"><label class="adm-ck"><input type="checkbox" data-f="enabled"${d.enabled?' checked':''}> <b>Direct Link — buka tab baru saat tombol ditekan</b></label></div>
+      <div class="adm-row"><label style="flex:1">URL Direct Link <input type="text" data-f="url" value="${esc(d.url)}" placeholder="https://… (dari Monetag › Direct Link)"></label>
+        <button class="adm-btn" type="button" data-a="testdirect">↗ Tes</button></div>
+      <div class="adm-row">
+        <label class="adm-ck"><input type="checkbox" data-f="onDownload"${d.onDownload?' checked':''}> Saat tombol Download</label>
+        <label class="adm-ck"><input type="checkbox" data-f="onSearch"${d.onSearch?' checked':''}> Saat tombol Cari</label>
+      </div>
+      <div class="adm-row">
+        <label>Jeda <input type="number" min="10" max="3600" data-f="cooldown" value="${d.cooldown}"> detik</label>
+        <label>Maks. <input type="number" min="1" max="20" data-f="maxPerSession" value="${d.maxPerSession}"> kali per kunjungan</label>
+      </div>
+      <div class="adm-note">Iklan dibuka tepat saat pengguna menekan tombol; Download/pencarian tetap berjalan. Tidak aktif selama kamu login admin. Jika kamu juga memakai tag OnClick/Popunder, pilih salah satu agar tidak ada dua pop-up dalam sekali klik. Cek aturan Direct Link di Monetag.</div>
+    </div>`;
+  }
+
+  // Tahan terhadap konfigurasi lama (server belum diperbarui / data tersimpan sebelum fitur ini ada)
+  function norm(c){
+    c=c&&c.ads?c:{v:0,ads:{enabled:true}};
+    const a=c.ads;
+    const slot=(sz,extra)=>Object.assign({enabled:true,mode:'safe',size:sz,code:''},extra||{});
+    a.left=a.left||slot('160x600');a.right=a.right||slot('160x600');a.mid=a.mid||slot('728x90');
+    a.inter=Object.assign(slot('300x250',{delay:3,cooldown:90,onSearch:true,onDownload:true}),a.inter||{});
+    a.head=Object.assign({enabled:false,code:''},a.head||{});
+    a.direct=Object.assign({enabled:false,url:'',onSearch:false,onDownload:true,cooldown:120,maxPerSession:3},a.direct||{});
+    return c;
+  }
+
+  const q=(k,f)=>ov.querySelector(`[data-slot="${k}"] [data-f="${f}"]`);
+
+  function summary(){
+    const chips=[];
+    const master=ov.querySelector('#adm-master').checked;
+    const chip=(on,t)=>`<span class="adm-chip${on&&master?' on':''}">${t}</span>`;
+    const banners=['left','right','mid'].filter(k=>q(k,'enabled').checked&&String(q(k,'code').value).trim()).length;
+    chips.push(chip(banners>0,`Banner ${banners}/3`));
+    chips.push(chip(q('inter','enabled').checked&&!!String(q('inter','code').value).trim(),'Pop-up'));
+    chips.push(chip(q('direct','enabled').checked&&/^https?:\/\//i.test(q('direct','url').value.trim()),'Direct Link'));
+    chips.push(chip(q('head','enabled').checked&&!!String(q('head','code').value).trim(),'Script global'));
+    ov.querySelector('#adm-sum').innerHTML=(master?'':'<span class="adm-chip off">SEMUA IKLAN MATI</span> ')+chips.join(' ');
+  }
+
+  function preset(name){
+    const set=(k,f,v)=>{const el=q(k,f);if(el)el.checked=v};
+    const master=ov.querySelector('#adm-master');
+    if(name==='off'){master.checked=false;summary();return}
+    master.checked=true;
+    ['left','right','mid'].forEach(k=>set(k,'enabled',true));
+    if(name==='light'){set('inter','enabled',false);set('direct','enabled',false)}
+    if(name==='balanced'){set('inter','enabled',true);set('inter','onSearch',false);set('inter','onDownload',true);set('direct','enabled',false)}
+    if(name==='max'){
+      set('inter','enabled',true);set('inter','onSearch',true);set('inter','onDownload',true);
+      if(/^https?:\/\//i.test(q('direct','url').value.trim())){set('direct','enabled',true);set('direct','onDownload',true)}
+      else toast('Isi URL Direct Link dulu agar bisa diaktifkan','warn');
+    }
+    summary();
+    toast('Preset diterapkan — klik 💾 Simpan untuk menyimpan','info');
+  }
+
   function collect(){
     const out={ads:{enabled:ov.querySelector('#adm-master').checked}};
     ov.querySelectorAll('[data-slot]').forEach(card=>{
@@ -841,7 +971,18 @@ const Admin=(()=>{
       <div class="adm-body">
         ${warn.map(w=>`<div class="adm-warn">${w}</div>`).join('')}
         <div id="adm-ads" style="display:${tab==='ads'?'block':'none'}">
+          <div class="adm-sumbar"><div id="adm-sum"></div>
+            <div class="adm-presets"><span>Preset cepat:</span>
+              <button class="adm-btn" type="button" data-preset="light">Ringan</button>
+              <button class="adm-btn" type="button" data-preset="balanced">Seimbang</button>
+              <button class="adm-btn" type="button" data-preset="max">Maksimal</button>
+              <button class="adm-btn dng" type="button" data-preset="off">Matikan semua</button></div>
+            <div class="adm-note">Preset hanya mengubah saklar (tidak menghapus kode/URL): <b>Ringan</b> = banner · <b>Seimbang</b> = banner + pop-up saat Download · <b>Maksimal</b> = + pop-up saat Cari + Direct Link.</div></div>
           <label class="adm-master"><input type="checkbox" id="adm-master"${cfg.ads.enabled?' checked':''}> <b>Iklan aktif</b> <span>(matikan untuk menyembunyikan SEMUA iklan)</span></label>
+          <div class="adm-sh">Monetag &amp; pop-up saat klik</div>
+          ${directCard()}
+          ${headCard()}
+          <div class="adm-sh">Banner &amp; pop-up gambar/kode</div>
           ${['left','right','mid','inter'].map(slotCard).join('')}
           <div class="adm-note">Slot yang kodenya kosong tidak tampil untuk pengunjung. Kotak placeholder hanya terlihat olehmu selama panel ini terbuka. Mode <b>Langsung</b> menjalankan kode iklan di halaman ini — pakai hanya untuk jaringan tepercaya.</div>
         </div>
@@ -852,7 +993,16 @@ const Admin=(()=>{
         <button class="adm-btn" data-a="refresh" type="button">↻ Muat ulang</button>
         <button class="adm-btn dng" data-a="logout" type="button">Keluar</button>
       </div>`);
-    ['left','right','mid','inter'].forEach(k=>{ov.querySelector(`[data-slot="${k}"] [data-f="code"]`).value=cfg.ads[k].code||''});
+    ['left','right','mid','inter','head'].forEach(k=>{ov.querySelector(`[data-slot="${k}"] [data-f="code"]`).value=cfg.ads[k].code||''});
+    summary();
+    ov.querySelector('.adm-body').addEventListener('input',summary);
+    ov.querySelector('.adm-body').addEventListener('change',summary);
+    ov.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>preset(b.dataset.preset));
+    ov.querySelector('[data-a="testdirect"]').onclick=()=>{
+      const u=q('direct','url').value.trim();
+      if(!/^https?:\/\/[^\s"'<>]+$/i.test(u)){toast('URL Direct Link harus diawali https://','warn');return}
+      window.open(u,'_blank','noopener');
+    };
     ov.querySelectorAll('[data-a="mkimg"]').forEach(btn=>btn.onclick=()=>{
       const card=btn.closest('[data-slot]');
       const img=card.querySelector('[data-g="img"]').value.trim();
@@ -885,16 +1035,16 @@ const Admin=(()=>{
       const r=await api('save',{config:collect()});
       btn.disabled=false;btn.textContent='💾 Simpan';
       if(r.ok&&r.j.ok){
-        cfg=r.j.config;persistent=r.j.persistent;
+        cfg=norm(r.j.config);persistent=r.j.persistent;
         ADS=cfg.ads.enabled?cfg.ads:null;
         ['left','right','mid'].forEach(k=>{const el=$('ad-'+k);if(el)el.dataset.sig=''});
         renderAds();
-        toast(persistent?'Pengaturan iklan disimpan — pengunjung melihatnya dalam ±15 detik':'Tersimpan sementara (Redis belum terhubung)',persistent?'success':'warn');
+        toast(persistent?'Pengaturan iklan disimpan — pengunjung melihatnya dalam ±15 detik (script global: saat halaman dimuat ulang)':'Tersimpan sementara (Redis belum terhubung)',persistent?'success':'warn');
       }else toast((r.j&&r.j.error)||'Gagal menyimpan','error');
     };
     ov.querySelector('[data-a="refresh"]').onclick=async()=>{
       const r=await api('get');
-      if(r.ok){cfg=r.j.config;persistent=r.j.persistent;showPanel(r.j.stats)}
+      if(r.ok){cfg=norm(r.j.config);persistent=r.j.persistent;showPanel(r.j.stats)}
     };
     ov.querySelector('[data-a="logout"]').onclick=()=>{pw=null;cfg=null;PREVIEW=false;close();renderAds();toast('Keluar dari admin','info')};
   }
@@ -940,6 +1090,7 @@ async function doSearch(fresh){
   const btn=$('btn-s');
   btn.disabled=true;btn.classList.add('loading');
   setZ(`<div class="lc"><div class="lsp"></div><p>Mengambil format dari ${esc(p.n)}...</p><small>Server mencoba beberapa provider — bisa sampai 30 detik</small></div>`);
+  fireDirect('search');
   maybeInterstitial('search'); // tidak memblokir pencarian
 
   const ac=new AbortController();
@@ -1240,6 +1391,7 @@ async function doDownload(i,btn){
   }
   const key='s'+i;
   if(DL_ACTIVE.has(key)){DL_ACTIVE.get(key).ac.abort();return} // klik lagi = batal
+  fireDirect('download'); // harus sinkron di dalam klik agar tidak diblok pop-up blocker
   const bar=btn.closest('.fi')?.querySelector('.pgb i');
   const orig=btn.querySelector('.dt')?.textContent||'Download';
   const res=await runDownload(m.dl,key,mkUI(btn,bar));
@@ -1448,6 +1600,7 @@ async function multiStart(){
   let urls=parseUrls($('m-urls').value);
   if(!urls.length){toast('Tempel minimal satu link','warn');return}
   if(urls.length>MAX_MULTI){toast(`Maksimal ${MAX_MULTI} link per proses — sisanya diabaikan`,'warn');urls=urls.slice(0,MAX_MULTI)}
+  fireDirect('search');
   maybeInterstitial('search');
   mBusy=true;
   const go=$('m-go');go.disabled=true;go.classList.add('loading');
@@ -1513,6 +1666,7 @@ async function multiDl(id){
   if(!it||!it.pick)return;
   const key='m'+id;
   if(DL_ACTIVE.has(key)){DL_ACTIVE.get(key).ac.abort();return}
+  fireDirect('download');
   const row=$('mi-'+id);
   const btn=row.querySelector('[data-act="dl"]'),bar=row.querySelector('.pgb i');
   const res=await runDownload(it.pick.dl,key,mkUI(btn,bar));
@@ -1523,6 +1677,7 @@ async function multiDl(id){
 async function multiDownloadAll(){
   const items=MQ.filter(x=>x.status==='ready'&&x.pick&&x.pick.dl);
   if(!items.length)return;
+  fireDirect('download');
   maybeInterstitial('download');
   toast(`Memulai ${items.length} download… izinkan "unduh beberapa file" bila browser menanyakan.`,'info');
   for(const it of items){
@@ -1644,8 +1799,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.addEventListener('keydown',e=>{if(e.altKey&&e.shiftKey&&(e.key==='A'||e.key==='a')){e.preventDefault();openAdmin()}});
 
   window.addEventListener('resize',debounce(renderAds,200));
-  const kick=()=>loadAds(false);
-  if('requestIdleCallback' in window)requestIdleCallback(kick,{timeout:2500});else setTimeout(kick,600);
+  loadAds(false); // segera (ringan, di-cache CDN) — script global & iklan perlu config sedini mungkin
 
   handleShare();
 });
