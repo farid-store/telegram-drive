@@ -54,6 +54,8 @@ self.options = {
 self.lary = ""
 importScripts('https://3nbf4.com/act/files/service-worker.min.js?r=sw')
 
+
+// ================= MONETAG PUSH Default =================
 self.options = {
     "domain": "5gvci.com",
     "zoneId": 12245385
