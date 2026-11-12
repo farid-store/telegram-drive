@@ -13,8 +13,14 @@
 //   COBALT_API_URL     mis. https://cobalt.domainmu.com   (instance Cobalt)
 //   COBALT_API_KEY     API key Cobalt bila instance-nya butuh
 //   TERABOX_API        override endpoint worker Terabox
+//   RATE_LIMIT_PER_MIN        batas semua request /api/get per IP per menit (default 40)
+//   RATE_LIMIT_MISS_PER_MIN   batas request yang benar-benar menjalankan ekstraksi (default 15)
+//   CACHE_TTL                 lama cache hasil ekstraksi dalam detik (default 480 = 8 menit)
+//   BLOCKED_HOSTS             domain yang diblokir (pisahkan koma), mis. situs-pelanggar.com,contoh.net — untuk permintaan takedown/DMCA
+//   (opsional) KV_REST_API_URL + KV_REST_API_TOKEN  → Redis bersama untuk rate limit, cache, statistik
 
 const crypto = require('crypto');
+const store = require('../lib/store');
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
 const SIGN_SECRET = process.env.SIGN_SECRET || '';
@@ -75,10 +81,10 @@ function normMedia(m) {
   let type = String(m.type || '').toLowerCase();
   if (type === 'photo') type = 'image';
   if (type === 'gif') type = 'video';
-  if (!['video', 'audio', 'image'].includes(type)) {
+  if (!['video', 'audio', 'image', 'subtitle'].includes(type)) {
     type = AUDIO_EXT.includes(ext) ? 'audio' : IMAGE_EXT.includes(ext) ? 'image' : 'video';
   }
-  if (!ext) ext = type === 'audio' ? 'mp3' : type === 'image' ? 'jpg' : 'mp4';
+  if (!ext) ext = type === 'audio' ? 'mp3' : type === 'image' ? 'jpg' : type === 'subtitle' ? 'vtt' : 'mp4';
   return {
     url, type, extension: ext,
     quality: String(m.quality || m.label || m.resolution || '').trim(),
@@ -91,6 +97,10 @@ function normMedia(m) {
 const safeName = s => String(s || '').replace(/[\\/:*?"<>|\x00-\x1f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80);
 
 function buildName(title, m) {
+  if (m.type === 'subtitle') {
+    const lang = (String(m.quality || '').split(' ')[0] || 'sub').toLowerCase().replace(/[^a-z0-9-]/g, '') || 'sub';
+    return `${safeName(title) || 'VaultDL'}.${lang}.${m.extension}`;
+  }
   const base = safeName(m.filename ? m.filename.replace(/\.[a-z0-9]{2,5}$/i, '') : title) || 'VaultDL';
   const q = !m.filename && /\d{3,4}p/.test(m.quality) ? ' ' + m.quality.match(/\d{3,4}p/)[0] : '';
   return `${base}${q}.${m.extension}`;
@@ -109,18 +119,21 @@ function dlLink(m, title) {
 }
 
 // ---------- providers ----------
-async function viaYtdlp(url, ctx) {
+async function viaYtdlp(url, ctx, opt = {}) {
   const headers = { accept: 'application/json' };
   if (SIGN_SECRET) headers['x-internal-key'] = SIGN_SECRET;
-  const r = await fetch(`https://${ctx.host}/api/extract?url=${encodeURIComponent(url)}`, {
-    headers, signal: ctx.t(38000),
-  });
+  const q = `url=${encodeURIComponent(url)}${opt.playlist ? '&playlist=1' : ''}`;
+  const r = await fetch(`https://${ctx.host}/api/extract?${q}`, { headers, signal: ctx.t(38000) });
   const text = await r.text();
   let j = {};
   try { j = JSON.parse(text); } catch { /* bukan JSON */ }
   if (!r.ok) {
     if (!j.error) throw new Error(`HTTP ${r.status} — /api/extract belum ter-deploy? (butuh requirements.txt + api/extract.py)`);
     const e = new Error(j.error); e.kind = j.kind; throw e;
+  }
+  if (opt.playlist) {
+    if (!j.entries?.length) throw new Error('playlist kosong / tidak terbaca');
+    return j;
   }
   if (!j.medias?.length) throw new Error('tidak ada media');
   return j;
@@ -239,6 +252,28 @@ async function viaDood(url, ctx) {
 }
 
 // ---------- handler ----------
+// ---------- statistik & log ----------
+const KNOWN_HOSTS = ['youtube.com', 'youtu.be', 'tiktok.com', 'instagram.com', 'facebook.com', 'fb.watch', 'twitter.com', 'x.com',
+  'reddit.com', 'vimeo.com', 'soundcloud.com', 'twitch.tv', 'bilibili.com', 'dailymotion.com', 'pinterest.com', 'linkedin.com',
+  'rumble.com', 'telegram.org', 't.me', 'terabox.com', 'doodstream.com'];
+const platformKey = h => KNOWN_HOSTS.find(d => h === d || h.endsWith('.' + d)) || (inList(h, TERABOX) ? 'terabox.com' : inList(h, DOOD) ? 'doodstream.com' : 'lainnya');
+const dayKey = () => 'st:' + new Date().toISOString().slice(0, 10);
+
+async function record(kind, host, errMsg) {
+  const jobs = [store.hincr(dayKey(), kind, 35 * 86400)];
+  if (kind === 'ok') jobs.push(store.hincr('stp:ok', platformKey(host)));
+  if (kind === 'fail') {
+    jobs.push(store.hincr('stp:fail', platformKey(host)));
+    jobs.push(store.lpush('errlog', JSON.stringify({ t: Date.now(), host: String(host).slice(0, 60), msg: String(errMsg || '').slice(0, 300) }), 40));
+    console.error(JSON.stringify({ level: 'error', event: 'extract_failed', host, msg: String(errMsg || '').slice(0, 300) }));
+  }
+  await store.settle(jobs);
+}
+
+const RATE_ALL = Number(process.env.RATE_LIMIT_PER_MIN) || 40;
+const RATE_MISS = Number(process.env.RATE_LIMIT_MISS_PER_MIN) || 15;
+const CACHE_TTL = Number(process.env.CACHE_TTL) || 480;
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -246,8 +281,11 @@ module.exports = async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const input = req.method === 'POST' ? (req.body || {}).url : (req.query || {}).url;
+  const q = req.method === 'POST' ? (req.body || {}) : (req.query || {});
+  const input = q.url;
   if (!input) return res.status(400).json({ error: 'Parameter url diperlukan' });
+  const wantPlaylist = String(q.playlist || '') === '1';
+  const fresh = String(q.fresh || '') === '1';
 
   let url;
   try {
@@ -257,14 +295,58 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'URL tidak valid' });
   }
 
+  const tooMany = async (rl) => {
+    await record('rl');
+    res.setHeader('Retry-After', String(rl.retryAfter));
+    return res.status(429).json({ error: `Terlalu banyak permintaan. Coba lagi dalam ${rl.retryAfter} detik.`, retryAfter: rl.retryAfter });
+  };
+
+  // 1) rate limit per IP — semua request
+  const ip = store.clientIp(req);
+  const rlAll = await store.rateLimit('get:' + ip, RATE_ALL, 60);
+  if (!rlAll.ok) return tooMany(rlAll);
+
   const deadline = Date.now() + 54000;
   url = await resolveShort(url);
   const h = hostOf(url);
+
+  // Daftar blokir (permintaan takedown/DMCA) — diisi lewat env BLOCKED_HOSTS
+  const blocked = (process.env.BLOCKED_HOSTS || '').split(',').map(x => x.trim().toLowerCase().replace(/^www\./, '')).filter(Boolean);
+  if (blocked.some(d => h === d || h.endsWith('.' + d))) {
+    return res.status(451).json({ error: 'Situs ini tidak dapat diproses oleh VaultDL (diblokir atas permintaan pemegang hak).' });
+  }
+
+  // 2) cache hasil (kunci = hash URL, bukan URL asli)
+  const cacheKey = 'c:v2:' + (wantPlaylist ? 'p:' : '') + store.sha1(url);
+  if (!fresh) {
+    const hit = await store.getJSON(cacheKey);
+    if (hit) {
+      await record('cache');
+      return res.status(200).json({ ...hit, cached: true });
+    }
+  }
+
+  // 3) rate limit lebih ketat khusus yang menjalankan ekstraksi sungguhan
+  const rlMiss = await store.rateLimit('getmiss:' + ip, RATE_MISS, 60);
+  if (!rlMiss.ok) return tooMany(rlMiss);
 
   const ctx = {
     host: ((req.headers || {})['x-forwarded-host'] || (req.headers || {}).host || '').split(',')[0].trim(),
     t: ms => AbortSignal.timeout(Math.max(1500, Math.min(ms, deadline - Date.now() - 800))),
   };
+
+  // ---- mode playlist: hanya yt-dlp ----
+  if (wantPlaylist) {
+    try {
+      const out = await viaYtdlp(url, ctx, { playlist: true });
+      const payload = { playlist: true, title: out.title || 'Playlist', source: out.source || null, count: out.entries.length, entries: out.entries.slice(0, 30) };
+      await store.settle([store.setJSON(cacheKey, payload, CACHE_TTL), record('ok', h)]);
+      return res.status(200).json(payload);
+    } catch (e) {
+      await record('fail', h, 'playlist: ' + e.message);
+      return res.status(502).json({ error: 'Gagal membaca playlist', hint: 'Tidak semua link bisa dibaca sebagai playlist. Tempel link video satu per satu.', details: [e.message] });
+    }
+  }
 
   const chain = [];
   if (inList(h, TERABOX)) chain.push(['terabox', viaTerabox]);
@@ -274,7 +356,7 @@ module.exports = async function handler(req, res) {
   chain.push(['yt-dlp', viaYtdlp], ['cobalt', viaCobalt]);
 
   const errors = [];
-  let kinds = [];
+  const kinds = [];
   for (const [name, fn] of chain) {
     if (deadline - Date.now() < 3000) { errors.push(`${name}: dilewati (waktu habis)`); continue; }
     if (name === 'cobalt' && !COBALT_API_URL) { errors.push('cobalt: tidak dikonfigurasi (opsional)'); continue; }
@@ -283,7 +365,7 @@ module.exports = async function handler(req, res) {
       const medias = (out.medias || []).map(normMedia).filter(Boolean);
       if (!medias.length) throw new Error('media kosong');
       const title = out.title || 'Video';
-      return res.status(200).json({
+      const payload = {
         title,
         thumbnail: out.thumbnail || null,
         source: out.source || null,
@@ -297,12 +379,16 @@ module.exports = async function handler(req, res) {
           hls: ['m3u8', 'mpd'].includes(m.extension),
           dl: dlLink(m, title),
         })),
-      });
+      };
+      await store.settle([store.setJSON(cacheKey, payload, CACHE_TTL), record('ok', h)]);
+      return res.status(200).json(payload);
     } catch (e) {
       if (e.kind) kinds.push(e.kind);
       errors.push(`${name}: ${e.message}`);
     }
   }
+
+  await record('fail', h, errors.filter(x => !/tidak dikonfigurasi|dilewati/.test(x)).join(' | '));
 
   let hint = 'Pastikan video publik (bukan privat / terhapus) lalu coba lagi.';
   if (kinds.includes('bot_check') || kinds.includes('login_required')) {
