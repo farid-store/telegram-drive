@@ -1,23 +1,52 @@
 {
-  "regions": ["sin1"],
+  "regions": [
+    "sin1"
+  ],
   "functions": {
-    "api/get.js": { "maxDuration": 60 },
-    "api/extract.py": { "maxDuration": 50 },
-    "api/analyze.js": { "maxDuration": 15 },
-    "api/admin.js": { "maxDuration": 10 },
-    "api/config.js": { "maxDuration": 10 }
+    "api/get.js": {
+      "maxDuration": 60
+    },
+    "api/extract.py": {
+      "maxDuration": 50
+    },
+    "api/analyze.js": {
+      "maxDuration": 15
+    },
+    "api/admin.js": {
+      "maxDuration": 10
+    },
+    "api/config.js": {
+      "maxDuration": 10
+    },
+    "api/search.mjs": {
+      "maxDuration": 30
+    },
+    "api/xsearch.py": {
+      "maxDuration": 30
+    }
   },
   "headers": [
     {
       "source": "/sw.js",
       "headers": [
-        { "key": "Cache-Control", "value": "no-cache" },
-        { "key": "Service-Worker-Allowed", "value": "/" }
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        },
+        {
+          "key": "Service-Worker-Allowed",
+          "value": "/"
+        }
       ]
     },
     {
       "source": "/manifest.webmanifest",
-      "headers": [{ "key": "Content-Type", "value": "application/manifest+json" }]
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/manifest+json"
+        }
+      ]
     }
   ]
 }
