@@ -210,6 +210,51 @@ details.dtl summary{cursor:pointer;color:var(--t2)}
 footer a{color:var(--t2);text-decoration:none;margin:0 6px}
 footer a:hover{color:var(--bl2);text-decoration:underline}
 
+
+/* ---- TV Live ---- */
+.tv-player{position:relative;aspect-ratio:16/9;background:#000;border-radius:12px;overflow:hidden;border:1px solid var(--b1)}
+.tv-player video{width:100%;height:100%;object-fit:contain;background:#000;display:block}
+.tv-ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(0,0,0,.74);text-align:center;padding:14px;font-size:.8rem;color:var(--t2)}
+.tv-ph{font-size:2.2rem;line-height:1.3}
+.tv-ph small{display:block;font-size:.72rem;color:var(--t3);margin-top:4px}
+.tv-err{display:flex;flex-direction:column;gap:10px;align-items:center;color:var(--am);max-width:420px}
+.tv-eb{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.tv-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 0;flex-wrap:wrap}
+.tv-now{min-width:0;display:flex;flex-direction:column;gap:3px;flex:1}
+.tv-now b{font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tv-st{font-size:.66rem;font-weight:700;color:var(--t3)}
+.tv-st.ok{color:var(--gn)}.tv-st.warn{color:var(--am)}.tv-st.err{color:var(--rd)}
+.tv-btns{display:flex;gap:6px}
+.tv-btns .qb.on{color:var(--am)}
+.tv-tools{display:flex;gap:8px;margin-bottom:8px}
+.tv-tools input,.tv-tools select,.tv-add input{background:var(--bg);border:1px solid var(--b2);border-radius:var(--r2);padding:10px 12px;color:var(--tx);font-family:'Space Grotesk',sans-serif;font-size:.8rem;outline:none}
+.tv-tools input{flex:1;min-width:0}
+.tv-tools input:focus,.tv-add input:focus{border-color:var(--bl)}
+.tv-tools select{max-width:44%}
+.tv-meta{font-size:.68rem;color:var(--t3);margin-bottom:8px}
+#tv-list{display:flex;flex-direction:column;gap:4px;max-height:460px;overflow:auto;padding-right:4px}
+.tv-empty{padding:22px;text-align:center;color:var(--t3);font-size:.78rem}
+.tvi{display:flex;align-items:center;gap:10px;padding:7px 9px;border:1px solid var(--b1);border-radius:9px;background:var(--bg);cursor:pointer}
+.tvi:hover{border-color:var(--b2)}
+.tvi.on{border-color:rgba(79,142,255,.5);background:var(--bg1)}
+.tvi-l{width:38px;height:28px;border-radius:5px;background:var(--s2);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;font-size:.8rem}
+.tvi-l img{max-width:100%;max-height:100%;object-fit:contain}
+.tvi-i{flex:1;min-width:0}
+.tvi-n{font-size:.78rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tvi-g{font-size:.62rem;color:var(--t3)}
+.tvi-fav{background:none;border:none;color:var(--t3);font-size:1.05rem;cursor:pointer;padding:2px 4px}
+.tvi-fav.on{color:var(--am)}
+#tv-more{width:100%;margin-top:8px}
+.tv-src{margin-top:12px;font-size:.72rem;color:var(--t2)}
+.tv-src summary{cursor:pointer;color:var(--bl2);font-weight:600}
+.tv-src label{display:flex;gap:6px;align-items:center;margin-top:8px}
+#tv-srcs{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.tv-chip{display:inline-flex;align-items:center;gap:5px;font-size:.66rem;padding:3px 9px;border-radius:20px;border:1px solid var(--b2);color:var(--t2)}
+.tv-chip button{background:none;border:none;color:var(--rd);cursor:pointer;font-size:.7rem}
+.tv-add{display:flex;gap:6px;margin:8px 0}
+.tv-add input{flex:1;min-width:0}
+.tv-note{font-size:.64rem;color:var(--t3);line-height:1.6;margin-top:6px}
+
 /* ---- iklan ---- */
 .ad-lbl{display:block;font-size:.55rem;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-bottom:4px;text-align:center}
 .ad-side{position:fixed;top:84px;z-index:3;width:var(--adw,160px);animation:up .3s ease}
@@ -318,6 +363,8 @@ footer a:hover{color:var(--bl2);text-decoration:underline}
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="VaultDL">
+<!-- Proxy HLS untuk TV Live. Bawaan: fungsi Vercel /api/hls. Untuk memakai Cloudflare Worker: ganti ke https://NAMA.AKUN.workers.dev/ -->
+<meta name="tv-proxy" content="/api/hls">
 </head>
 <body>
 <div class="amb"></div><div class="gbg"></div>
@@ -356,6 +403,7 @@ footer a:hover{color:var(--bl2);text-decoration:underline}
 <div class="mode-tabs">
   <button class="mt on" id="mt-single" type="button" onclick="setMode('single')">🔗 Satu Link</button>
   <button class="mt" id="mt-multi" type="button" onclick="setMode('multi')">📚 Multi Link &amp; Playlist</button>
+  <button class="mt" id="mt-tv" type="button" onclick="setMode('tv')">📺 TV Live</button>
 </div>
 <div class="main-card" id="single-card">
   <div class="search-row">
@@ -397,6 +445,31 @@ footer a:hover{color:var(--bl2);text-decoration:underline}
     </div>
   </div>
 </div>
+<div class="main-card" id="tv-card" style="display:none">
+  <div class="tv-player"><video id="tv-video" controls playsinline></video>
+    <div class="tv-ov" id="tv-ov"><div class="tv-ph">📺<small>Pilih channel di bawah</small></div></div></div>
+  <div class="tv-bar">
+    <div class="tv-now"><b id="tv-title">Belum ada channel dipilih</b><span class="tv-st" id="tv-status">—</span></div>
+    <div class="tv-btns">
+      <button class="qb" id="tv-fav" type="button" onclick="tvToggleFav()" title="Favorit">☆</button>
+      <button class="qb" type="button" onclick="tvReload()" title="Muat ulang channel">↻</button>
+      <button class="qb" id="tv-pip" type="button" onclick="tvPip()" title="Picture-in-picture">⧉</button>
+    </div>
+  </div>
+  <div class="tv-tools">
+    <input id="tv-q" type="search" placeholder="Cari channel…" oninput="tvFilterDebounced()" autocomplete="off">
+    <select id="tv-g" onchange="tvFilter()" aria-label="Kategori"><option value="*">Semua</option></select>
+  </div>
+  <div class="tv-meta" id="tv-meta">Memuat playlist…</div>
+  <div id="tv-list"></div>
+  <button class="qb" id="tv-more" type="button" onclick="tvMore()" style="display:none">Muat lebih banyak</button>
+  <details class="tv-src"><summary>⚙ Playlist &amp; pengaturan</summary>
+    <div id="tv-srcs"></div>
+    <div class="tv-add"><input id="tv-add" type="url" placeholder="https://…/playlist.m3u (playlist M3U sendiri)"><button class="qb" type="button" onclick="tvAddSrc()">+ Tambah</button></div>
+    <label><input type="checkbox" id="tv-force"> Selalu lewat server (bila banyak channel gagal diputar langsung)</label>
+    <div class="tv-note">Urutan otomatis: channel dicoba <b>langsung</b> dulu; bila diblok (CORS / http), dicoba <b>lewat server</b>. Lewat server memakai kuota bandwidth situs. Beberapa channel hanya bisa diputar dari wilayah tertentu.</div>
+  </details>
+</div>
 <div id="zone"></div>
 <div class="ad-mid" id="ad-mid" hidden aria-label="Iklan"><span class="ad-lbl">Iklan</span><div class="ad-box"></div></div>
 <div class="sec">
@@ -430,6 +503,7 @@ footer a:hover{color:var(--bl2);text-decoration:underline}
     <div class="fc"><div class="fci">📱</div><h4>Semua Device</h4><p>HP, tablet, desktop — responsive sempurna</p></div>
     <div class="fc"><div class="fci">📝</div><h4>Subtitle &amp; Thumbnail HD</h4><p>Unduh subtitle (SRT/VTT) dan gambar sampul resolusi tinggi</p></div>
     <div class="fc"><div class="fci">📚</div><h4>Multi Link &amp; Playlist</h4><p>Tempel banyak link atau satu playlist sekaligus</p></div>
+    <div class="fc"><div class="fci">📺</div><h4>TV Live (IPTV)</h4><p>Tonton channel TV online langsung di browser, lengkap dengan favorit &amp; pencarian</p></div>
     <div class="fc"><div class="fci">📲</div><h4>Pasang di HP</h4><p>Pasang seperti aplikasi, lalu Bagikan link langsung ke VaultDL</p></div>
   </div>
 </div>
@@ -1504,12 +1578,19 @@ const MAX_MULTI=15,MAX_TOTAL=30;
 let MQ=[],mid=0,mBusy=false;
 
 function setMode(mode){
-  const multi=mode==='multi';
-  $('single-card').style.display=multi?'none':'';
-  $('zone').style.display=multi?'none':'';
+  const multi=mode==='multi',tv=mode==='tv';
+  $('single-card').style.display=(multi||tv)?'none':'';
+  $('zone').style.display=(multi||tv)?'none':'';
   $('multi-card').style.display=multi?'':'none';
-  $('mt-single').classList.toggle('on',!multi);
+  $('tv-card').style.display=tv?'':'none';
+  $('mt-single').classList.toggle('on',!multi&&!tv);
   $('mt-multi').classList.toggle('on',multi);
+  $('mt-tv').classList.toggle('on',tv);
+  if(tv){tvInit();try{history.replaceState(null,'','#tv')}catch{}}
+  else{
+    tvHalt(); // hentikan siaran saat pindah tab (hemat bandwidth)
+    try{if(location.hash==='#tv')history.replaceState(null,'',location.pathname+location.search)}catch{}
+  }
 }
 
 const parseUrls=t=>[...new Set((String(t).match(/https?:\/\/[^\s<>"']+/g)||[]).map(cleanUrl).filter(isUrl))];
@@ -1803,7 +1884,391 @@ document.addEventListener('DOMContentLoaded',()=>{
   loadAds(false); // segera (ringan, di-cache CDN) — script global & iklan perlu config sedini mungkin
 
   handleShare();
+  if(location.hash==='#tv')setMode('tv');
 });
+
+// ============================================================
+// TV LIVE (IPTV)
+// hls.js dengan urutan percobaan otomatis: LANGSUNG dari server channel → bila diblok
+// (CORS / http di halaman https / butuh Referer) → LEWAT PROXY server (/api/hls).
+// Mode yang berhasil diingat per channel agar channel berikutnya langsung memakai yang tepat.
+// ============================================================
+const TV_PROXY=((document.querySelector('meta[name="tv-proxy"]')||{}).content||'/api/hls').trim();
+const TV_SOURCES=[
+  {n:'Indonesia',u:'https://mgi24.github.io/tvdigital/idwork.m3u'},
+  {n:'Dunia — iptv-org',u:'https://iptv-org.github.io/iptv/index.m3u'},
+];
+const TV={inited:false,all:[],view:[],shown:0,cur:null,hls:null,favs:[],mode:{},force:{},token:0,
+  tDirect:12000,tProxy:20000,page:100,loading:false,errSrc:[]};
+
+const tvLS={
+  get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch{return d}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}},
+};
+
+function tvProxyUrl(u,ref,ua,raw){
+  return TV_PROXY+(TV_PROXY.includes('?')?'&':'?')+'u='+encodeURIComponent(u)
+    +(ref?'&ref='+encodeURIComponent(ref):'')+(ua?'&ua='+encodeURIComponent(ua):'')+(raw?'&raw=1':'');
+}
+
+// ---------- hls.js (dimuat saat pertama dibutuhkan; file lokal /vendor/hls.min.js) ----------
+let tvHlsP=null;
+function tvLoadHls(){
+  if(window.Hls)return Promise.resolve(true);
+  if(tvHlsP)return tvHlsP;
+  tvHlsP=new Promise(res=>{
+    const s=document.createElement('script');
+    s.src='/vendor/hls.min.js';
+    s.onload=()=>res(!!window.Hls);
+    s.onerror=()=>{tvHlsP=null;res(false)};
+    document.head.appendChild(s);
+  });
+  return tvHlsP;
+}
+
+// ---------- parser M3U ----------
+function tvParse(text){
+  const out=[];
+  let cur=null;
+  for(const raw of String(text).split(/\r?\n/)){
+    const line=raw.trim();
+    if(!line)continue;
+    if(line.startsWith('#EXTINF')){
+      const attrs={};
+      line.replace(/([\w-]+)="([^"]*)"/g,(m,k,v)=>{attrs[k.toLowerCase()]=v;return m});
+      let inQ=false,idx=-1;
+      for(let i=0;i<line.length;i++){const c=line[i];if(c==='"')inQ=!inQ;else if(c===','&&!inQ){idx=i;break}}
+      cur={
+        n:((idx>=0?line.slice(idx+1).trim():'')||attrs['tvg-name']||'Channel').slice(0,120),
+        l:attrs['tvg-logo']||'',
+        g:((attrs['group-title']||'').split(';')[0].trim()||'Lainnya').slice(0,60),
+        ref:attrs['http-referrer']||attrs['http-referer']||'',
+        ua:attrs['http-user-agent']||'',
+      };
+    }else if(line.startsWith('#EXTVLCOPT:')&&cur){
+      const m=line.match(/^#EXTVLCOPT:http-(referrer|referer|user-agent)=(.*)$/i);
+      if(m){if(m[1].toLowerCase()==='user-agent')cur.ua=m[2].trim();else cur.ref=m[2].trim()}
+    }else if(line.startsWith('#')){
+      continue;
+    }else if(cur){
+      if(/^https?:\/\//i.test(line)){cur.u=line;out.push(cur)}
+      cur=null;
+    }
+  }
+  return out;
+}
+
+async function tvFetchText(u){
+  const attempt=async url=>{
+    const ac=new AbortController();
+    const t=setTimeout(()=>ac.abort(),25000);
+    try{
+      const r=await fetch(url,{signal:ac.signal});
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      const x=await r.text();
+      if(!/^\s*\uFEFF?#EXTM3U/.test(x))throw new Error('bukan file M3U');
+      return x;
+    }finally{clearTimeout(t)}
+  };
+  try{return await attempt(u)}
+  catch{return await attempt(tvProxyUrl(u,'','',true))} // sumber tanpa CORS → ambil lewat server
+}
+
+const tvCustom=()=>tvLS.get('vdl_tvsrc',[]);
+
+async function tvLoadSources(){
+  TV.loading=true;TV.errSrc=[];
+  tvMeta();
+  const srcs=[...TV_SOURCES,...tvCustom().map(u=>({n:'Kustom',u}))];
+  const seen=new Set(TV.all.map(c=>c.u));
+  for(const s of srcs){
+    try{
+      const list=tvParse(await tvFetchText(s.u));
+      for(const c of list){if(seen.has(c.u))continue;seen.add(c.u);c.s=s.n;TV.all.push(c)}
+      tvBuildGroups();tvFilter();
+    }catch(e){TV.errSrc.push(s.n)}
+    tvMeta();
+  }
+  TV.loading=false;
+  tvMeta();
+  if(TV.errSrc.length)toast('Playlist gagal dimuat: '+TV.errSrc.join(', '),'warn');
+}
+
+function tvMeta(){
+  const el=$('tv-meta');
+  if(!el)return;
+  el.textContent=`${TV.all.length.toLocaleString('id-ID')} channel`+(TV.loading?' · memuat playlist…':'')+(TV.view.length!==TV.all.length?` · ${TV.view.length.toLocaleString('id-ID')} cocok`:'');
+}
+
+function tvBuildGroups(){
+  const sel=$('tv-g'),prev=sel.value||'*';
+  const cnt={};
+  TV.all.forEach(c=>{cnt[c.g]=(cnt[c.g]||0)+1});
+  const groups=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]).slice(0,80);
+  sel.innerHTML=`<option value="*">Semua (${TV.all.length})</option><option value="★">★ Favorit (${TV.favs.length})</option>`
+    +groups.map(g=>`<option value="${esc(g)}">${esc(g)} (${cnt[g]})</option>`).join('');
+  sel.value=[...sel.options].some(o=>o.value===prev)?prev:'*';
+}
+
+function tvFilter(){
+  const q=($('tv-q').value||'').trim().toLowerCase();
+  const g=$('tv-g').value||'*';
+  let list=g==='★'?TV.favs:TV.all;
+  if(g!=='*'&&g!=='★')list=list.filter(c=>c.g===g);
+  if(q)list=list.filter(c=>c.n.toLowerCase().includes(q)||c.g.toLowerCase().includes(q));
+  TV.view=list;TV.shown=0;
+  $('tv-list').innerHTML='';
+  if(!list.length)$('tv-list').innerHTML='<div class="tv-empty">'+(g==='★'?'Belum ada favorit — tekan ☆ pada channel.':TV.loading?'Memuat…':'Channel tidak ditemukan.')+'</div>';
+  tvMore();
+  tvMeta();
+}
+const tvFilterDebounced=debounce(tvFilter,150);
+
+function tvItemHtml(c,i){
+  const fav=TV.favs.some(f=>f.u===c.u);
+  const logo=/^https:\/\//i.test(c.l)?`<img src="${esc(c.l)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`:'<span>📺</span>';
+  return `<div class="tvi${TV.cur&&TV.cur.u===c.u?' on':''}" data-i="${i}" role="button" tabindex="0">
+    <div class="tvi-l">${logo}</div>
+    <div class="tvi-i"><div class="tvi-n">${esc(c.n)}</div><div class="tvi-g">${esc(c.g)}</div></div>
+    <button class="tvi-fav${fav?' on':''}" type="button" title="Favorit" aria-label="Favorit">${fav?'★':'☆'}</button>
+  </div>`;
+}
+
+function tvMore(){
+  const next=TV.view.slice(TV.shown,TV.shown+TV.page);
+  if(next.length)$('tv-list').insertAdjacentHTML('beforeend',next.map((c,k)=>tvItemHtml(c,TV.shown+k)).join(''));
+  TV.shown+=next.length;
+  $('tv-more').style.display=TV.shown<TV.view.length?'':'none';
+  $('tv-more').textContent=`Muat lebih banyak (${(TV.view.length-TV.shown).toLocaleString('id-ID')} lagi)`;
+}
+
+function tvMarkActive(){
+  document.querySelectorAll('#tv-list .tvi').forEach(el=>{
+    const c=TV.view[+el.dataset.i];
+    el.classList.toggle('on',!!(c&&TV.cur&&c.u===TV.cur.u));
+  });
+}
+
+// ---------- favorit ----------
+function tvIsFav(u){return TV.favs.some(f=>f.u===u)}
+function tvToggleFavCh(ch){
+  if(!ch)return;
+  if(tvIsFav(ch.u))TV.favs=TV.favs.filter(f=>f.u!==ch.u);
+  else TV.favs.unshift({n:ch.n,u:ch.u,l:ch.l,g:ch.g,ref:ch.ref,ua:ch.ua});
+  tvLS.set('vdl_tvfav',TV.favs.slice(0,300));
+  tvBuildGroups();
+  tvUpdateFav();
+  if($('tv-g').value==='★')tvFilter();
+  else document.querySelectorAll('#tv-list .tvi').forEach(el=>{
+    const c=TV.view[+el.dataset.i];
+    if(!c)return;
+    const b=el.querySelector('.tvi-fav'),on=tvIsFav(c.u);
+    b.classList.toggle('on',on);b.textContent=on?'★':'☆';
+  });
+}
+function tvToggleFav(){tvToggleFavCh(TV.cur)}
+function tvUpdateFav(){
+  const b=$('tv-fav');
+  if(!b)return;
+  const on=!!(TV.cur&&tvIsFav(TV.cur.u));
+  b.textContent=on?'★':'☆';
+  b.classList.toggle('on',on);
+}
+
+// ---------- pemutaran ----------
+function tvSetStatus(text,kind){const el=$('tv-status');el.textContent=text;el.className='tv-st '+(kind||'')}
+function tvOverlay(html){
+  const o=$('tv-ov');
+  if(!html){o.style.display='none';o.innerHTML='';return}
+  o.style.display='flex';o.innerHTML=html;
+}
+function tvDestroyHls(){if(TV.hls){try{TV.hls.destroy()}catch{}TV.hls=null}}
+function tvResetVideo(){
+  const v=$('tv-video');
+  v.onloadeddata=v.onloadedmetadata=v.onerror=null;
+  try{v.pause()}catch{}
+  v.removeAttribute('src');
+  try{v.load()}catch{}
+}
+// Hentikan semua (dipanggil saat pindah tab agar tidak membuang bandwidth)
+function tvHalt(){TV.token++;tvDestroyHls();tvResetVideo()}
+
+function tvOrder(ch){
+  const insecure=/^http:/i.test(ch.u)&&location.protocol==='https:'; // mixed content: hanya bisa lewat proxy
+  if(insecure||$('tv-force').checked||TV.force[ch.u])return['proxy'];
+  if(TV.mode[ch.u]==='proxy'||ch.ref||ch.ua)return['proxy','direct']; // browser tidak bisa mengatur Referer/UA sendiri
+  return['direct','proxy'];
+}
+
+function tvTry(ch,mode,token){
+  return new Promise(resolve=>{
+    const v=$('tv-video');
+    const src=mode==='proxy'?tvProxyUrl(ch.u,ch.ref,ch.ua):ch.u;
+    const tmo=mode==='proxy'?TV.tProxy:TV.tDirect;
+    let done=false,timer=null,netRetry=0,mediaRetry=0;
+    const finish=r=>{if(done)return;done=true;clearTimeout(timer);resolve(r)};
+    const fail=err=>{if(done)return;tvDestroyHls();v.onloadeddata=v.onloadedmetadata=v.onerror=null;v.removeAttribute('src');finish({ok:false,err})};
+    const stale=()=>token!==TV.token;
+
+    // file media biasa (mp4/webm/mp3…) → elemen <video> langsung
+    if(/\.(mp4|webm|mkv|mp3|aac|ogg|opus)(\?|$)/i.test(ch.u)){
+      v.src=src;
+      v.onloadeddata=()=>finish({ok:true});
+      v.onerror=()=>fail('media');
+      timer=setTimeout(()=>fail('timeout'),tmo);
+      v.play().catch(()=>{});
+      return;
+    }
+    const H=window.Hls;
+    if(!H||!H.isSupported()){
+      if(v.canPlayType('application/vnd.apple.mpegurl')){ // Safari / iOS: HLS bawaan
+        v.src=src;
+        v.onloadedmetadata=()=>{finish({ok:true});v.play().catch(()=>{})};
+        v.onerror=()=>fail('native');
+        timer=setTimeout(()=>fail('timeout'),tmo);
+        return;
+      }
+      return finish({ok:false,err:'unsupported'});
+    }
+    const hls=new H({enableWorker:true,lowLatencyMode:false,maxBufferLength:30,manifestLoadingTimeOut:10000,
+      manifestLoadingMaxRetry:1,levelLoadingMaxRetry:2,fragLoadingMaxRetry:3,liveSyncDurationCount:3});
+    TV.hls=hls;
+    hls.on(H.Events.MANIFEST_PARSED,()=>{v.play().catch(()=>tvSetStatus('Tekan ▶ untuk memulai','warn'))});
+    // berhasil = segmen pertama benar-benar terunduh (bukti CORS & akses segmen beres, bukan hanya manifest)
+    hls.on(H.Events.FRAG_LOADED,()=>finish({ok:true}));
+    hls.on(H.Events.ERROR,(ev,d)=>{
+      if(stale()||!d||!d.fatal)return;
+      if(!done){fail(d.details||d.type||'error');return}
+      // sudah sempat berhasil → pulihkan otomatis saat sedang menonton
+      if(d.type===H.ErrorTypes.NETWORK_ERROR&&netRetry<3){netRetry++;tvSetStatus('Koneksi terputus, mencoba lagi…','warn');setTimeout(()=>{try{hls.startLoad()}catch{}},1500);return}
+      if(d.type===H.ErrorTypes.MEDIA_ERROR&&mediaRetry<2){mediaRetry++;try{hls.recoverMediaError()}catch{}return}
+      tvOverlay(tvErrHtml('Siaran terputus.'));tvSetStatus('Terputus','err');
+    });
+    hls.loadSource(src);
+    hls.attachMedia(v);
+    timer=setTimeout(()=>fail('timeout'),tmo);
+  });
+}
+
+function tvRemember(u,mode){
+  if(TV.mode[u]===mode)return;
+  delete TV.mode[u];TV.mode[u]=mode;
+  const keys=Object.keys(TV.mode);
+  if(keys.length>400)keys.slice(0,keys.length-400).forEach(k=>delete TV.mode[k]);
+  tvLS.set('vdl_tvmode',TV.mode);
+}
+
+function tvErrMsg(err){
+  if(err==='timeout')return 'Channel tidak merespons. Kemungkinan sedang mati atau diblok untuk wilayahmu.';
+  if(err==='unsupported')return 'Browser ini tidak mendukung pemutaran HLS.';
+  return 'Gagal memutar. Channel mungkin mati, diblok wilayah (geo), atau butuh login/langganan.';
+}
+function tvErrHtml(msg){
+  return `<div class="tv-err"><div>⚠ ${esc(msg)}</div><div class="tv-eb">
+    <button class="qb" type="button" onclick="tvReload()">↻ Coba lagi</button>
+    <button class="qb" type="button" onclick="tvForceProxy()">Coba lewat server</button></div></div>`;
+}
+function tvReload(){if(TV.cur)tvPlay(TV.cur)}
+function tvForceProxy(){if(TV.cur){TV.force[TV.cur.u]=true;tvPlay(TV.cur)}}
+
+async function tvPlay(ch){
+  const token=++TV.token;
+  tvDestroyHls();tvResetVideo();
+  TV.cur=ch;tvLS.set('vdl_tvlast',ch);
+  $('tv-title').textContent=ch.n;
+  tvMarkActive();tvUpdateFav();
+  tvSetStatus('Menghubungkan…','warn');
+  tvOverlay('<div class="lsp"></div><p>Menghubungkan…</p>');
+  await tvLoadHls();
+  if(token!==TV.token)return;
+  const order=tvOrder(ch);
+  let lastErr='';
+  for(let k=0;k<order.length;k++){
+    const mode=order[k];
+    tvSetStatus(mode==='proxy'?'Menghubungkan via server…':'Menghubungkan…','warn');
+    const r=await tvTry(ch,mode,token);
+    if(token!==TV.token)return;
+    if(r.ok){
+      tvRemember(ch.u,mode);
+      tvOverlay('');
+      tvSetStatus(mode==='proxy'?'Via server':'Langsung',mode==='proxy'?'warn':'ok');
+      return;
+    }
+    lastErr=r.err;
+    if(k<order.length-1)toast(mode==='direct'?'Tidak bisa diakses langsung (CORS/jaringan) — mencoba lewat server…':'Gagal lewat server — mencoba langsung…','info');
+  }
+  tvOverlay(tvErrHtml(tvErrMsg(lastErr)));
+  tvSetStatus('Gagal','err');
+}
+
+function tvPip(){
+  const v=$('tv-video');
+  try{
+    if(document.pictureInPictureElement)document.exitPictureInPicture();
+    else if(v.requestPictureInPicture)v.requestPictureInPicture();
+  }catch{}
+}
+
+// ---------- playlist kustom ----------
+function tvRenderSrcs(){
+  const custom=tvCustom();
+  $('tv-srcs').innerHTML=TV_SOURCES.map(s=>`<span class="tv-chip">${esc(s.n)}</span>`).join('')
+    +custom.map((u,i)=>`<span class="tv-chip" title="${esc(u)}">${esc(u.replace(/^https?:\/\//,'').slice(0,34))} <button type="button" data-rm="${i}" aria-label="Hapus">✕</button></span>`).join('');
+}
+function tvAddSrc(){
+  const el=$('tv-add'),u=el.value.trim();
+  if(!/^https?:\/\/[^\s"'<>]+$/i.test(u)){toast('Masukkan URL playlist M3U yang diawali https://','warn');return}
+  const list=tvCustom();
+  if(list.includes(u)){toast('Playlist itu sudah ada','info');return}
+  list.push(u);tvLS.set('vdl_tvsrc',list);
+  el.value='';
+  tvRenderSrcs();tvReloadSources();
+}
+function tvReloadSources(){TV.all=[];TV.view=[];tvBuildGroups();tvFilter();tvLoadSources()}
+
+// ---------- init ----------
+function tvInit(){
+  if(TV.inited)return;
+  TV.inited=true;
+  TV.favs=tvLS.get('vdl_tvfav',[]);
+  TV.mode=tvLS.get('vdl_tvmode',{});
+  $('tv-force').checked=!!tvLS.get('vdl_tvforce',false);
+  $('tv-force').addEventListener('change',e=>tvLS.set('vdl_tvforce',e.target.checked));
+  if(!('pictureInPictureEnabled' in document))$('tv-pip').style.display='none';
+  tvRenderSrcs();
+  $('tv-srcs').addEventListener('click',e=>{
+    const b=e.target.closest('[data-rm]');
+    if(!b)return;
+    const list=tvCustom();list.splice(+b.dataset.rm,1);tvLS.set('vdl_tvsrc',list);
+    tvRenderSrcs();tvReloadSources();
+  });
+  $('tv-list').addEventListener('click',e=>{
+    const it=e.target.closest('.tvi');
+    if(!it)return;
+    const ch=TV.view[+it.dataset.i];
+    if(!ch)return;
+    if(e.target.closest('.tvi-fav'))tvToggleFavCh(ch);
+    else tvPlay(ch);
+  });
+  $('tv-list').addEventListener('keydown',e=>{
+    if(e.key!=='Enter'&&e.key!==' ')return;
+    const it=e.target.closest('.tvi');
+    if(!it||e.target.closest('.tvi-fav'))return;
+    e.preventDefault();
+    const ch=TV.view[+it.dataset.i];
+    if(ch)tvPlay(ch);
+  });
+  const last=tvLS.get('vdl_tvlast',null);
+  if(last&&last.u){
+    TV.cur=last;
+    $('tv-title').textContent=last.n;
+    tvUpdateFav();
+    tvOverlay(`<div class="tv-ph">📺<small>Terakhir ditonton</small></div><button class="qb" type="button" onclick="tvReload()">▶ Lanjutkan: ${esc(last.n)}</button>`);
+  }else tvOverlay('<div class="tv-ph">📺<small>Pilih channel di bawah</small></div>');
+  tvBuildGroups();
+  tvLoadSources();
+  tvLoadHls(); // muat pustaka di latar belakang
+}
 
 </script>
 </body>
