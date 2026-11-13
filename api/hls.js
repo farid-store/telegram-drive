@@ -1,29 +1,10 @@
 // api/hls.js — Proxy HLS untuk TV Live (Vercel Edge Runtime, region sin1)
-// (lihat penjelasan lengkap di README bagian TV Live)
-// ---------------------------------------------------------------------------
-//
-//   GET /api/hls?u=<url>[&ref=<referer>][&ua=<user-agent>][&raw=1]
-//
-// Masalah yang diselesaikan: stream IPTV biasanya TIDAK mengirim header CORS (browser memblokir
-// hls.js) dan sering http:// (diblok sebagai mixed content di halaman https). Proxy ini:
-//   • mengambil playlist .m3u8, menulis ulang SEMUA URL di dalamnya (varian, segmen, kunci AES,
-//     init map, audio/subtitle) agar kembali lewat proxy ini,
-//   • meneruskan segmen secara streaming (mendukung Range),
-//   • memasang Referer / User-Agent yang dibutuhkan channel tertentu,
-//   • ?raw=1 → mengambil file daftar channel M3U (tanpa ditulis ulang).
-//
-// Perlindungan: blok SSRF (localhost/IP privat/port non-standar/redirect berbahaya), hanya
-// menerima respons yang tampak seperti playlist HLS / media (bukan HTML), batas ukuran,
-// pembatasan laju lunak per IP, dan pemeriksaan Sec-Fetch-Site (anti-hotlink dari situs lain).
-// ---------------------------------------------------------------------------
-
 const BROWSER_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
-const MAX_PLAYLIST = 4 * 1024 * 1024;   // playlist media/master
-const MAX_RAW = 14 * 1024 * 1024;       // daftar channel M3U besar (iptv-org index ±3-5 MB)
+const MAX_PLAYLIST = 4 * 1024 * 1024;
+const MAX_RAW = 14 * 1024 * 1024;
 const MAX_HOPS = 5;
-const DENY_PORTS = new Set(['22', '23', '25', '110', '143', '445', '3306', '3389', '5432', '6379', '11211', '27017']); // server IPTV sering memakai port non-standar (8080, 25461, dst.)
+const DENY_PORTS = new Set(['22', '23', '25', '110', '143', '445', '3306', '3389', '5432', '6379', '11211', '27017']);
 
-// ---- pembatasan laju lunak (per instance) ----
 const hits = new Map();
 function overRate(ip, limit) {
   const now = Date.now();
@@ -56,12 +37,11 @@ function blockedReason(u, blockedHosts) {
 
 const cleanHeaderVal = (v, max) => String(v || '').replace(/[\x00-\x1f\x7f]/g, '').slice(0, max);
 
-// Tulis ulang semua URL di playlist HLS agar lewat proxy
 function rewritePlaylist(text, base, selfBase, extra) {
   const prox = u => {
     try {
-      const abs = new URL(u, base).href;
-      if (!/^https?:/i.test(abs)) return u; // data: dsb. dibiarkan
+      const abs = new URL(u.trim(), base).href;
+      if (!/^https?:/i.test(abs)) return u;
       return `${selfBase}?u=${encodeURIComponent(abs)}${extra}`;
     } catch { return u; }
   };
@@ -74,34 +54,23 @@ function rewritePlaylist(text, base, selfBase, extra) {
 }
 
 async function handle(req, opts = {}) {
-  const cors = !!opts.cors;
   const base = {
     'Cache-Control': 'no-store',
     'X-Content-Type-Options': 'nosniff',
-    ...(cors ? {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'Range',
-      'Access-Control-Expose-Headers': 'Content-Length, Content-Range, Accept-Ranges',
-    } : {}),
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+    'Access-Control-Allow-Headers': 'Range, Content-Type, Accept',
+    'Access-Control-Expose-Headers': 'Content-Length, Content-Range, Accept-Ranges',
   };
   const json = (status, obj, extra = {}) => new Response(JSON.stringify(obj), {
     status, headers: { ...base, 'Content-Type': 'application/json', ...extra },
   });
 
-  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: { ...base, 'Access-Control-Allow-Methods': 'GET, OPTIONS' } });
-  if (req.method !== 'GET') return json(405, { error: 'Method not allowed' });
-
-  // Anti-hotlink: browser dari situs lain tidak boleh memakai proxy ini
-  const sfs = req.headers.get('sec-fetch-site');
-  if (!cors && sfs && !['same-origin', 'none'].includes(sfs)) return json(403, { error: 'Akses lintas situs tidak diizinkan' });
-  if (opts.allowOrigins && opts.allowOrigins.length) {
-    let o = req.headers.get('origin') || '';
-    if (!o) { try { o = new URL(req.headers.get('referer') || '').origin; } catch { o = ''; } }
-    if (o && !opts.allowOrigins.includes(o)) return json(403, { error: 'Origin tidak diizinkan' });
-  }
+  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: base });
+  if (req.method !== 'GET' && req.method !== 'HEAD') return json(405, { error: 'Method not allowed' });
 
   const ip = (req.headers.get('cf-connecting-ip') || req.headers.get('x-real-ip') || (req.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'unknown');
-  if (overRate(ip, opts.rate || 600)) return json(429, { error: 'Terlalu banyak permintaan' }, { 'Retry-After': '30' });
+  if (overRate(ip, opts.rate || 1200)) return json(429, { error: 'Terlalu banyak permintaan' }, { 'Retry-After': '15' });
 
   const self = new URL(req.url);
   const sp = self.searchParams;
@@ -114,8 +83,18 @@ async function handle(req, opts = {}) {
   const ref = cleanHeaderVal(sp.get('ref'), 500);
   const ua = cleanHeaderVal(sp.get('ua'), 300);
   const mkHeaders = u => {
-    const h = { 'User-Agent': ua || BROWSER_UA, Accept: '*/*', 'Accept-Encoding': 'identity' };
-    if (/^https?:\/\//i.test(ref)) { h.Referer = ref; try { h.Origin = new URL(ref).origin; } catch { /* abaikan */ } }
+    const h = {
+      'User-Agent': ua || BROWSER_UA,
+      'Accept': '*/*',
+      'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
+    };
+    if (/^https?:\/\//i.test(ref)) {
+      h.Referer = ref;
+      try { h.Origin = new URL(ref).origin; } catch {}
+    } else if (!raw) {
+      // Fallback Referer ke origin target agar CDN tidak menolak request kosong
+      h.Referer = u.origin + '/';
+    }
     const range = req.headers.get('range');
     if (range && !raw) h.Range = range;
     return h;
@@ -150,7 +129,6 @@ async function handle(req, opts = {}) {
   const len = Number(resp.headers.get('content-length')) || 0;
   const path = cur.pathname + cur.search;
 
-  // ---- mode raw: daftar channel M3U ----
   if (raw) {
     if (len && len > MAX_RAW) return json(502, { error: 'Playlist terlalu besar' });
     const text = (await resp.text()).replace(/^\uFEFF/, '');
@@ -161,21 +139,32 @@ async function handle(req, opts = {}) {
 
   if (/^text\/html/.test(ct)) return json(502, { error: 'Server channel mengirim halaman web, bukan stream (link mati / diblok)' });
 
-  // ---- playlist HLS: tulis ulang ----
-  const isPlaylist = /mpegurl/.test(ct) || /\.m3u8?(\?|$)/i.test(path);
-  if (isPlaylist) {
-    if (len && len > MAX_PLAYLIST) return json(502, { error: 'Playlist terlalu besar' });
-    const text = (await resp.text()).replace(/^\uFEFF/, '');
-    if (text.length > MAX_PLAYLIST) return json(502, { error: 'Playlist terlalu besar' });
-    if (!text.trimStart().startsWith('#EXTM3U')) return json(502, { error: 'Respons bukan playlist HLS yang valid' });
-    const selfBase = `${self.origin}${self.pathname}`;
-    const extra = (ref ? `&ref=${encodeURIComponent(ref)}` : '') + (ua ? `&ua=${encodeURIComponent(ua)}` : '');
-    return new Response(rewritePlaylist(text, cur.href, selfBase, extra), {
-      status: 200, headers: { ...base, 'Content-Type': 'application/vnd.apple.mpegurl' },
+  // Deteksi apakah respons adalah playlist HLS (baik dari Content-Type, ekstensi, maupun isi teks kecil)
+  const looksLikePlaylist = /mpegurl|vnd\.apple\.mpegurl|x-mpegurl/i.test(ct) || /\.m3u8?(\?|$)/i.test(path);
+  const maybeTextPlaylist = !looksLikePlaylist && !/\.(ts|m4s|mp4|aac|mp3|key)(\?|$)/i.test(path) && (len === 0 || len < 512 * 1024) && /text\/plain|octet-stream|^$/.test(ct);
+
+  if (looksLikePlaylist || maybeTextPlaylist) {
+    const buf = await resp.arrayBuffer();
+    if (buf.byteLength > MAX_PLAYLIST) return json(502, { error: 'Playlist terlalu besar' });
+    const sample = new TextDecoder('utf-8').decode(buf.slice(0, 64)).replace(/^\uFEFF/, '').trimStart();
+    if (sample.startsWith('#EXTM3U')) {
+      const text = new TextDecoder('utf-8').decode(buf).replace(/^\uFEFF/, '');
+      const selfBase = `${self.origin}${self.pathname}`;
+      const extra = (ref ? `&ref=${encodeURIComponent(ref)}` : '') + (ua ? `&ua=${encodeURIComponent(ua)}` : '');
+      return new Response(rewritePlaylist(text, cur.href, selfBase, extra), {
+        status: 200, headers: { ...base, 'Content-Type': 'application/vnd.apple.mpegurl' },
+      });
+    }
+    if (looksLikePlaylist) {
+      return json(502, { error: 'Respons bukan playlist HLS yang valid' });
+    }
+    // Jika bukan #EXTM3U (berarti segmen biner dengan ekstensi non-standar), kirimkan buffer aslinya
+    return new Response(buf, {
+      status: resp.status,
+      headers: { ...base, 'Content-Type': ct || 'video/mp2t', 'Content-Length': String(buf.byteLength) },
     });
   }
 
-  // ---- segmen / kunci / media lain: teruskan sebagai stream ----
   if (len && len > 60 * 1024 * 1024) return json(502, { error: 'Segmen terlalu besar' });
   const headers = new Headers({ ...base, 'Content-Type': ct || 'application/octet-stream', 'Accept-Ranges': 'bytes' });
   for (const k of ['Content-Length', 'Content-Range']) {
@@ -189,9 +178,9 @@ export const config = { runtime: 'edge', regions: ['sin1'] };
 
 const list = s => String(s || '').split(',').map(x => x.trim().toLowerCase().replace(/^www\./, '')).filter(Boolean);
 const OPTS = {
-  cors: false, // dipanggil dari halaman yang sama (same-origin)
+  cors: true,
   blockedHosts: list(process.env.BLOCKED_HOSTS),
-  rate: Number(process.env.HLS_RATE_PER_MIN) || 600, // per IP per menit (per instance)
+  rate: Number(process.env.HLS_RATE_PER_MIN) || 1200,
 };
 
 export default async function handler(req) {
