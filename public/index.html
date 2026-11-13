@@ -825,6 +825,8 @@ body{min-height:100dvh;padding-bottom:calc(84px + env(safe-area-inset-bottom,0px
 .bw-more.ld .lsp{display:block}.bw-more.ld .eb,.bw-more.end .eb{display:none}
 .bw-ic.bw-go{background:#5BC774}
 .bw-view{overflow:hidden}
+.bw-sp{flex:none;height:32px;border:none;border-radius:9999px;background:#1C1C1E;color:#fff;font:700 .7rem 'Plus Jakarta Sans',sans-serif;padding:0 10px;max-width:124px}
+.bw-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;background:linear-gradient(135deg,#1C1C1E,#262629)}
 .bw-bar{position:relative}
 .bw-sg{position:absolute;left:56px;right:12px;top:calc(100% - 4px);z-index:20;background:#1C1C1E;border-radius:16px;box-shadow:0 12px 32px rgba(0,0,0,.7);overflow:hidden;max-height:50vh;overflow-y:auto}
 .bw-sg[hidden]{display:none}
@@ -1082,6 +1084,7 @@ body{min-height:100dvh;padding-bottom:calc(84px + env(safe-area-inset-bottom,0px
   </div>
   <div class="bw-sub">
     <div class="bw-seg"><button id="bw-m-guest" class="on" type="button" onclick="bwMode('guest')">👤 Tamu</button><button id="bw-m-login" type="button" onclick="bwMode('login')">🔑 Login</button></div>
+    <select class="bw-sp" id="bw-sp" aria-label="Cari di" onchange="const v=$('bw-url').value.trim();if(v&&bwIsQuery(v))bwSearch(v)"><option value="yt">🔎 YouTube</option><option value="sc">🎧 SoundCloud</option><option value="bili">📺 Bilibili</option></select>
     <div class="bw-sites" id="bw-sites"></div>
   </div>
   <div class="bw-stage" id="bw-stage"><div class="bw-res" id="bw-res" hidden></div><div class="bw-view" id="bw-view"></div></div>
@@ -3279,14 +3282,14 @@ function bwView(v){
   $('bw-v-grid')?.classList.toggle('on',v==='grid');$('bw-v-list')?.classList.toggle('on',v==='list');
 }
 async function bwFetch(q,c){
-  const r=await fetch('/api/search?q='+encodeURIComponent(q)+(c?'&c='+encodeURIComponent(c):''),{headers:{accept:'application/json'}});
+  const r=await fetch('/api/search?q='+encodeURIComponent(q)+(c?'&c='+encodeURIComponent(c):'')+'&p='+bw.p,{headers:{accept:'application/json'}});
   if(r.status===429)throw new Error('429');
   const j=await r.json();
   if(!r.ok||!j.items)throw new Error(j.error||'gagal');
   return j;
 }
 async function bwSearch(q){
-  bwQSave(q);bw.sel.clear();bw.url='';bw.fromRes=false;bw.q=q;bw.res=[];bw.cont='';bw.ids=new Set();bw.empty=0;bw.loading=true;
+  bw.p=$('bw-sp').value;bwQSave(q);bw.sel.clear();bw.url='';bw.fromRes=false;bw.q=q;bw.res=[];bw.cont='';bw.ids=new Set();bw.empty=0;bw.loading=true;
   $('bw-grab').hidden=true;
   $('bw-view').innerHTML='<div class="bw-rl bw-sk '+bw.view+'">'+'<article class="bw-card"><div class="bw-th"></div><div class="bw-bd"><div class="bw-ln"></div><div class="bw-ln s"></div></div></article>'.repeat(8)+'</div>';bwPane('view');
   let j;
@@ -3315,7 +3318,7 @@ function bwAppend(j){
   for(const v of j.items){
     if(bw.ids.has(v.id))continue;
     bw.ids.add(v.id);const i=bw.res.push(v)-1;n++;
-    h+=`<article class="bw-card"><div class="bw-th" onclick="bwPlay(${i})"><label class="bw-ck" onclick="event.stopPropagation()" title="Pilih"><input type="checkbox" onchange="bwSel(${i},this)"></label><img loading="lazy" src="${esc(v.thumb)}" alt="">${v.dur?`<span class="bw-du">${esc(v.dur)}</span>`:''}<span class="bw-pl">▶</span></div><div class="bw-bd"><div class="bw-ct" onclick="bwPlay(${i})">${esc(v.title)}</div><div class="bw-cm">${esc(v.channel)}${v.views?'<br>'+esc(v.views):''}</div><div class="bw-cb"><button class="bw-p" type="button" onclick="bwPlay(${i})">▶<span> Putar</span></button><button class="bw-g" type="button" onclick="bwGrabItem(${i})">⬇ Grab</button></div></div></article>`;
+    h+=`<article class="bw-card"><div class="bw-th" onclick="bwPlay(${i})"><label class="bw-ck" onclick="event.stopPropagation()" title="Pilih"><input type="checkbox" onchange="bwSel(${i},this)"></label>${v.thumb?`<img loading="lazy" referrerpolicy="no-referrer" src="${esc(v.thumb)}" alt="">`:'<div class="bw-ph">🎧</div>'}${v.dur?`<span class="bw-du">${esc(v.dur)}</span>`:''}<span class="bw-pl">▶</span></div><div class="bw-bd"><div class="bw-ct" onclick="bwPlay(${i})">${esc(v.title)}</div><div class="bw-cm">${esc(v.channel)}${v.views?'<br>'+esc(v.views):''}</div><div class="bw-cb"><button class="bw-p" type="button" onclick="bwPlay(${i})">▶<span> Putar</span></button><button class="bw-g" type="button" onclick="bwGrabItem(${i})">⬇ Grab</button></div></div></article>`;
   }
   $('bw-rl').insertAdjacentHTML('beforeend',h);
   bw.empty=n?0:bw.empty+1;
@@ -3339,10 +3342,10 @@ function bwFill(){
   const m=$('bw-more'),r=$('bw-res');
   if(m&&r&&!r.hidden&&bw.cont&&m.getBoundingClientRect().top<r.getBoundingClientRect().bottom+500)bwMore();
 }
-const bwWatch=i=>'https://www.youtube.com/watch?v='+bw.res[i].id;
+const bwWatch=i=>bw.res[i].url||'https://www.youtube.com/watch?v='+bw.res[i].id;
 function bwPlay(i){
   const u=bwWatch(i);bw.url=u;$('bw-url').value=u;bw.fromRes=true;
-  bwFrame(bwEmbed(u));bwShowGrab(u);
+  {const e=bwEmbed(u);if(e)bwFrame(e);else bwNote('noframe',u)}bwShowGrab(u);
 }
 function bwGrabItem(i){$('bw-grab-u').textContent=bwWatch(i);bwUse(true)}
 function bwGrabNow(){
@@ -3352,7 +3355,7 @@ function bwGrabNow(){
   $('bw-grab-u').textContent=cleanUrl(u);bwUse(true);
 }
 /* ---- Pilih banyak → Multi, Back sistem, riwayat/saran pencarian, riwayat download ---- */
-bw.h=0;bw.closing=false;bw.sel=new Set();bw.sg=[];bw.sgT=null;bw.qh=[];
+bw.h=0;bw.closing=false;bw.p='yt';bw.sel=new Map();bw.sg=[];bw.sgT=null;bw.qh=[];
 try{bw.qh=JSON.parse(localStorage.getItem('bw_q')||'[]')}catch{}
 function bwBackBtn(){if(bw.h>0)history.back();else bwBack()}
 window.addEventListener('popstate',()=>{
@@ -3364,7 +3367,7 @@ function bwSel(i,el){
   const id=bw.res[i].id;
   if(el.checked){
     if(bw.sel.size>=MAX_MULTI){el.checked=false;toast(`Maksimal ${MAX_MULTI} video per proses`,'warn');return}
-    bw.sel.add(id);
+    bw.sel.set(id,bwWatch(i));
   }else bw.sel.delete(id);
   bwSelUpd();
 }
@@ -3375,7 +3378,7 @@ function bwSelUpd(){
 }
 function bwSelClear(){bw.sel.clear();document.querySelectorAll('#bw-rl .bw-ck input').forEach(c=>{c.checked=false});bwSelUpd()}
 function bwSendMulti(){
-  const urls=[...bw.sel].map(id=>'https://www.youtube.com/watch?v='+id);
+  const urls=[...bw.sel.values()];
   if(!urls.length)return;
   setMode('multi');$('m-urls').value=urls.join('\n');
   bwSelClear();
