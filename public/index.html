@@ -456,8 +456,8 @@ footer a:hover{color:var(--bl2);text-decoration:underline}
       <button class="qb" id="tv-pip" type="button" onclick="tvPip()" title="Picture-in-picture">⧉</button>
     </div>
   </div>
-<div class="tv-tools" style="flex-wrap:wrap">
-    <input id="tv-q" type="search" placeholder="Cari channel…" oninput="tvFilterDebounced()" autocomplete="off" style="min-width:160px">
+  <div class="tv-tools" style="flex-wrap:wrap">
+    <input id="tv-q" type="search" placeholder="Cari channel…" oninput="tvFilterDebounced()" autocomplete="off" style="min-width:150px">
     <select id="tv-g" onchange="tvFilter()" aria-label="Kategori"><option value="*">Semua</option></select>
     <select id="tv-st-filter" onchange="tvFilter()" aria-label="Status" style="max-width:145px">
       <option value="all">Semua Status</option>
@@ -476,7 +476,7 @@ footer a:hover{color:var(--bl2);text-decoration:underline}
     <div id="tv-srcs"></div>
     <div class="tv-add"><input id="tv-add" type="url" placeholder="https://…/playlist.m3u (playlist M3U sendiri)"><button class="qb" type="button" onclick="tvAddSrc()">+ Tambah</button></div>
     <label><input type="checkbox" id="tv-force"> Selalu lewat server (bila banyak channel gagal diputar langsung)</label>
-    <div class="tv-note">Urutan otomatis: channel dicoba <b>langsung</b> dulu; bila diblok (CORS / http), dicoba <b>lewat server</b>. Lewat server memakai kuota bandwidth situs. Beberapa channel hanya bisa diputar dari wilayah tertentu.</div>
+    <div class="tv-note">Urutan otomatis: channel dicoba <b>langsung</b> → <b>hybrid</b> (manifest server + video langsung) → <b>lewat server penuh</b>. Gunakan tombol <b>🌐 Universal / 🇮🇩 IP Lokal</b> untuk membandingkan hasil bypass Geo-IP.</div>
   </details>
 </div>
 <div id="zone"></div>
@@ -1902,19 +1902,31 @@ document.addEventListener('DOMContentLoaded',()=>{
 // (CORS / http di halaman https / butuh Referer) → LEWAT PROXY server (/api/hls).
 // Mode yang berhasil diingat per channel agar channel berikutnya langsung memakai yang tepat.
 // ============================================================
+// ============================================================
+// TV LIVE (IPTV) — Revisi Lengkap (Hybrid, IP Toggle, Scanner)
+// ============================================================
 const TV_PROXY=((document.querySelector('meta[name="tv-proxy"]')||{}).content||'/api/hls').trim();
 const TV_SOURCES=[
   {n:'Indonesia (iptv-org)',u:'https://iptv-org.github.io/iptv/countries/id.m3u'},
+  {n:'Indonesia (Free-TV)',u:'https://raw.githubusercontent.com/Free-TV/IPTV/master/playlists/playlist_indonesia.m3u8'},
   {n:'Indonesia (Alternatif)',u:'https://mgi24.github.io/tvdigital/idwork.m3u'},
   {n:'Dunia — iptv-org',u:'https://iptv-org.github.io/iptv/index.m3u'},
 ];
 const TV={inited:false,all:[],view:[],shown:0,cur:null,hls:null,favs:[],mode:{},force:{},token:0,
-  tDirect:12000,tProxy:20000,page:100,loading:false,errSrc:[]};
+  tDirect:12000,tProxy:20000,page:100,loading:false,errSrc:[],ipMode:'uni',healthByMode:{uni:{},id:{}},scanning:false};
 
 const tvLS={
   get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch{return d}},
   set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}},
 };
+
+TV.ipMode=tvLS.get('vdl_tvipmode','uni');
+TV.healthByMode=tvLS.get('vdl_tvhealth2',{uni:{},id:{}});
+if(!TV.healthByMode.uni)TV.healthByMode.uni={};
+if(!TV.healthByMode.id)TV.healthByMode.id={};
+Object.defineProperty(TV,'health',{
+  get(){return TV.healthByMode[TV.ipMode||'uni']}
+});
 
 function tvProxyUrl(u,ref,ua,raw){
   const ipParam=(!raw&&TV.ipMode==='id')?'&ip=id':'';
@@ -1947,6 +1959,7 @@ function tvLoadHls(){
   });
   return tvHlsP;
 }
+
 // ---------- parser M3U ----------
 function tvParse(text){
   const out=[];
@@ -2002,6 +2015,7 @@ function tvParse(text){
   }
   return out;
 }
+
 async function tvFetchText(u){
   const attempt=async url=>{
     const ac=new AbortController();
@@ -2015,7 +2029,7 @@ async function tvFetchText(u){
     }finally{clearTimeout(t)}
   };
   try{return await attempt(u)}
-  catch{return await attempt(tvProxyUrl(u,'','',true))} // sumber tanpa CORS → ambil lewat server
+  catch{return await attempt(tvProxyUrl(u,'','',true))}
 }
 
 const tvCustom=()=>tvLS.get('vdl_tvsrc',[]);
@@ -2035,26 +2049,25 @@ async function tvLoadSources(){
   }
   TV.loading=false;
   tvMeta();
-  if(TV.errSrc.length)toast('Playlist gagal dimuat: '+TV.errSrc.join(', '),'warn');
+  if(TV.errSrc.length)toast('Sebagian playlist gagal dimuat: '+TV.errSrc.join(', '),'warn');
 }
 
 function tvMeta(){
   const el=$('tv-meta');
   if(!el)return;
-  const hMap=(TV.healthByMode&&TV.healthByMode[TV.ipMode||'uni'])||{};
+  const hMap=TV.health||{};
   let okCnt=0,deadCnt=0;
   for(const c of TV.view){
     const st=hMap[c.u];
     if(st==='ok')okCnt++;
     else if(st==='dead')deadCnt++;
   }
-  const modeLabel=TV.ipMode==='id'?'🇮🇩 Mode IP Lokal':'🌐 Mode Universal';
+  const modeLabel=TV.ipMode==='id'?'🇮🇩 IP Lokal':'🌐 Universal';
   el.innerHTML=`${TV.all.length.toLocaleString('id-ID')} channel`
     +(TV.loading?' · memuat playlist…':'')
-    +(TV.view.length!==TV.all.length?` · <b>${TV.view.length.toLocaleString('id-ID')}</b> ditampilkan`:'')
-    +` &nbsp;|&nbsp; <b>${modeLabel}:</b> <span style="color:var(--gn)">🟢 ${okCnt} Aktif</span> · <span style="color:var(--rd)">🔴 ${deadCnt} Mati</span> · ⚪ ${TV.view.length-okCnt-deadCnt} Belum dicek`;
+    +(TV.view.length!==TV.all.length?` · <b>${TV.view.length.toLocaleString('id-ID')}</b> cocok`:'')
+    +` &nbsp;|&nbsp; <b>${modeLabel}:</b> <span style="color:var(--gn)">🟢 ${okCnt}</span> · <span style="color:var(--rd)">🔴 ${deadCnt}</span> · ⚪ ${Math.max(0,TV.view.length-okCnt-deadCnt)}`;
 }
-     
 
 function tvBuildGroups(){
   const sel=$('tv-g'),prev=sel.value||'*';
@@ -2075,8 +2088,6 @@ function tvFilter(){
   let list=g==='★'?TV.favs:TV.all;
   if(g!=='*'&&g!=='★')list=list.filter(c=>c.g===g);
   if(q)list=list.filter(c=>c.n.toLowerCase().includes(q)||c.g.toLowerCase().includes(q));
-  
-  // Filter berdasarkan status harus dijalankan SEBELUM TV.view = list dan tvMore()
   if(stf==='ok')list=list.filter(c=>health[c.u]==='ok');
   else if(stf==='dead')list=list.filter(c=>health[c.u]==='dead');
   else if(stf==='untested')list=list.filter(c=>!health[c.u]);
@@ -2159,27 +2170,27 @@ function tvResetVideo(){
   v.removeAttribute('src');
   try{v.load()}catch{}
 }
-// Hentikan semua (dipanggil saat pindah tab agar tidak membuang bandwidth)
 function tvHalt(){TV.token++;tvDestroyHls();tvResetVideo()}
 
 function tvOrder(ch){
-  const insecure=/^http:/i.test(ch.u)&&location.protocol==='https:'; // mixed content: hanya bisa lewat proxy
+  const insecure=/^http:/i.test(ch.u)&&location.protocol==='https:';
   if(insecure||$('tv-force').checked||TV.force[ch.u])return['proxy'];
-  if(TV.mode[ch.u]==='proxy'||ch.ref||ch.ua)return['proxy','direct']; // browser tidak bisa mengatur Referer/UA sendiri
-  return['direct','proxy'];
+  if(TV.ipMode==='id')return['proxy','hybrid','direct'];
+  if(TV.mode[ch.u]==='proxy'||ch.ref||ch.ua)return['proxy','hybrid','direct'];
+  if(TV.mode[ch.u]==='hybrid')return['hybrid','proxy','direct'];
+  return['direct','hybrid','proxy'];
 }
 
 function tvTry(ch,mode,token){
   return new Promise(resolve=>{
     const v=$('tv-video');
-    const src=mode==='proxy'?tvProxyUrl(ch.u,ch.ref,ch.ua):ch.u;
-    const tmo=mode==='proxy'?TV.tProxy:TV.tDirect;
+    const src=mode==='proxy'?tvProxyUrl(ch.u,ch.ref,ch.ua):mode==='hybrid'?(tvProxyUrl(ch.u,ch.ref,ch.ua)+'&seg=direct'):ch.u;
+    const tmo=mode==='direct'?TV.tDirect:TV.tProxy;
     let done=false,timer=null,netRetry=0,mediaRetry=0;
     const finish=r=>{if(done)return;done=true;clearTimeout(timer);resolve(r)};
     const fail=err=>{if(done)return;tvDestroyHls();v.onloadeddata=v.onloadedmetadata=v.onerror=null;v.removeAttribute('src');finish({ok:false,err})};
     const stale=()=>token!==TV.token;
 
-    // Fallback autoplay: jika browser menolak autoplay dengan suara, otomatis mute lalu putar ulang
     const safePlay=()=>{
       const p=v.play();
       if(p&&typeof p.catch==='function'){
@@ -2195,7 +2206,6 @@ function tvTry(ch,mode,token){
       }
     };
 
-    // file media biasa (mp4/webm/mp3…) → elemen <video> langsung
     if(/\.(mp4|webm|mkv|mp3|aac|ogg|opus)(\?|$)/i.test(ch.u)){
       v.src=src;
       v.onloadeddata=()=>{finish({ok:true});safePlay()};
@@ -2206,7 +2216,7 @@ function tvTry(ch,mode,token){
     }
     const H=window.Hls;
     if(!H||!H.isSupported()){
-      if(v.canPlayType('application/vnd.apple.mpegurl')){ // Safari / iOS: HLS bawaan
+      if(v.canPlayType('application/vnd.apple.mpegurl')){
         v.src=src;
         v.onloadedmetadata=()=>{finish({ok:true});safePlay()};
         v.onerror=()=>fail('native');
@@ -2219,6 +2229,9 @@ function tvTry(ch,mode,token){
       enableWorker:false,
       lowLatencyMode:false,
       maxBufferLength:30,
+      maxBufferHole:1.5,
+      maxFragLookUpTolerance:0.5,
+      nudgeMaxRetry:5,
       manifestLoadingTimeOut:12000,
       manifestLoadingMaxRetry:1,
       levelLoadingTimeOut:12000,
@@ -2232,7 +2245,6 @@ function tvTry(ch,mode,token){
       if(stale())return;
       safePlay();
     });
-    // berhasil = segmen pertama benar-benar terunduh (bukti CORS & akses segmen beres, bukan hanya manifest)
     hls.on(H.Events.FRAG_LOADED,()=>{
       if(stale())return;
       netRetry=0;
@@ -2241,7 +2253,6 @@ function tvTry(ch,mode,token){
     hls.on(H.Events.ERROR,(ev,d)=>{
       if(stale()||!d||!d.fatal)return;
       if(!done){fail(d.details||d.type||'error');return}
-      // sudah sempat berhasil → pulihkan otomatis saat sedang menonton
       if(d.type===H.ErrorTypes.NETWORK_ERROR&&netRetry<3){
         netRetry++;
         tvSetStatus('Koneksi terputus, mencoba lagi…','warn');
@@ -2273,7 +2284,7 @@ function tvRemember(u,mode){
 function tvErrMsg(err){
   if(err==='timeout')return 'Channel tidak merespons. Kemungkinan sedang mati atau diblok untuk wilayahmu.';
   if(err==='unsupported')return 'Browser ini tidak mendukung pemutaran HLS.';
-  return 'Gagal memutar. Channel mungkin mati, diblok wilayah (geo), atau butuh login/langganan.';
+  return 'Gagal memutar. Channel mungkin mati, diblok wilayah (geo), atau memakai codec HEVC/AC-3.';
 }
 const TV_ERR_TXT={
   manifestLoadError:'gagal memuat playlist (diblok CORS / jaringan / server mati)',
@@ -2298,7 +2309,6 @@ function tvErrHtml(msg,lines){
   </div></div>`;
 }
 
-// Setelah semua percobaan gagal: tanyakan ke proxy apa yang sebenarnya terjadi (1 permintaan kecil)
 async function tvDiagnose(ch,err){
   const lines=[];
   let msg=tvErrMsg(err);
@@ -2311,7 +2321,7 @@ async function tvDiagnose(ch,err){
     if(r.ok){
       try{r.body&&r.body.cancel&&r.body.cancel()}catch{}
       lines.push('Server: playlist HLS channel terbaca (HTTP 200)');
-      msg='Playlist channel terbaca, tetapi video gagal diputar. Kemungkinan link bertoken terikat IP, format tidak didukung (mis. DRM), atau siaran baru saja putus.';
+      msg='Playlist channel terbaca, tetapi video gagal diputar. Kemungkinan memakai codec HEVC/AC-3 (coba Buka di VLC), atau token terikat IP.';
     }else if(/json/.test(ct)){
       const j=await r.json().catch(()=>({}));
       lines.push(`Server: HTTP ${r.status}${j.error?' — '+j.error:''}`);
@@ -2343,19 +2353,21 @@ async function tvPlay(ch){
   const tried=[];
   for(let k=0;k<order.length;k++){
     const mode=order[k];
-    tvSetStatus(mode==='proxy'?'Menghubungkan via server…':'Menghubungkan…','warn');
+    const modeLbl=mode==='proxy'?'Via server':mode==='hybrid'?'Via hybrid':'Langsung';
+    tvSetStatus(`Menghubungkan (${modeLbl})…`,'warn');
     const r=await tvTry(ch,mode,token);
     if(token!==TV.token)return;
     if(r.ok){
       tvRemember(ch.u,mode);
+      tvSetHealth(ch.u,'ok');
       tvOverlay('');
-      tvSetStatus(mode==='proxy'?'Via server':'Langsung',mode==='proxy'?'warn':'ok');
+      tvSetStatus(modeLbl,mode==='direct'?'ok':'warn');
       return;
     }
     lastErr=r.err;
-    tried.push(`${mode==='proxy'?'Via server':'Langsung'}: ${TV_ERR_TXT[r.err]||r.err}`);
-    if(k<order.length-1)toast(mode==='direct'?'Tidak bisa diakses langsung (CORS/jaringan) — mencoba lewat server…':'Gagal lewat server — mencoba langsung…','info');
+    tried.push(`${modeLbl}: ${TV_ERR_TXT[r.err]||r.err}`);
   }
+  tvSetHealth(ch.u,'dead');
   tvSetStatus('Memeriksa penyebab…','warn');
   tvOverlay('<div class="lsp"></div><p>Memeriksa penyebab…</p>');
   const diag=await tvDiagnose(ch,lastErr);
@@ -2389,6 +2401,122 @@ function tvAddSrc(){
 }
 function tvReloadSources(){TV.all=[];TV.view=[];tvBuildGroups();tvFilter();tvLoadSources()}
 
+// ---------- Mode IP (Universal vs Lokal ID) & Auto-Scanner ----------
+function tvSyncIpBtn(){
+  const b=$('tv-ip-btn');
+  if(!b)return;
+  const isId=TV.ipMode==='id';
+  b.textContent=isId?'🇮🇩 IP Lokal: ON':'🌐 Universal';
+  b.style.color=isId?'var(--am)':'var(--bl2)';
+  b.style.borderColor=isId?'rgba(255,176,64,.45)':'var(--b2)';
+  b.style.background=isId?'rgba(255,176,64,.1)':'transparent';
+}
+
+function tvToggleIpMode(){
+  if(TV.scanning){
+    toast('Hentikan scan terlebih dahulu sebelum mengganti mode IP','warn');
+    return;
+  }
+  TV.ipMode=TV.ipMode==='id'?'uni':'id';
+  tvLS.set('vdl_tvipmode',TV.ipMode);
+  tvSyncIpBtn();
+  tvFilter();
+  toast(TV.ipMode==='id'
+    ?'Mode 🇮🇩 IP Lokal aktif — menampilkan hasil scan IP Lokal'
+    :'Mode 🌐 Universal aktif — menampilkan hasil scan Universal','info');
+  if(TV.cur)tvPlay(TV.cur);
+}
+
+function tvSetHealth(u,st){
+  if(!u)return;
+  const mode=TV.ipMode||'uni';
+  const map=TV.healthByMode[mode];
+  map[u]=st;
+  const keys=Object.keys(map);
+  if(keys.length>6000)delete map[keys[0]];
+  tvLS.set('vdl_tvhealth2',TV.healthByMode);
+  document.querySelectorAll('#tv-list .tvi').forEach(el=>{
+    const c=TV.view[+el.dataset.i];
+    if(c&&c.u===u){
+      const dot=el.querySelector('.tvi-dot');
+      if(dot)dot.textContent=st==='ok'?'🟢':'🔴';
+    }
+  });
+  tvMeta();
+}
+
+async function tvProbeOne(ch){
+  const tryUrl=async(url,ms)=>{
+    const ac=new AbortController();
+    const t=setTimeout(()=>ac.abort(),ms);
+    try{
+      const r=await fetch(url,{method:'GET',signal:ac.signal,cache:'no-store'});
+      if(!r.ok)return false;
+      const reader=r.body.getReader();
+      const{value}=await reader.read();
+      reader.cancel();
+      const txt=new TextDecoder().decode((value||new Uint8Array()).slice(0,64));
+      return txt.includes('#EXTM3U')||r.status===200;
+    }catch{return false}finally{clearTimeout(t)}
+  };
+  const insecure=/^http:/i.test(ch.u)&&location.protocol==='https:';
+  if(TV.ipMode!=='id'&&!insecure&&!ch.ref&&!ch.ua){
+    if(await tryUrl(ch.u,4500)){tvSetHealth(ch.u,'ok');tvRemember(ch.u,'direct');return true}
+  }
+  const ok=await tryUrl(tvProxyUrl(ch.u,ch.ref,ch.ua),6500);
+  tvSetHealth(ch.u,ok?'ok':'dead');
+  if(ok)tvRemember(ch.u,'proxy');
+  return ok;
+}
+
+async function tvToggleScan(forceAll=false){
+  const btn=$('tv-scan-btn');
+  if(TV.scanning){
+    TV.scanning=false;
+    if(btn)btn.textContent='⚡ Cek Otomatis';
+    return;
+  }
+  let queue=forceAll?[...TV.view]:TV.view.filter(c=>!TV.health[c.u]);
+  if(!queue.length&&TV.view.length){
+    queue=[...TV.view];
+    toast('Semua channel di tampilan ini sudah dicek — memulai scan ulang…','info');
+  }
+  if(!queue.length){
+    toast('Tidak ada channel di daftar untuk di-scan','warn');
+    return;
+  }
+  TV.scanning=true;
+  let done=0,alive=0;
+  const total=queue.length;
+  if(btn)btn.textContent=`⏹ Stop (0/${total})`;
+
+  const worker=async()=>{
+    while(TV.scanning&&queue.length){
+      const ch=queue.shift();
+      const ok=await tvProbeOne(ch);
+      done++;
+      if(ok)alive++;
+      if(TV.scanning&&btn)btn.textContent=`⏹ Stop (${done}/${total} · 🟢${alive})`;
+    }
+  };
+  await Promise.all([worker(),worker(),worker(),worker(),worker()]);
+  TV.scanning=false;
+  if(btn)btn.textContent='⚡ Cek Otomatis';
+  toast(`Scan (${TV.ipMode==='id'?'IP Lokal':'Universal'}) selesai: ${alive} aktif dari ${done} channel`,'success');
+  if($('tv-st-filter')&&$('tv-st-filter').value!=='all')tvFilter();
+  else tvMeta();
+}
+
+function tvRescanView(){
+  if(TV.scanning)TV.scanning=false;
+  const mode=TV.ipMode||'uni';
+  const map=TV.healthByMode[mode];
+  TV.view.forEach(c=>{delete map[c.u]});
+  tvLS.set('vdl_tvhealth2',TV.healthByMode);
+  tvFilter();
+  setTimeout(()=>tvToggleScan(true),100);
+}
+
 // ---------- init ----------
 function tvInit(){
   if(TV.inited)return;
@@ -2398,6 +2526,7 @@ function tvInit(){
   $('tv-force').checked=!!tvLS.get('vdl_tvforce',false);
   $('tv-force').addEventListener('change',e=>tvLS.set('vdl_tvforce',e.target.checked));
   if(!('pictureInPictureEnabled' in document))$('tv-pip').style.display='none';
+  tvSyncIpBtn();
   tvRenderSrcs();
   $('tv-srcs').addEventListener('click',e=>{
     const b=e.target.closest('[data-rm]');
@@ -2430,9 +2559,8 @@ function tvInit(){
   }else tvOverlay('<div class="tv-ph">📺<small>Pilih channel di bawah</small></div>');
   tvBuildGroups();
   tvLoadSources();
-  tvLoadHls(); // muat pustaka di latar belakang
+  tvLoadHls();
 }
-
 // ---------- Mode IP (Universal vs Lokal ID) & Auto-Scanner ----------
 TV.ipMode = tvLS.get('vdl_tvipmode', 'uni'); // 'uni' | 'id'
 TV.healthByMode = tvLS.get('vdl_tvhealth2', { uni: {}, id: {} });
