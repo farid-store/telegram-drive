@@ -37,12 +37,20 @@ function blockedReason(u, blockedHosts) {
 
 const cleanHeaderVal = (v, max) => String(v || '').replace(/[\x00-\x1f\x7f]/g, '').slice(0, max);
 
+// Tulis ulang semua URL di playlist HLS + wariskan token query induk bila sub-URL tidak punya query
 function rewritePlaylist(text, base, selfBase, extra) {
+  const baseObj = new URL(base);
   const prox = u => {
     try {
-      const abs = new URL(u.trim(), base).href;
-      if (!/^https?:/i.test(abs)) return u;
-      return `${selfBase}?u=${encodeURIComponent(abs)}${extra}`;
+      const rawUrl = u.trim();
+      if (!rawUrl) return u;
+      const absObj = new URL(rawUrl, base);
+      if (!/^https?:/i.test(absObj.protocol)) return u;
+      // Wariskan token/query dari manifest induk jika masih di domain yang sama dan belum punya query
+      if (absObj.origin === baseObj.origin && !absObj.search && baseObj.search) {
+        absObj.search = baseObj.search;
+      }
+      return `${selfBase}?u=${encodeURIComponent(absObj.href)}${extra}`;
     } catch { return u; }
   };
   return text.split(/\r?\n/).map(line => {
@@ -70,7 +78,7 @@ async function handle(req, opts = {}) {
   if (req.method !== 'GET' && req.method !== 'HEAD') return json(405, { error: 'Method not allowed' });
 
   const ip = (req.headers.get('cf-connecting-ip') || req.headers.get('x-real-ip') || (req.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'unknown');
-  if (overRate(ip, opts.rate || 1200)) return json(429, { error: 'Terlalu banyak permintaan' }, { 'Retry-After': '15' });
+  if (overRate(ip, opts.rate || 1500)) return json(429, { error: 'Terlalu banyak permintaan' }, { 'Retry-After': '15' });
 
   const self = new URL(req.url);
   const sp = self.searchParams;
@@ -87,13 +95,15 @@ async function handle(req, opts = {}) {
       'User-Agent': ua || BROWSER_UA,
       'Accept': '*/*',
       'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
+      'X-Forwarded-For': '36.80.112.10',
+      'X-Real-IP': '36.80.112.10',
     };
     if (/^https?:\/\//i.test(ref)) {
       h.Referer = ref;
       try { h.Origin = new URL(ref).origin; } catch {}
     } else if (!raw) {
-      // Fallback Referer ke origin target agar CDN tidak menolak request kosong
       h.Referer = u.origin + '/';
+      h.Origin = u.origin;
     }
     const range = req.headers.get('range');
     if (range && !raw) h.Range = range;
@@ -129,6 +139,7 @@ async function handle(req, opts = {}) {
   const len = Number(resp.headers.get('content-length')) || 0;
   const path = cur.pathname + cur.search;
 
+  // ---- mode raw: daftar channel M3U ----
   if (raw) {
     if (len && len > MAX_RAW) return json(502, { error: 'Playlist terlalu besar' });
     const text = (await resp.text()).replace(/^\uFEFF/, '');
@@ -139,7 +150,7 @@ async function handle(req, opts = {}) {
 
   if (/^text\/html/.test(ct)) return json(502, { error: 'Server channel mengirim halaman web, bukan stream (link mati / diblok)' });
 
-  // Deteksi apakah respons adalah playlist HLS (baik dari Content-Type, ekstensi, maupun isi teks kecil)
+  // ---- playlist HLS: deteksi dari Content-Type, ekstensi .m3u8, atau isi awal #EXTM3U ----
   const looksLikePlaylist = /mpegurl|vnd\.apple\.mpegurl|x-mpegurl/i.test(ct) || /\.m3u8?(\?|$)/i.test(path);
   const maybeTextPlaylist = !looksLikePlaylist && !/\.(ts|m4s|mp4|aac|mp3|key)(\?|$)/i.test(path) && (len === 0 || len < 512 * 1024) && /text\/plain|octet-stream|^$/.test(ct);
 
@@ -158,13 +169,13 @@ async function handle(req, opts = {}) {
     if (looksLikePlaylist) {
       return json(502, { error: 'Respons bukan playlist HLS yang valid' });
     }
-    // Jika bukan #EXTM3U (berarti segmen biner dengan ekstensi non-standar), kirimkan buffer aslinya
     return new Response(buf, {
       status: resp.status,
       headers: { ...base, 'Content-Type': ct || 'video/mp2t', 'Content-Length': String(buf.byteLength) },
     });
   }
 
+  // ---- segmen / kunci / media lain: teruskan sebagai stream ----
   if (len && len > 60 * 1024 * 1024) return json(502, { error: 'Segmen terlalu besar' });
   const headers = new Headers({ ...base, 'Content-Type': ct || 'application/octet-stream', 'Accept-Ranges': 'bytes' });
   for (const k of ['Content-Length', 'Content-Range']) {
@@ -180,7 +191,7 @@ const list = s => String(s || '').split(',').map(x => x.trim().toLowerCase().rep
 const OPTS = {
   cors: true,
   blockedHosts: list(process.env.BLOCKED_HOSTS),
-  rate: Number(process.env.HLS_RATE_PER_MIN) || 1200,
+  rate: Number(process.env.HLS_RATE_PER_MIN) || 1500,
 };
 
 export default async function handler(req) {
