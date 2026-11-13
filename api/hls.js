@@ -200,3 +200,29 @@ const OPTS = {
 export default async function handler(req) {
   return handle(req, OPTS);
 }
+
+function rewritePlaylist(text, base, selfBase, extra, directSeg = false) {
+  const baseObj = new URL(base);
+  const prox = u => {
+    try {
+      const rawUrl = u.trim();
+      if (!rawUrl) return u;
+      const absObj = new URL(rawUrl, base);
+      if (!/^https?:/i.test(absObj.protocol)) return u;
+      if (absObj.origin === baseObj.origin && !absObj.search && baseObj.search) {
+        absObj.search = baseObj.search;
+      }
+      // Jika mode directSeg aktif dan ini adalah file segmen (.ts/.m4s) yang sudah https, ambil langsung dari IP user!
+      if (directSeg && absObj.protocol === 'https:' && /\.(ts|m4s|mp4|aac)(\?|$)/i.test(absObj.pathname)) {
+        return absObj.href;
+      }
+      return `${selfBase}?u=${encodeURIComponent(absObj.href)}${extra}`;
+    } catch { return u; }
+  };
+  return text.split(/\r?\n/).map(line => {
+    const t = line.trim();
+    if (!t) return line;
+    if (t.startsWith('#')) return line.replace(/URI="([^"]*)"/g, (m, u) => `URI="${prox(u)}"`);
+    return prox(t);
+  }).join('\n');
+}
