@@ -456,9 +456,16 @@ footer a:hover{color:var(--bl2);text-decoration:underline}
       <button class="qb" id="tv-pip" type="button" onclick="tvPip()" title="Picture-in-picture">⧉</button>
     </div>
   </div>
-  <div class="tv-tools">
+  <div class="tv-tools" style="flex-wrap:wrap">
     <input id="tv-q" type="search" placeholder="Cari channel…" oninput="tvFilterDebounced()" autocomplete="off">
     <select id="tv-g" onchange="tvFilter()" aria-label="Kategori"><option value="*">Semua</option></select>
+    <select id="tv-st-filter" onchange="tvFilter()" aria-label="Status" style="max-width:140px">
+      <option value="all">Semua Status</option>
+      <option value="ok">🟢 Aktif Saja</option>
+      <option value="dead">🔴 Mati</option>
+      <option value="untested">⚪ Belum Dicek</option>
+    </select>
+    <button class="qb" id="tv-scan-btn" type="button" onclick="tvToggleScan()" style="padding:8px 12px;font-weight:700;color:var(--gn);border-color:rgba(0,212,138,.3)">⚡ Cek Otomatis</button>
   </div>
   <div class="tv-meta" id="tv-meta">Memuat playlist…</div>
   <div id="tv-list"></div>
@@ -2047,12 +2054,23 @@ function tvBuildGroups(){
 function tvFilter(){
   const q=($('tv-q').value||'').trim().toLowerCase();
   const g=$('tv-g').value||'*';
+  const stf=($('tv-st-filter')&&$('tv-st-filter').value)||'all';
+  const health=TV.health||{};
+
   let list=g==='★'?TV.favs:TV.all;
   if(g!=='*'&&g!=='★')list=list.filter(c=>c.g===g);
   if(q)list=list.filter(c=>c.n.toLowerCase().includes(q)||c.g.toLowerCase().includes(q));
+  
+  // Filter berdasarkan status harus dijalankan SEBELUM TV.view = list dan tvMore()
+  if(stf==='ok')list=list.filter(c=>health[c.u]==='ok');
+  else if(stf==='dead')list=list.filter(c=>health[c.u]==='dead');
+  else if(stf==='untested')list=list.filter(c=>!health[c.u]);
+
   TV.view=list;TV.shown=0;
   $('tv-list').innerHTML='';
-  if(!list.length)$('tv-list').innerHTML='<div class="tv-empty">'+(g==='★'?'Belum ada favorit — tekan ☆ pada channel.':TV.loading?'Memuat…':'Channel tidak ditemukan.')+'</div>';
+  if(!list.length){
+    $('tv-list').innerHTML='<div class="tv-empty">'+(g==='★'?'Belum ada favorit — tekan ☆ pada channel.':TV.loading?'Memuat…':'Channel tidak ditemukan.')+'</div>';
+  }
   tvMore();
   tvMeta();
 }
@@ -2060,10 +2078,12 @@ const tvFilterDebounced=debounce(tvFilter,150);
 
 function tvItemHtml(c,i){
   const fav=TV.favs.some(f=>f.u===c.u);
+  const h=TV.health&&TV.health[c.u];
+  const dot=h==='ok'?'🟢':h==='dead'?'🔴':'⚪';
   const logo=/^https:\/\//i.test(c.l)?`<img src="${esc(c.l)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`:'<span>📺</span>';
   return `<div class="tvi${TV.cur&&TV.cur.u===c.u?' on':''}" data-i="${i}" role="button" tabindex="0">
     <div class="tvi-l">${logo}</div>
-    <div class="tvi-i"><div class="tvi-n">${esc(c.n)}</div><div class="tvi-g">${esc(c.g)}</div></div>
+    <div class="tvi-i"><div class="tvi-n"><span class="tvi-dot" style="font-size:.65rem;margin-right:5px">${dot}</span>${esc(c.n)}</div><div class="tvi-g">${esc(c.g)}</div></div>
     <button class="tvi-fav${fav?' on':''}" type="button" title="Favorit" aria-label="Favorit">${fav?'★':'☆'}</button>
   </div>`;
 }
@@ -2392,6 +2412,85 @@ function tvInit(){
   tvBuildGroups();
   tvLoadSources();
   tvLoadHls(); // muat pustaka di latar belakang
+}
+
+// ---------- Pencatat Status Channel (ok / dead) & Auto-Scanner ----------
+TV.health = tvLS.get('vdl_tvhealth', {}); // { url: 'ok' | 'dead' }
+TV.scanning = false;
+
+function tvSetHealth(u, st) {
+  if (!u) return;
+  TV.health[u] = st;
+  const keys = Object.keys(TV.health);
+  if (keys.length > 5000) delete TV.health[keys[0]];
+  tvLS.set('vdl_tvhealth', TV.health);
+  // Update dot indikator di daftar tanpa render ulang semua
+  document.querySelectorAll('#tv-list .tvi').forEach(el => {
+    const c = TV.view[+el.dataset.i];
+    if (c && c.u === u) {
+      const dot = el.querySelector('.tvi-dot');
+      if (dot) dot.textContent = st === 'ok' ? '🟢' : '🔴';
+    }
+  });
+}
+
+// Probe cepat 1 channel (cek langsung dulu, lalu via proxy)
+async function tvProbeOne(ch) {
+  const tryUrl = async (url, ms) => {
+    const ac = new AbortController();
+    const t = setTimeout(() => ac.abort(), ms);
+    try {
+      const r = await fetch(url, { method: 'GET', signal: ac.signal, cache: 'no-store' });
+      if (!r.ok) return false;
+      const reader = r.body.getReader();
+      const { value } = await reader.read();
+      reader.cancel();
+      const txt = new TextDecoder().decode((value || new Uint8Array()).slice(0, 64));
+      return txt.includes('#EXTM3U') || r.status === 200;
+    } catch { return false; } finally { clearTimeout(t); }
+  };
+  const insecure = /^http:/i.test(ch.u) && location.protocol === 'https:';
+  if (!insecure && !ch.ref && !ch.ua) {
+    if (await tryUrl(ch.u, 5000)) { tvSetHealth(ch.u, 'ok'); tvRemember(ch.u, 'direct'); return true; }
+  }
+  const ok = await tryUrl(tvProxyUrl(ch.u, ch.ref, ch.ua), 7000);
+  tvSetHealth(ch.u, ok ? 'ok' : 'dead');
+  if (ok) tvRemember(ch.u, 'proxy');
+  return ok;
+}
+
+async function tvToggleScan() {
+  const btn = $('tv-scan-btn');
+  if (TV.scanning) {
+    TV.scanning = false;
+    btn.textContent = '⚡ Cek Otomatis';
+    return;
+  }
+  const queue = TV.view.filter(c => !TV.health[c.u]);
+  if (!queue.length) {
+    toast('Semua channel di tampilan ini sudah dicek!', 'info');
+    return;
+  }
+  TV.scanning = true;
+  let done = 0, alive = 0;
+  const total = queue.length;
+  btn.textContent = `⏹ Stop (0/${total})`;
+
+  // 5 worker paralel agar cepat namun tidak terkena rate-limit
+  const worker = async () => {
+    while (TV.scanning && queue.length) {
+      const ch = queue.shift();
+      const ok = await tvProbeOne(ch);
+      done++;
+      if (ok) alive++;
+      if (TV.scanning) btn.textContent = `⏹ Stop (${done}/${total} · 🟢${alive})`;
+    }
+  };
+  await Promise.all([worker(), worker(), worker(), worker(), worker()]);
+  TV.scanning = false;
+  btn.textContent = '⚡ Cek Otomatis';
+  toast(`Scan selesai: ${alive} aktif dari ${done} channel yang dicek`, 'success');
+  if ($('tv-st-filter').value !== 'all') tvFilter();
 }
 
 </script>
