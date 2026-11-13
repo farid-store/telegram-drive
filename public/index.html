@@ -2054,6 +2054,7 @@ function tvMeta(){
     +(TV.view.length!==TV.all.length?` · <b>${TV.view.length.toLocaleString('id-ID')}</b> ditampilkan`:'')
     +` &nbsp;|&nbsp; <b>${modeLabel}:</b> <span style="color:var(--gn)">🟢 ${okCnt} Aktif</span> · <span style="color:var(--rd)">🔴 ${deadCnt} Mati</span> · ⚪ ${TV.view.length-okCnt-deadCnt} Belum dicek`;
 }
+     
 
 function tvBuildGroups(){
   const sel=$('tv-g'),prev=sel.value||'*';
