@@ -793,15 +793,36 @@ body{min-height:100dvh;padding-bottom:calc(84px + env(safe-area-inset-bottom,0px
   body.bw-on .bottom-nav{left:calc((100% - var(--bwW))/2)}
   body.bw-on #ts{right:calc(var(--bwW) + 18px)}
 }
-.bw-res{position:absolute;inset:0;overflow:auto;padding:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;align-content:start}
-.bw-card{background:#141414;border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
-.bw-card img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:#1C1C1E;cursor:pointer}
-.bw-ct{padding:10px 12px 2px;font-size:.76rem;line-height:1.4;color:#fff;font-weight:600;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.bw-cm{padding:0 12px;font-size:.68rem;color:#8E8E93}
-.bw-cb{display:flex;gap:6px;padding:10px 12px 12px;margin-top:auto}
-.bw-cb button{height:34px;border:none;border-radius:9999px;font:700 .72rem 'Plus Jakarta Sans',sans-serif;cursor:pointer;color:#fff}
-.bw-p{background:#1C1C1E;padding:0 12px}
-.bw-g{background:#5BC774;flex:1}
+.bw-view,.bw-res{position:absolute;inset:0}
+.bw-view[hidden],.bw-res[hidden]{display:none}
+.bw-res{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.bw-rh{position:sticky;top:0;z-index:3;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;background:rgba(10,10,10,.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--b1)}
+.bw-rt{font-size:.78rem;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.bw-vt{display:flex;background:#141414;border-radius:9999px;padding:3px;flex:none}
+.bw-vt button{border:none;background:none;color:#8E8E93;width:38px;height:30px;border-radius:9999px;font-size:15px;cursor:pointer}
+.bw-vt button.on{background:#5BC774;color:#fff}
+.bw-rl{padding:14px 12px;display:grid;gap:18px 12px}
+.bw-rl.grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,168px),1fr))}
+.bw-rl.list{grid-template-columns:1fr}
+.bw-card{display:flex;flex-direction:column;gap:9px;min-width:0}
+.bw-rl.list .bw-card{flex-direction:row;gap:12px;align-items:flex-start}
+.bw-th{position:relative;border-radius:14px;overflow:hidden;background:#1C1C1E;aspect-ratio:16/9;cursor:pointer;flex:none}
+.bw-rl.list .bw-th{width:42%;max-width:240px;min-width:128px}
+.bw-th img{width:100%;height:100%;object-fit:cover;display:block}
+.bw-du{position:absolute;right:6px;bottom:6px;background:rgba(0,0,0,.85);color:#fff;font:700 .64rem 'JetBrains Mono',monospace;padding:2px 6px;border-radius:6px}
+.bw-pl{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;color:#fff;background:rgba(0,0,0,.3);opacity:0;transition:opacity .15s}
+.bw-th:hover .bw-pl{opacity:1}
+.bw-bd{min-width:0;flex:1;display:flex;flex-direction:column;gap:4px}
+.bw-ct{font-size:.8rem;line-height:1.35;color:#fff;font-weight:600;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}
+.bw-rl.list .bw-ct{-webkit-line-clamp:3}
+.bw-cm{font-size:.68rem;color:#8E8E93;line-height:1.4}
+.bw-cb{display:flex;gap:6px;margin-top:4px}
+.bw-cb button{height:32px;border:none;border-radius:9999px;font:700 .7rem 'Plus Jakarta Sans',sans-serif;cursor:pointer;color:#fff;padding:0 12px}
+.bw-p{background:#1C1C1E}.bw-g{background:#5BC774;flex:1}
+.bw-rl.grid .bw-p span{display:none}.bw-rl.grid .bw-p{padding:0 11px}
+.bw-more{display:flex;flex-direction:column;align-items:center;gap:10px;padding:16px 12px 30px;color:#8E8E93;font-size:.72rem;text-align:center}
+.bw-more .lsp{display:none;margin:0}
+.bw-more.ld .lsp{display:block}.bw-more.ld .eb,.bw-more.end .eb{display:none}
 .bw-ic.bw-go{background:#5BC774}
 @media(max-width:1023px){body.bw-on{overflow:hidden}}
 </style>
@@ -1036,18 +1057,18 @@ body{min-height:100dvh;padding-bottom:calc(84px + env(safe-area-inset-bottom,0px
 
 <section class="bw" id="bw" hidden aria-label="Browser VaultDL">
   <div class="bw-bar">
-    <button class="bw-ic" type="button" onclick="bwClose()" title="Tutup browser" aria-label="Tutup browser">✕</button>
-    <input class="bw-url" id="bw-url" type="text" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Cari di YouTube atau ketik alamat…" onkeydown="if(event.key==='Enter')bwGo()"/>
-    <button class="bw-ic" type="button" onclick="bwGo()" title="Buka" aria-label="Buka">➜</button>
+    <button class="bw-ic" type="button" onclick="bwBack()" title="Kembali" aria-label="Kembali">←</button>
+    <input class="bw-url" id="bw-url" type="text" inputmode="url" enterkeyhint="search" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Cari video atau ketik alamat…" onkeydown="if(event.key==='Enter')bwGo()"/>
     <button class="bw-ic" type="button" onclick="bwPop()" title="Buka di jendela terpisah" aria-label="Buka di jendela terpisah">↗</button>
     <button class="bw-ic" type="button" onclick="bwClip(true)" title="Ambil link dari clipboard" aria-label="Ambil link dari clipboard">📋</button>
     <button class="bw-ic bw-go" type="button" onclick="bwGrabNow()" title="Grab &amp; Download link ini" aria-label="Grab dan Download">⬇</button>
+    <button class="bw-ic" type="button" onclick="bwClose()" title="Tutup browser" aria-label="Tutup browser">✕</button>
   </div>
   <div class="bw-sub">
     <div class="bw-seg"><button id="bw-m-guest" class="on" type="button" onclick="bwMode('guest')">👤 Tamu</button><button id="bw-m-login" type="button" onclick="bwMode('login')">🔑 Login</button></div>
     <div class="bw-sites" id="bw-sites"></div>
   </div>
-  <div class="bw-stage" id="bw-stage"></div>
+  <div class="bw-stage" id="bw-stage"><div class="bw-res" id="bw-res" hidden></div><div class="bw-view" id="bw-view"></div></div>
   <div class="bw-grab" id="bw-grab" hidden>
     <button class="eb" id="bw-back" type="button" hidden onclick="bwBack()">← Hasil</button>
     <code id="bw-grab-u"></code>
@@ -3152,7 +3173,7 @@ function bwLoad(u){
   bwFrame(u);
 }
 function bwFrame(src){
-  const st=$('bw-stage');st.innerHTML='';
+  const st=$('bw-view');st.innerHTML='';bwPane('view');
   const f=document.createElement('iframe');
   f.setAttribute('sandbox','allow-scripts allow-same-origin allow-forms allow-popups allow-presentation');
   f.allow='autoplay; fullscreen; encrypted-media; picture-in-picture';
@@ -3166,7 +3187,7 @@ function bwNote(type,u){
     noframe:`<b>${h} tidak bisa ditampilkan di dalam aplikasi ini</b><p>Situs ini melarang dibuka di dalam halaman lain. Buka di jendela terpisah, salin link video, lalu kembali ke sini — link akan terdeteksi otomatis.</p><button class="eb" style="background:#5BC774" type="button" onclick="bwPop()">↗ Buka di jendela</button>`,
     login:`<b>Jendela ${h} terbuka</b><p>Login di jendela tersebut, cari videonya, salin link-nya, lalu kembali ke sini. Jika jendela tidak muncul, izinkan pop-up untuk situs ini.</p><button class="eb" type="button" onclick="bwPop()">↗ Buka lagi</button>`
   };
-  $('bw-stage').innerHTML=`<div class="bw-note">${T[type]||''}</div>`;
+  $('bw-view').innerHTML=`<div class="bw-note">${T[type]||''}</div>`;bwPane(type==='welcome'?'home':'view');
 }
 function bwPop(){
   const t=bwNorm(bw.url||$('bw-url').value||'https://www.youtube.com/');
@@ -3199,38 +3220,94 @@ function bwUse(go){
   if(go)doSearch();
 }
 
-/* ---- Pencarian dalam aplikasi + Grab & Download ---- */
-bw.res=[];bw.fromRes=false;
+/* ---- Pencarian dalam aplikasi (scroll tanpa batas) + Grab & Download ---- */
+bw.res=[];bw.fromRes=false;bw.pane='home';bw.cont='';bw.q='';bw.loading=false;bw.ids=new Set();bw.io=null;bw.empty=0;
+try{bw.view=localStorage.getItem('bw_view')}catch{}
+if(bw.view!=='grid'&&bw.view!=='list')bw.view=innerWidth>=640?'grid':'list';
+function bwPane(p){bw.pane=p;$('bw-res').hidden=p!=='res';$('bw-view').hidden=p==='res'}
 function bwShowGrab(u){
   const c=cleanUrl(u);bw.seen=c;
   $('bw-grab-u').textContent=c;$('bw-back').hidden=!bw.fromRes;$('bw-grab').hidden=false;
 }
+function bwBack(){
+  if(bw.pane==='view'){
+    $('bw-view').innerHTML='';$('bw-grab').hidden=true;
+    if(bw.res.length){bwPane('res');return}
+    bwNote('welcome');return;
+  }
+  if(bw.pane==='res'){bw.res=[];bw.cont='';bw.q='';bwNote('welcome');return}
+  bwClose();
+}
+function bwView(v){
+  bw.view=v;try{localStorage.setItem('bw_view',v)}catch{}
+  const l=$('bw-rl');if(l)l.className='bw-rl '+v;
+  $('bw-v-grid')?.classList.toggle('on',v==='grid');$('bw-v-list')?.classList.toggle('on',v==='list');
+}
+async function bwFetch(q,c){
+  const r=await fetch('/api/search?q='+encodeURIComponent(q)+(c?'&c='+encodeURIComponent(c):''),{headers:{accept:'application/json'}});
+  const j=await r.json();
+  if(!r.ok||!j.items)throw new Error(j.error||'gagal');
+  return j;
+}
 async function bwSearch(q){
-  bw.url='';bw.fromRes=false;$('bw-grab').hidden=true;
-  $('bw-stage').innerHTML='<div class="bw-note"><div class="lsp"></div>Mencari “'+esc(q)+'”…</div>';
-  try{
-    const r=await fetch('/api/search?q='+encodeURIComponent(q),{headers:{accept:'application/json'}});
-    const j=await r.json();
-    if(!r.ok||!j.items)throw new Error(j.error||'gagal');
-    bw.res=j.items;
-  }catch(e){
-    bw.url='https://www.youtube.com/results?search_query='+encodeURIComponent(q);
-    $('bw-stage').innerHTML='<div class="bw-note"><b>Pencarian dalam aplikasi gagal</b><p>Pastikan file api/search.mjs sudah ter-deploy. Sementara itu Anda bisa mencari di jendela terpisah.</p><button class="eb" style="background:#5BC774" type="button" onclick="bwPop()">↗ Cari di YouTube</button></div>';
+  bw.url='';bw.fromRes=false;bw.q=q;bw.res=[];bw.cont='';bw.ids=new Set();bw.empty=0;bw.loading=true;
+  $('bw-grab').hidden=true;
+  $('bw-view').innerHTML='<div class="bw-note"><div class="lsp"></div>Mencari “'+esc(q)+'”…</div>';bwPane('view');
+  let j;
+  try{j=await bwFetch(q,'')}
+  catch(e){
+    bw.loading=false;bw.url='https://www.youtube.com/results?search_query='+encodeURIComponent(q);
+    $('bw-view').innerHTML='<div class="bw-note"><b>Pencarian dalam aplikasi gagal</b><p>Pastikan file api/search.mjs sudah ter-deploy. Sementara itu Anda bisa mencari di jendela terpisah.</p><button class="eb" style="background:#5BC774" type="button" onclick="bwPop()">↗ Cari di YouTube</button></div>';
     return;
   }
-  if(!bw.res.length){$('bw-stage').innerHTML='<div class="bw-note"><b>Tidak ada hasil</b><p>Coba kata kunci lain.</p></div>';return}
-  bwRender();
+  bw.loading=false;
+  if(!j.items.length){$('bw-view').innerHTML='<div class="bw-note"><b>Tidak ada hasil</b><p>Coba kata kunci lain.</p></div>';return}
+  bwShell();bwAppend(j);bwPane('res');$('bw-res').scrollTop=0;
+  setTimeout(bwFill,80);
 }
-function bwRender(){
-  $('bw-grab').hidden=true;bw.fromRes=false;
-  $('bw-stage').innerHTML='<div class="bw-res">'+bw.res.map((v,i)=>`<div class="bw-card"><img loading="lazy" src="${esc(v.thumb)}" alt="" onclick="bwPlay(${i})"><div class="bw-ct">${esc(v.title)}</div><div class="bw-cm">${esc(v.channel)}${v.dur?' · '+esc(v.dur):''}${v.views?' · '+esc(v.views):''}</div><div class="bw-cb"><button class="bw-p" type="button" onclick="bwPlay(${i})">▶ Putar</button><button class="bw-g" type="button" onclick="bwGrabItem(${i})">⬇ Grab &amp; Download</button></div></div>`).join('')+'</div>';
+function bwShell(){
+  $('bw-res').innerHTML=`<div class="bw-rh"><div class="bw-rt">Hasil: “${esc(bw.q)}”</div><div class="bw-vt"><button id="bw-v-grid" type="button" title="Tampilan kolom" onclick="bwView('grid')">▦</button><button id="bw-v-list" type="button" title="Tampilan daftar" onclick="bwView('list')">☰</button></div></div><div class="bw-rl ${bw.view}" id="bw-rl"></div><div class="bw-more" id="bw-more"><div class="lsp"></div><button class="eb" type="button" onclick="bwMore()">Muat lebih banyak</button></div>`;
+  bwView(bw.view);
+  if(bw.io)bw.io.disconnect();
+  if(typeof IntersectionObserver==='function'){
+    bw.io=new IntersectionObserver(e=>{if(e.some(x=>x.isIntersecting))bwMore()},{root:$('bw-res'),rootMargin:'500px'});
+    bw.io.observe($('bw-more'));
+  }
+}
+function bwAppend(j){
+  let n=0,h='';
+  for(const v of j.items){
+    if(bw.ids.has(v.id))continue;
+    bw.ids.add(v.id);const i=bw.res.push(v)-1;n++;
+    h+=`<article class="bw-card"><div class="bw-th" onclick="bwPlay(${i})"><img loading="lazy" src="${esc(v.thumb)}" alt="">${v.dur?`<span class="bw-du">${esc(v.dur)}</span>`:''}<span class="bw-pl">▶</span></div><div class="bw-bd"><div class="bw-ct" onclick="bwPlay(${i})">${esc(v.title)}</div><div class="bw-cm">${esc(v.channel)}${v.views?'<br>'+esc(v.views):''}</div><div class="bw-cb"><button class="bw-p" type="button" onclick="bwPlay(${i})">▶<span> Putar</span></button><button class="bw-g" type="button" onclick="bwGrabItem(${i})">⬇ Grab</button></div></div></article>`;
+  }
+  $('bw-rl').insertAdjacentHTML('beforeend',h);
+  bw.empty=n?0:bw.empty+1;
+  bw.cont=bw.empty>=3?'':(j.next||'');
+  const m=$('bw-more');m.classList.remove('ld');
+  m.classList.toggle('end',!bw.cont);
+  if(!bw.cont&&m.lastChild)m.insertAdjacentHTML('afterbegin','<span>Sudah di akhir hasil</span>');
+}
+async function bwMore(){
+  if(bw.loading||!bw.cont||!$('bw-more'))return;
+  bw.loading=true;const q=bw.q,m=$('bw-more');m.classList.add('ld');
+  try{
+    const j=await bwFetch(q,bw.cont);
+    if(q!==bw.q)return;
+    bw.loading=false;bwAppend(j);setTimeout(bwFill,80);
+  }catch(e){
+    bw.loading=false;m.classList.remove('ld');toast('Gagal memuat hasil berikutnya — tekan “Muat lebih banyak”','warn');
+  }
+}
+function bwFill(){
+  const m=$('bw-more'),r=$('bw-res');
+  if(m&&r&&!r.hidden&&bw.cont&&m.getBoundingClientRect().top<r.getBoundingClientRect().bottom+500)bwMore();
 }
 const bwWatch=i=>'https://www.youtube.com/watch?v='+bw.res[i].id;
 function bwPlay(i){
   const u=bwWatch(i);bw.url=u;$('bw-url').value=u;bw.fromRes=true;
   bwFrame(bwEmbed(u));bwShowGrab(u);
 }
-function bwBack(){if(bw.res.length)bwRender()}
 function bwGrabItem(i){$('bw-grab-u').textContent=bwWatch(i);bwUse(true)}
 function bwGrabNow(){
   const v=$('bw-url').value.trim();
