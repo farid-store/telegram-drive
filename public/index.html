@@ -824,6 +824,20 @@ body{min-height:100dvh;padding-bottom:calc(84px + env(safe-area-inset-bottom,0px
 .bw-more .lsp{display:none;margin:0}
 .bw-more.ld .lsp{display:block}.bw-more.ld .eb,.bw-more.end .eb{display:none}
 .bw-ic.bw-go{background:#5BC774}
+.bw-view{overflow:hidden}
+.bw-bar{position:relative}
+.bw-sg{position:absolute;left:56px;right:12px;top:calc(100% - 4px);z-index:20;background:#1C1C1E;border-radius:16px;box-shadow:0 12px 32px rgba(0,0,0,.7);overflow:hidden;max-height:50vh;overflow-y:auto}
+.bw-sg[hidden]{display:none}
+.bw-si{display:flex;align-items:center;gap:10px;padding:11px 14px;font-size:.8rem;color:#fff;cursor:pointer}
+.bw-si:hover{background:#262629}
+.bw-si b{flex:1;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bw-si i{font-style:normal;color:#8E8E93;padding:2px 6px}
+.bw-si i:hover{color:#FF4D6D}
+.bw-ck{position:absolute;left:6px;top:6px;z-index:2;width:28px;height:28px;border-radius:8px;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.bw-ck input{width:18px;height:18px;accent-color:#5BC774;cursor:pointer}
+.bw-sk .bw-th,.bw-ln{background:linear-gradient(90deg,#141414 25%,#262629 50%,#141414 75%);background-size:200% 100%;animation:bwsh 1.2s linear infinite}
+.bw-ln{height:12px;border-radius:6px;margin-bottom:6px}.bw-ln.s{width:60%}
+@keyframes bwsh{to{background-position:-200% 0}}
 @media(max-width:1023px){body.bw-on{overflow:hidden}}
 </style>
 
@@ -1013,6 +1027,7 @@ body{min-height:100dvh;padding-bottom:calc(84px + env(safe-area-inset-bottom,0px
   <div class="sec" id="sec-hist">
     <div class="filter-bar">
       <span class="filter-lbl">Filter · Recent Queue</span>
+      <button class="qb" type="button" onclick="clearHist()" title="Riwayat otomatis terhapus setelah 7 hari">🗑 Bersihkan</button>
       <div class="view-toggles">
         <button class="vt-btn on" type="button" title="List View">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor"><rect x="2" y="3" width="14" height="5" rx="2"/><rect x="2" y="10" width="14" height="5" rx="2"/></svg>
@@ -1057,20 +1072,26 @@ body{min-height:100dvh;padding-bottom:calc(84px + env(safe-area-inset-bottom,0px
 
 <section class="bw" id="bw" hidden aria-label="Browser VaultDL">
   <div class="bw-bar">
-    <button class="bw-ic" type="button" onclick="bwBack()" title="Kembali" aria-label="Kembali">←</button>
-    <input class="bw-url" id="bw-url" type="text" inputmode="url" enterkeyhint="search" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Cari video atau ketik alamat…" onkeydown="if(event.key==='Enter')bwGo()"/>
+    <button class="bw-ic" type="button" onclick="bwBackBtn()" title="Kembali" aria-label="Kembali">←</button>
+    <input class="bw-url" id="bw-url" type="text" inputmode="url" enterkeyhint="search" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Cari video atau ketik alamat…" oninput="bwSug()" onfocus="bwSug()" onblur="setTimeout(()=>{$('bw-sg').hidden=true},150)" onkeydown="if(event.key==='Enter')bwGo()"/>
     <button class="bw-ic" type="button" onclick="bwPop()" title="Buka di jendela terpisah" aria-label="Buka di jendela terpisah">↗</button>
     <button class="bw-ic" type="button" onclick="bwClip(true)" title="Ambil link dari clipboard" aria-label="Ambil link dari clipboard">📋</button>
     <button class="bw-ic bw-go" type="button" onclick="bwGrabNow()" title="Grab &amp; Download link ini" aria-label="Grab dan Download">⬇</button>
     <button class="bw-ic" type="button" onclick="bwClose()" title="Tutup browser" aria-label="Tutup browser">✕</button>
+    <div class="bw-sg" id="bw-sg" hidden></div>
   </div>
   <div class="bw-sub">
     <div class="bw-seg"><button id="bw-m-guest" class="on" type="button" onclick="bwMode('guest')">👤 Tamu</button><button id="bw-m-login" type="button" onclick="bwMode('login')">🔑 Login</button></div>
     <div class="bw-sites" id="bw-sites"></div>
   </div>
   <div class="bw-stage" id="bw-stage"><div class="bw-res" id="bw-res" hidden></div><div class="bw-view" id="bw-view"></div></div>
+  <div class="bw-grab" id="bw-sel" hidden>
+    <span id="bw-sel-n" style="flex:1;font-size:.76rem;font-weight:700"></span>
+    <button class="eb" type="button" onclick="bwSelClear()">Kosongkan</button>
+    <button class="eb" id="bw-sel-b" style="background:#5BC774" type="button" onclick="bwSendMulti()">⬇ Download</button>
+  </div>
   <div class="bw-grab" id="bw-grab" hidden>
-    <button class="eb" id="bw-back" type="button" hidden onclick="bwBack()">← Hasil</button>
+    <button class="eb" id="bw-back" type="button" hidden onclick="bwBackBtn()">← Hasil</button>
     <code id="bw-grab-u"></code>
     <button class="eb" type="button" onclick="bwUse(false)">Isi kolom</button>
     <button class="eb" style="background:#5BC774" type="button" onclick="bwUse(true)">⬇ Grab &amp; Download</button>
@@ -1180,6 +1201,9 @@ const doodCode=u=>{try{const m=new URL(u).pathname.match(/\/[def]\/([a-z0-9]+)/i
 
 let hist=[];
 try{hist=JSON.parse(localStorage.getItem('vdl9')||'[]')}catch{}
+const HIST_TTL=7*24*60*60*1000;
+hist=hist.filter(h=>h&&Date.now()-h.ts<HIST_TTL);
+try{localStorage.setItem('vdl9',JSON.stringify(hist))}catch{}
 let busy=false;
 let CUR={medias:[],title:''};
 
@@ -2364,6 +2388,8 @@ function saveHist(url,p,title){
 }
 
 function renderHist(){
+  const n0=hist.length;hist=hist.filter(h=>Date.now()-h.ts<HIST_TTL);
+  if(hist.length!==n0){try{localStorage.setItem('vdl9',JSON.stringify(hist))}catch{}}
   const l=$('hl'),e=$('he');
   if(!hist.length){l.innerHTML='';e.style.display='block';return}
   e.style.display='none';
@@ -3149,11 +3175,16 @@ function bwBuild(){
   bwNote('welcome');bw.built=true;
 }
 function bwOpen(u){
+  if($('bw').hidden){const n=bw.pane==='res'?2:1;try{for(let i=0;i<n;i++)history.pushState({bw:1},'');bw.h=n}catch{}}
   $('bw').hidden=false;document.body.classList.add('bw-on');
   if(!bw.built)bwBuild();
   if(u&&typeof u==='string')bwLoad(u);
 }
-function bwClose(){$('bw').hidden=true;document.body.classList.remove('bw-on');$('bw-grab').hidden=true}
+function bwClose(){
+  if(bw.pane==='view'){$('bw-view').innerHTML='';if(bw.res.length)bwPane('res');else bwNote('welcome')}
+  $('bw').hidden=true;document.body.classList.remove('bw-on');$('bw-grab').hidden=true;$('bw-sg').hidden=true;
+  if(bw.h>0){const n=bw.h;bw.h=0;bw.closing=true;try{history.go(-n)}catch{bw.closing=false}}
+}
 function bwMode(m,keep){
   bw.mode=m;
   $('bw-m-guest').classList.toggle('on',m==='guest');
@@ -3162,7 +3193,7 @@ function bwMode(m,keep){
 }
 function bwSite(i){const s=BW_SITES[i];bwMode(s.m,true);bwLoad(s.u)}
 function bwIsQuery(t){return !isUrl(t)&&(/\s/.test(t)||!/^[\w-]+(\.[\w-]+)+([\/?#].*)?$/.test(t))}
-function bwGo(){const v=$('bw-url').value.trim();if(!v)return;if(bwIsQuery(v)){bwSearch(v);return}const u=bwNorm(v);if(u)bwLoad(u)}
+function bwGo(){$('bw-sg').hidden=true;const v=$('bw-url').value.trim();if(!v)return;if(bwIsQuery(v)){bwSearch(v);return}const u=bwNorm(v);if(u)bwLoad(u)}
 function bwLoad(u){
   u=bwNorm(u);if(!u)return;
   bw.url=u;bw.fromRes=false;$('bw-grab').hidden=true;$('bw-url').value=u;
@@ -3224,7 +3255,11 @@ function bwUse(go){
 bw.res=[];bw.fromRes=false;bw.pane='home';bw.cont='';bw.q='';bw.loading=false;bw.ids=new Set();bw.io=null;bw.empty=0;
 try{bw.view=localStorage.getItem('bw_view')}catch{}
 if(bw.view!=='grid'&&bw.view!=='list')bw.view=innerWidth>=640?'grid':'list';
-function bwPane(p){bw.pane=p;$('bw-res').hidden=p!=='res';$('bw-view').hidden=p==='res'}
+const BW_RANK={home:0,res:1,view:2};
+function bwPane(p){
+  if(!$('bw').hidden&&BW_RANK[p]>BW_RANK[bw.pane]){try{history.pushState({bw:1},'');bw.h++}catch{}}
+  bw.pane=p;$('bw-res').hidden=p!=='res';$('bw-view').hidden=p==='res';bwSelUpd();
+}
 function bwShowGrab(u){
   const c=cleanUrl(u);bw.seen=c;
   $('bw-grab-u').textContent=c;$('bw-back').hidden=!bw.fromRes;$('bw-grab').hidden=false;
@@ -3235,7 +3270,7 @@ function bwBack(){
     if(bw.res.length){bwPane('res');return}
     bwNote('welcome');return;
   }
-  if(bw.pane==='res'){bw.res=[];bw.cont='';bw.q='';bwNote('welcome');return}
+  if(bw.pane==='res'){bw.res=[];bw.cont='';bw.q='';bw.sel.clear();bwNote('welcome');return}
   bwClose();
 }
 function bwView(v){
@@ -3245,24 +3280,25 @@ function bwView(v){
 }
 async function bwFetch(q,c){
   const r=await fetch('/api/search?q='+encodeURIComponent(q)+(c?'&c='+encodeURIComponent(c):''),{headers:{accept:'application/json'}});
+  if(r.status===429)throw new Error('429');
   const j=await r.json();
   if(!r.ok||!j.items)throw new Error(j.error||'gagal');
   return j;
 }
 async function bwSearch(q){
-  bw.url='';bw.fromRes=false;bw.q=q;bw.res=[];bw.cont='';bw.ids=new Set();bw.empty=0;bw.loading=true;
+  bwQSave(q);bw.sel.clear();bw.url='';bw.fromRes=false;bw.q=q;bw.res=[];bw.cont='';bw.ids=new Set();bw.empty=0;bw.loading=true;
   $('bw-grab').hidden=true;
-  $('bw-view').innerHTML='<div class="bw-note"><div class="lsp"></div>Mencari “'+esc(q)+'”…</div>';bwPane('view');
+  $('bw-view').innerHTML='<div class="bw-rl bw-sk '+bw.view+'">'+'<article class="bw-card"><div class="bw-th"></div><div class="bw-bd"><div class="bw-ln"></div><div class="bw-ln s"></div></div></article>'.repeat(8)+'</div>';bwPane('view');
   let j;
   try{j=await bwFetch(q,'')}
   catch(e){
     bw.loading=false;bw.url='https://www.youtube.com/results?search_query='+encodeURIComponent(q);
-    $('bw-view').innerHTML='<div class="bw-note"><b>Pencarian dalam aplikasi gagal</b><p>Pastikan file api/search.mjs sudah ter-deploy. Sementara itu Anda bisa mencari di jendela terpisah.</p><button class="eb" style="background:#5BC774" type="button" onclick="bwPop()">↗ Cari di YouTube</button></div>';
+    $('bw-view').innerHTML='<div class="bw-note"><b>Pencarian dalam aplikasi gagal</b><p>'+(e.message==='429'?'Terlalu banyak pencarian. Tunggu sebentar lalu coba lagi.':'Pastikan file api/search.mjs sudah ter-deploy. Sementara itu Anda bisa mencari di jendela terpisah.')+'</p><button class="eb" style="background:#5BC774" type="button" onclick="bwPop()">↗ Cari di YouTube</button></div>';
     return;
   }
   bw.loading=false;
   if(!j.items.length){$('bw-view').innerHTML='<div class="bw-note"><b>Tidak ada hasil</b><p>Coba kata kunci lain.</p></div>';return}
-  bwShell();bwAppend(j);bwPane('res');$('bw-res').scrollTop=0;
+  bwShell();bwAppend(j);$('bw-view').innerHTML='';bwPane('res');$('bw-res').scrollTop=0;
   setTimeout(bwFill,80);
 }
 function bwShell(){
@@ -3279,7 +3315,7 @@ function bwAppend(j){
   for(const v of j.items){
     if(bw.ids.has(v.id))continue;
     bw.ids.add(v.id);const i=bw.res.push(v)-1;n++;
-    h+=`<article class="bw-card"><div class="bw-th" onclick="bwPlay(${i})"><img loading="lazy" src="${esc(v.thumb)}" alt="">${v.dur?`<span class="bw-du">${esc(v.dur)}</span>`:''}<span class="bw-pl">▶</span></div><div class="bw-bd"><div class="bw-ct" onclick="bwPlay(${i})">${esc(v.title)}</div><div class="bw-cm">${esc(v.channel)}${v.views?'<br>'+esc(v.views):''}</div><div class="bw-cb"><button class="bw-p" type="button" onclick="bwPlay(${i})">▶<span> Putar</span></button><button class="bw-g" type="button" onclick="bwGrabItem(${i})">⬇ Grab</button></div></div></article>`;
+    h+=`<article class="bw-card"><div class="bw-th" onclick="bwPlay(${i})"><label class="bw-ck" onclick="event.stopPropagation()" title="Pilih"><input type="checkbox" onchange="bwSel(${i},this)"></label><img loading="lazy" src="${esc(v.thumb)}" alt="">${v.dur?`<span class="bw-du">${esc(v.dur)}</span>`:''}<span class="bw-pl">▶</span></div><div class="bw-bd"><div class="bw-ct" onclick="bwPlay(${i})">${esc(v.title)}</div><div class="bw-cm">${esc(v.channel)}${v.views?'<br>'+esc(v.views):''}</div><div class="bw-cb"><button class="bw-p" type="button" onclick="bwPlay(${i})">▶<span> Putar</span></button><button class="bw-g" type="button" onclick="bwGrabItem(${i})">⬇ Grab</button></div></div></article>`;
   }
   $('bw-rl').insertAdjacentHTML('beforeend',h);
   bw.empty=n?0:bw.empty+1;
@@ -3314,6 +3350,70 @@ function bwGrabNow(){
   const u=isUrl(v)?v:(isUrl(bw.url)?bw.url:'');
   if(!u){toast('Belum ada link — buka atau pilih video dulu','warn');return}
   $('bw-grab-u').textContent=cleanUrl(u);bwUse(true);
+}
+/* ---- Pilih banyak → Multi, Back sistem, riwayat/saran pencarian, riwayat download ---- */
+bw.h=0;bw.closing=false;bw.sel=new Set();bw.sg=[];bw.sgT=null;bw.qh=[];
+try{bw.qh=JSON.parse(localStorage.getItem('bw_q')||'[]')}catch{}
+function bwBackBtn(){if(bw.h>0)history.back();else bwBack()}
+window.addEventListener('popstate',()=>{
+  if(bw.closing){bw.closing=false;return}
+  if($('bw').hidden)return;
+  bw.h=Math.max(0,bw.h-1);bwBack();
+});
+function bwSel(i,el){
+  const id=bw.res[i].id;
+  if(el.checked){
+    if(bw.sel.size>=MAX_MULTI){el.checked=false;toast(`Maksimal ${MAX_MULTI} video per proses`,'warn');return}
+    bw.sel.add(id);
+  }else bw.sel.delete(id);
+  bwSelUpd();
+}
+function bwSelUpd(){
+  const n=bw.sel.size,b=$('bw-sel');if(!b)return;
+  b.hidden=!n||bw.pane!=='res';
+  $('bw-sel-n').textContent=n+' dipilih';$('bw-sel-b').textContent='⬇ Download '+n+' terpilih';
+}
+function bwSelClear(){bw.sel.clear();document.querySelectorAll('#bw-rl .bw-ck input').forEach(c=>{c.checked=false});bwSelUpd()}
+function bwSendMulti(){
+  const urls=[...bw.sel].map(id=>'https://www.youtube.com/watch?v='+id);
+  if(!urls.length)return;
+  setMode('multi');$('m-urls').value=urls.join('\n');
+  bwSelClear();
+  if(innerWidth<1024)bwClose();
+  window.scrollTo({top:0,behavior:'smooth'});
+  multiStart();
+}
+const bwQStore=()=>{try{localStorage.setItem('bw_q',JSON.stringify(bw.qh))}catch{}};
+function bwQSave(q){bw.qh=[q,...bw.qh.filter(x=>x.toLowerCase()!==q.toLowerCase())].slice(0,15);bwQStore()}
+function bwQDel(i){const t=bw.sg[i].t;bw.qh=bw.qh.filter(x=>x!==t);bwQStore();bw.sg.splice(i,1);bwSugRender()}
+function bwSug(){
+  const v=$('bw-url').value.trim();
+  if(isUrl(v)){$('bw-sg').hidden=true;return}
+  const lv=v.toLowerCase();
+  const loc=bw.qh.filter(x=>!lv||x.toLowerCase().includes(lv)).slice(0,6).map(t=>({t,h:1}));
+  bw.sg=loc;bwSugRender();
+  clearTimeout(bw.sgT);
+  if(v.length>=2)bw.sgT=setTimeout(async()=>{
+    try{
+      const r=await fetch('/api/search?s=1&q='+encodeURIComponent(v));if(!r.ok)return;
+      const j=await r.json();if($('bw-url').value.trim()!==v)return;
+      const have=new Set(loc.map(x=>x.t.toLowerCase()));
+      bw.sg=loc.concat((j.items||[]).filter(t=>!have.has(t.toLowerCase())).slice(0,6).map(t=>({t,h:0})));
+      bwSugRender();
+    }catch{}
+  },250);
+}
+function bwSugRender(){
+  const box=$('bw-sg');
+  if(!bw.sg.length){box.hidden=true;return}
+  box.innerHTML=bw.sg.map((x,i)=>`<div class="bw-si" onmousedown="event.preventDefault()" onclick="bwPick(${i})"><span>${x.h?'🕘':'🔍'}</span><b>${esc(x.t)}</b>${x.h?`<i onclick="event.stopPropagation();bwQDel(${i})" title="Hapus">✕</i>`:''}</div>`).join('');
+  box.hidden=false;
+}
+function bwPick(i){$('bw-url').value=bw.sg[i].t;$('bw-sg').hidden=true;bwGo()}
+function clearHist(){
+  if(hist.length&&!confirm('Hapus semua riwayat download?'))return;
+  hist=[];try{localStorage.removeItem('vdl9')}catch{}
+  renderHist();toast('Riwayat dibersihkan','success');
 }
 window.addEventListener('focus',()=>setTimeout(bwClip,250));
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(bwClip,250)});
