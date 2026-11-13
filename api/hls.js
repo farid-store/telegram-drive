@@ -1,4 +1,4 @@
-// api/hls.js — Proxy HLS untuk TV Live (Vercel Edge Runtime, region sin1)
+// api/hls.js — Proxy HLS untuk TV Live (Vercel Edge Runtime, region cgk1 & sin1)
 const BROWSER_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
 const MAX_PLAYLIST = 4 * 1024 * 1024;
 const MAX_RAW = 14 * 1024 * 1024;
@@ -46,11 +46,12 @@ function rewritePlaylist(text, base, selfBase, extra, directSeg = false) {
       if (!rawUrl) return u;
       const absObj = new URL(rawUrl, base);
       if (!/^https?:/i.test(absObj.protocol)) return u;
+      // Wariskan token/query dari manifest induk jika berada di domain yang sama dan belum punya query
       if (absObj.origin === baseObj.origin && !absObj.search && baseObj.search) {
         absObj.search = baseObj.search;
       }
-      // Jika mode directSeg aktif dan ini adalah file segmen (.ts/.m4s) yang sudah https, ambil langsung dari IP user!
-      if (directSeg && absObj.protocol === 'https:' && /\.(ts|m4s|mp4|aac)(\?|$)/i.test(absObj.pathname)) {
+      // Jika mode directSeg aktif dan ini adalah file segmen (.ts/.m4s/.aac) yang sudah https, ambil langsung dari IP user
+      if (directSeg && absObj.protocol === 'https:' && /\.(ts|m4s|mp4|aac|mp3)(\?|$)/i.test(absObj.pathname)) {
         return absObj.href;
       }
       return `${selfBase}?u=${encodeURIComponent(absObj.href)}${extra}`;
@@ -86,6 +87,8 @@ async function handle(req, opts = {}) {
   const self = new URL(req.url);
   const sp = self.searchParams;
   const raw = sp.get('raw') === '1';
+  const directSeg = sp.get('seg') === 'direct';
+
   let target;
   try { target = new URL(sp.get('u') || ''); } catch { return json(400, { error: 'Parameter u (URL) tidak valid' }); }
   const bad = blockedReason(target, opts.blockedHosts);
@@ -108,7 +111,6 @@ async function handle(req, opts = {}) {
       h.Referer = ref;
       try { h.Origin = new URL(ref).origin; } catch {}
     } else if (!raw) {
-      // Otomatis samakan Referer & Origin dengan domain server stream
       h.Referer = u.origin + '/';
       h.Origin = u.origin;
     }
@@ -116,10 +118,11 @@ async function handle(req, opts = {}) {
     if (range && !raw) h.Range = range;
     return h;
   };
+
   let cur = target, resp;
   try {
     for (let hop = 0; hop <= MAX_HOPS; hop++) {
-      resp = await fetch(cur.href, { headers: mkHeaders(cur), redirect: 'manual' });
+      resp = await fetch(cur.href, { method: 'GET', headers: mkHeaders(cur), redirect: 'manual' });
       const loc = resp.headers.get('location');
       if (resp.status >= 300 && resp.status < 400 && loc) {
         const next = new URL(loc, cur);
@@ -141,6 +144,11 @@ async function handle(req, opts = {}) {
     return json(502, { error: `Server channel membalas HTTP ${resp.status}${hint}`, upstream: resp.status });
   }
 
+  if (req.method === 'HEAD') {
+    try { resp.body && resp.body.cancel(); } catch {}
+    return new Response(null, { status: 200, headers: base });
+  }
+
   const ct = (resp.headers.get('content-type') || '').toLowerCase();
   const len = Number(resp.headers.get('content-length')) || 0;
   const path = cur.pathname + cur.search;
@@ -157,8 +165,9 @@ async function handle(req, opts = {}) {
   if (/^text\/html/.test(ct)) return json(502, { error: 'Server channel mengirim halaman web, bukan stream (link mati / diblok)' });
 
   // ---- playlist HLS: deteksi dari Content-Type, ekstensi .m3u8, atau isi awal #EXTM3U ----
+  const isMediaMime = /^(video|audio)\/(?!x-mpegurl|vnd\.apple\.mpegurl)/i.test(ct);
   const looksLikePlaylist = /mpegurl|vnd\.apple\.mpegurl|x-mpegurl/i.test(ct) || /\.m3u8?(\?|$)/i.test(path);
-  const maybeTextPlaylist = !looksLikePlaylist && !/\.(ts|m4s|mp4|aac|mp3|key)(\?|$)/i.test(path) && (len === 0 || len < 512 * 1024) && /text\/plain|octet-stream|^$/.test(ct);
+  const maybeTextPlaylist = !looksLikePlaylist && !isMediaMime && !/\.(ts|m4s|mp4|aac|mp3|key)(\?|$)/i.test(path) && (len === 0 || len < 512 * 1024) && /text\/plain|octet-stream|^$/.test(ct);
 
   if (looksLikePlaylist || maybeTextPlaylist) {
     const buf = await resp.arrayBuffer();
@@ -167,8 +176,10 @@ async function handle(req, opts = {}) {
     if (sample.startsWith('#EXTM3U')) {
       const text = new TextDecoder('utf-8').decode(buf).replace(/^\uFEFF/, '');
       const selfBase = `${self.origin}${self.pathname}`;
-      const extra = (ref ? `&ref=${encodeURIComponent(ref)}` : '') + (ua ? `&ua=${encodeURIComponent(ua)}` : '');
-      return new Response(rewritePlaylist(text, cur.href, selfBase, extra), {
+      const extra = (ref ? `&ref=${encodeURIComponent(ref)}` : '')
+        + (ua ? `&ua=${encodeURIComponent(ua)}` : '')
+        + (directSeg ? '&seg=direct' : '');
+      return new Response(rewritePlaylist(text, cur.href, selfBase, extra, directSeg), {
         status: 200, headers: { ...base, 'Content-Type': 'application/vnd.apple.mpegurl' },
       });
     }
@@ -203,4 +214,3 @@ const OPTS = {
 export default async function handler(req) {
   return handle(req, OPTS);
 }
-
