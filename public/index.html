@@ -793,6 +793,16 @@ body{min-height:100dvh;padding-bottom:calc(84px + env(safe-area-inset-bottom,0px
   body.bw-on .bottom-nav{left:calc((100% - var(--bwW))/2)}
   body.bw-on #ts{right:calc(var(--bwW) + 18px)}
 }
+.bw-res{position:absolute;inset:0;overflow:auto;padding:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;align-content:start}
+.bw-card{background:#141414;border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+.bw-card img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:#1C1C1E;cursor:pointer}
+.bw-ct{padding:10px 12px 2px;font-size:.76rem;line-height:1.4;color:#fff;font-weight:600;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.bw-cm{padding:0 12px;font-size:.68rem;color:#8E8E93}
+.bw-cb{display:flex;gap:6px;padding:10px 12px 12px;margin-top:auto}
+.bw-cb button{height:34px;border:none;border-radius:9999px;font:700 .72rem 'Plus Jakarta Sans',sans-serif;cursor:pointer;color:#fff}
+.bw-p{background:#1C1C1E;padding:0 12px}
+.bw-g{background:#5BC774;flex:1}
+.bw-ic.bw-go{background:#5BC774}
 @media(max-width:1023px){body.bw-on{overflow:hidden}}
 </style>
 
@@ -1031,6 +1041,7 @@ body{min-height:100dvh;padding-bottom:calc(84px + env(safe-area-inset-bottom,0px
     <button class="bw-ic" type="button" onclick="bwGo()" title="Buka" aria-label="Buka">➜</button>
     <button class="bw-ic" type="button" onclick="bwPop()" title="Buka di jendela terpisah" aria-label="Buka di jendela terpisah">↗</button>
     <button class="bw-ic" type="button" onclick="bwClip(true)" title="Ambil link dari clipboard" aria-label="Ambil link dari clipboard">📋</button>
+    <button class="bw-ic bw-go" type="button" onclick="bwGrabNow()" title="Grab &amp; Download link ini" aria-label="Grab dan Download">⬇</button>
   </div>
   <div class="bw-sub">
     <div class="bw-seg"><button id="bw-m-guest" class="on" type="button" onclick="bwMode('guest')">👤 Tamu</button><button id="bw-m-login" type="button" onclick="bwMode('login')">🔑 Login</button></div>
@@ -1038,9 +1049,10 @@ body{min-height:100dvh;padding-bottom:calc(84px + env(safe-area-inset-bottom,0px
   </div>
   <div class="bw-stage" id="bw-stage"></div>
   <div class="bw-grab" id="bw-grab" hidden>
+    <button class="eb" id="bw-back" type="button" hidden onclick="bwBack()">← Hasil</button>
     <code id="bw-grab-u"></code>
     <button class="eb" type="button" onclick="bwUse(false)">Isi kolom</button>
-    <button class="eb" style="background:#5BC774" type="button" onclick="bwUse(true)">Isi &amp; Watch/DL</button>
+    <button class="eb" style="background:#5BC774" type="button" onclick="bwUse(true)">⬇ Grab &amp; Download</button>
     <button class="bw-ic" type="button" onclick="$('bw-grab').hidden=true" aria-label="Abaikan">✕</button>
   </div>
 </section>
@@ -3079,11 +3091,13 @@ const BW_SITES=[
   {n:'Instagram',u:'https://www.instagram.com/',m:'login',e:'📸'},
   {n:'Facebook',u:'https://www.facebook.com/',m:'login',e:'📘'},
   {n:'X',u:'https://x.com/',m:'login',e:'🐦'},
+  {n:'SoundCloud',u:'https://soundcloud.com/',m:'guest',e:'🎧'},
+  {n:'Bilibili',u:'https://www.bilibili.com/',m:'guest',e:'📺'},
   {n:'Reddit',u:'https://www.reddit.com/',m:'guest',e:'👽'},
   {n:'Vimeo',u:'https://vimeo.com/',m:'guest',e:'🎞'},
   {n:'Dailymotion',u:'https://www.dailymotion.com/',m:'guest',e:'▶'}
 ];
-const BW_NOFRAME=/(^|\.)(youtube\.com|youtu\.be|tiktok\.com|instagram\.com|facebook\.com|fb\.watch|x\.com|twitter\.com|reddit\.com|linkedin\.com|pinterest\.com|google\.com|vimeo\.com|dailymotion\.com|twitch\.tv)$/;
+const BW_NOFRAME=/(^|\.)(youtube\.com|youtu\.be|tiktok\.com|instagram\.com|facebook\.com|fb\.watch|x\.com|twitter\.com|reddit\.com|linkedin\.com|pinterest\.com|google\.com|vimeo\.com|dailymotion\.com|twitch\.tv|soundcloud\.com|bilibili\.com)$/;
 const bw={mode:'guest',url:'',pop:null,tm:null,seen:'',built:false};
 
 function bwEmbed(u){
@@ -3097,6 +3111,9 @@ function bwEmbed(u){
     if(/^[\w-]{6,}$/.test(id))return'https://www.youtube-nocookie.com/embed/'+id+'?rel=0';
     if(h==='vimeo.com'){const m=x.pathname.match(/^\/(\d+)/);if(m)return'https://player.vimeo.com/video/'+m[1]}
     if(/(^|\.)dailymotion\.com$/.test(h)){const m=x.pathname.match(/^\/video\/(\w+)/);if(m)return'https://www.dailymotion.com/embed/video/'+m[1]}
+    if(/(^|\.)soundcloud\.com$/.test(h)&&x.pathname.split('/').filter(Boolean).length>=2)return'https://w.soundcloud.com/player/?visual=true&url='+encodeURIComponent(u);
+    if(/(^|\.)bilibili\.com$/.test(h)){const m=x.pathname.match(/\/video\/(BV\w+)/i);if(m)return'https://player.bilibili.com/player.html?isOutside=true&bvid='+m[1]+'&high_quality=1&autoplay=0'}
+    if(/(^|\.)tiktok\.com$/.test(h)){const m=x.pathname.match(/\/video\/(\d+)/);if(m)return'https://www.tiktok.com/embed/v2/'+m[1]}
   }catch{}
   return null;
 }
@@ -3123,13 +3140,14 @@ function bwMode(m,keep){
   if(!keep&&bw.url)bwLoad(bw.url);
 }
 function bwSite(i){const s=BW_SITES[i];bwMode(s.m,true);bwLoad(s.u)}
-function bwGo(){const u=bwNorm($('bw-url').value);if(u)bwLoad(u)}
+function bwIsQuery(t){return !isUrl(t)&&(/\s/.test(t)||!/^[\w-]+(\.[\w-]+)+([\/?#].*)?$/.test(t))}
+function bwGo(){const v=$('bw-url').value.trim();if(!v)return;if(bwIsQuery(v)){bwSearch(v);return}const u=bwNorm(v);if(u)bwLoad(u)}
 function bwLoad(u){
   u=bwNorm(u);if(!u)return;
-  bw.url=u;$('bw-url').value=u;
+  bw.url=u;bw.fromRes=false;$('bw-grab').hidden=true;$('bw-url').value=u;
   if(bw.mode==='login'){bwPop();bwNote('login',u);return}
   const emb=bwEmbed(u);
-  if(emb){bwFrame(emb);return}
+  if(emb){bwFrame(emb);bwShowGrab(u);return}
   if(BW_NOFRAME.test(hostOf(u))){bwNote('noframe',u);return}
   bwFrame(u);
 }
@@ -3179,6 +3197,46 @@ function bwUse(go){
   window.scrollTo({top:0,behavior:'smooth'});
   toast('Link dipakai','success');
   if(go)doSearch();
+}
+
+/* ---- Pencarian dalam aplikasi + Grab & Download ---- */
+bw.res=[];bw.fromRes=false;
+function bwShowGrab(u){
+  const c=cleanUrl(u);bw.seen=c;
+  $('bw-grab-u').textContent=c;$('bw-back').hidden=!bw.fromRes;$('bw-grab').hidden=false;
+}
+async function bwSearch(q){
+  bw.url='';bw.fromRes=false;$('bw-grab').hidden=true;
+  $('bw-stage').innerHTML='<div class="bw-note"><div class="lsp"></div>Mencari “'+esc(q)+'”…</div>';
+  try{
+    const r=await fetch('/api/search?q='+encodeURIComponent(q),{headers:{accept:'application/json'}});
+    const j=await r.json();
+    if(!r.ok||!j.items)throw new Error(j.error||'gagal');
+    bw.res=j.items;
+  }catch(e){
+    bw.url='https://www.youtube.com/results?search_query='+encodeURIComponent(q);
+    $('bw-stage').innerHTML='<div class="bw-note"><b>Pencarian dalam aplikasi gagal</b><p>Pastikan file api/search.mjs sudah ter-deploy. Sementara itu Anda bisa mencari di jendela terpisah.</p><button class="eb" style="background:#5BC774" type="button" onclick="bwPop()">↗ Cari di YouTube</button></div>';
+    return;
+  }
+  if(!bw.res.length){$('bw-stage').innerHTML='<div class="bw-note"><b>Tidak ada hasil</b><p>Coba kata kunci lain.</p></div>';return}
+  bwRender();
+}
+function bwRender(){
+  $('bw-grab').hidden=true;bw.fromRes=false;
+  $('bw-stage').innerHTML='<div class="bw-res">'+bw.res.map((v,i)=>`<div class="bw-card"><img loading="lazy" src="${esc(v.thumb)}" alt="" onclick="bwPlay(${i})"><div class="bw-ct">${esc(v.title)}</div><div class="bw-cm">${esc(v.channel)}${v.dur?' · '+esc(v.dur):''}${v.views?' · '+esc(v.views):''}</div><div class="bw-cb"><button class="bw-p" type="button" onclick="bwPlay(${i})">▶ Putar</button><button class="bw-g" type="button" onclick="bwGrabItem(${i})">⬇ Grab &amp; Download</button></div></div>`).join('')+'</div>';
+}
+const bwWatch=i=>'https://www.youtube.com/watch?v='+bw.res[i].id;
+function bwPlay(i){
+  const u=bwWatch(i);bw.url=u;$('bw-url').value=u;bw.fromRes=true;
+  bwFrame(bwEmbed(u));bwShowGrab(u);
+}
+function bwBack(){if(bw.res.length)bwRender()}
+function bwGrabItem(i){$('bw-grab-u').textContent=bwWatch(i);bwUse(true)}
+function bwGrabNow(){
+  const v=$('bw-url').value.trim();
+  const u=isUrl(v)?v:(isUrl(bw.url)?bw.url:'');
+  if(!u){toast('Belum ada link — buka atau pilih video dulu','warn');return}
+  $('bw-grab-u').textContent=cleanUrl(u);bwUse(true);
 }
 window.addEventListener('focus',()=>setTimeout(bwClip,250));
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(bwClip,250)});
