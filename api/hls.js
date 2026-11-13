@@ -91,17 +91,21 @@ async function handle(req, opts = {}) {
   const ref = cleanHeaderVal(sp.get('ref'), 500);
   const ua = cleanHeaderVal(sp.get('ua'), 300);
   const mkHeaders = u => {
+    const ipIndo = '36.80.112.10'; // IP Telkom Indonesia
     const h = {
       'User-Agent': ua || BROWSER_UA,
       'Accept': '*/*',
       'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
-      'X-Forwarded-For': '36.80.112.10',
-      'X-Real-IP': '36.80.112.10',
+      'X-Forwarded-For': ipIndo,
+      'X-Real-IP': ipIndo,
+      'True-Client-IP': ipIndo,
+      'CF-Connecting-IP': ipIndo,
     };
     if (/^https?:\/\//i.test(ref)) {
       h.Referer = ref;
       try { h.Origin = new URL(ref).origin; } catch {}
     } else if (!raw) {
+      // Otomatis samakan Referer & Origin dengan domain server stream
       h.Referer = u.origin + '/';
       h.Origin = u.origin;
     }
@@ -109,7 +113,6 @@ async function handle(req, opts = {}) {
     if (range && !raw) h.Range = range;
     return h;
   };
-
   let cur = target, resp;
   try {
     for (let hop = 0; hop <= MAX_HOPS; hop++) {
