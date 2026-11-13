@@ -1912,21 +1912,31 @@ function tvProxyUrl(u,ref,ua,raw){
     +(ref?'&ref='+encodeURIComponent(ref):'')+(ua?'&ua='+encodeURIComponent(ua):'')+(raw?'&raw=1':'');
 }
 
-// ---------- hls.js (dimuat saat pertama dibutuhkan; file lokal /vendor/hls.min.js) ----------
+// ---------- hls.js (dimuat saat pertama dibutuhkan: /vendor/hls.min.js → /hls.min.js → CDN) ----------
 let tvHlsP=null;
 function tvLoadHls(){
   if(window.Hls)return Promise.resolve(true);
   if(tvHlsP)return tvHlsP;
+  const srcs=[
+    '/vendor/hls.min.js',
+    '/hls.min.js',
+    'https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js'
+  ];
   tvHlsP=new Promise(res=>{
-    const s=document.createElement('script');
-    s.src='/vendor/hls.min.js';
-    s.onload=()=>res(!!window.Hls);
-    s.onerror=()=>{tvHlsP=null;res(false)};
-    document.head.appendChild(s);
+    let idx=0;
+    const tryNext=()=>{
+      if(window.Hls)return res(true);
+      if(idx>=srcs.length){tvHlsP=null;return res(false)}
+      const s=document.createElement('script');
+      s.src=srcs[idx++];
+      s.onload=()=>window.Hls?res(true):tryNext();
+      s.onerror=()=>{s.remove();tryNext()};
+      document.head.appendChild(s);
+    };
+    tryNext();
   });
   return tvHlsP;
 }
-
 // ---------- parser M3U ----------
 function tvParse(text){
   const out=[];
