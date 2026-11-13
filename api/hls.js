@@ -185,7 +185,7 @@ async function handle(req, opts = {}) {
   return new Response(resp.body, { status: resp.status, headers });
 }
 
-export const config = { runtime: 'edge', regions: ['sin1'] };
+export const config = { runtime: 'edge', regions: ['cgk1', 'sin1'] };
 
 const list = s => String(s || '').split(',').map(x => x.trim().toLowerCase().replace(/^www\./, '')).filter(Boolean);
 const OPTS = {
