@@ -2163,10 +2163,51 @@ function tvErrMsg(err){
   if(err==='unsupported')return 'Browser ini tidak mendukung pemutaran HLS.';
   return 'Gagal memutar. Channel mungkin mati, diblok wilayah (geo), atau butuh login/langganan.';
 }
-function tvErrHtml(msg){
-  return `<div class="tv-err"><div>⚠ ${esc(msg)}</div><div class="tv-eb">
+const TV_ERR_TXT={
+  manifestLoadError:'gagal memuat playlist (diblok CORS / jaringan / server mati)',
+  manifestLoadTimeOut:'playlist tidak terbalas (timeout)',
+  manifestParsingError:'isinya bukan playlist HLS yang valid',
+  levelLoadError:'gagal memuat daftar kualitas',
+  levelLoadTimeOut:'daftar kualitas timeout',
+  fragLoadError:'segmen video gagal diunduh',
+  fragLoadTimeOut:'segmen video timeout',
+  timeout:'tidak merespons',
+  media:'file media gagal dibuka',
+  native:'pemutar bawaan browser gagal',
+};
+function tvErrHtml(msg,lines){
+  const det=lines&&lines.length?`<details class="dtl"><summary>Detail teknis</summary><div style="margin-top:6px;line-height:1.7;text-align:left">${lines.map(l=>'• '+esc(l)).join('<br>')}</div></details>`:'';
+  return `<div class="tv-err"><div>⚠ ${esc(msg)}</div>${det}<div class="tv-eb">
     <button class="qb" type="button" onclick="tvReload()">↻ Coba lagi</button>
     <button class="qb" type="button" onclick="tvForceProxy()">Coba lewat server</button></div></div>`;
+}
+
+// Setelah semua percobaan gagal: tanyakan ke proxy apa yang sebenarnya terjadi (1 permintaan kecil)
+async function tvDiagnose(ch,err){
+  const lines=[];
+  let msg=tvErrMsg(err);
+  if(err==='unsupported'||/\.(mp4|webm|mkv|mp3|aac|ogg|opus)(\?|$)/i.test(ch.u))return{msg,lines};
+  const ac=new AbortController();
+  const t=setTimeout(()=>ac.abort(),9000);
+  try{
+    const r=await fetch(tvProxyUrl(ch.u,ch.ref,ch.ua),{signal:ac.signal,cache:'no-store'});
+    const ct=r.headers.get('content-type')||'';
+    if(r.ok){
+      try{r.body&&r.body.cancel&&r.body.cancel()}catch{}
+      lines.push('Server: playlist HLS channel terbaca (HTTP 200)');
+      msg='Playlist channel terbaca, tetapi video gagal diputar. Kemungkinan link bertoken terikat IP, format tidak didukung (mis. DRM), atau siaran baru saja putus.';
+    }else if(/json/.test(ct)){
+      const j=await r.json().catch(()=>({}));
+      lines.push(`Server: HTTP ${r.status}${j.error?' — '+j.error:''}`);
+      if(j.error)msg=j.error;
+    }else{
+      lines.push(`Server: HTTP ${r.status}`);
+      if(r.status===404)msg='Proxy /api/hls tidak ditemukan. Pastikan file api/hls.js ikut ter-deploy ke Vercel.';
+    }
+  }catch(e){
+    lines.push('Server: tidak dapat dihubungi ('+(e&&e.name==='AbortError'?'timeout':(e&&e.message)||'jaringan')+')');
+  }finally{clearTimeout(t)}
+  return{msg,lines};
 }
 function tvReload(){if(TV.cur)tvPlay(TV.cur)}
 function tvForceProxy(){if(TV.cur){TV.force[TV.cur.u]=true;tvPlay(TV.cur)}}
@@ -2183,6 +2224,7 @@ async function tvPlay(ch){
   if(token!==TV.token)return;
   const order=tvOrder(ch);
   let lastErr='';
+  const tried=[];
   for(let k=0;k<order.length;k++){
     const mode=order[k];
     tvSetStatus(mode==='proxy'?'Menghubungkan via server…':'Menghubungkan…','warn');
@@ -2195,9 +2237,14 @@ async function tvPlay(ch){
       return;
     }
     lastErr=r.err;
+    tried.push(`${mode==='proxy'?'Via server':'Langsung'}: ${TV_ERR_TXT[r.err]||r.err}`);
     if(k<order.length-1)toast(mode==='direct'?'Tidak bisa diakses langsung (CORS/jaringan) — mencoba lewat server…':'Gagal lewat server — mencoba langsung…','info');
   }
-  tvOverlay(tvErrHtml(tvErrMsg(lastErr)));
+  tvSetStatus('Memeriksa penyebab…','warn');
+  tvOverlay('<div class="lsp"></div><p>Memeriksa penyebab…</p>');
+  const diag=await tvDiagnose(ch,lastErr);
+  if(token!==TV.token)return;
+  tvOverlay(tvErrHtml(diag.msg,[...tried,...diag.lines]));
   tvSetStatus('Gagal','err');
 }
 
