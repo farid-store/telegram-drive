@@ -2274,9 +2274,13 @@ const TV_ERR_TXT={
 };
 function tvErrHtml(msg,lines){
   const det=lines&&lines.length?`<details class="dtl"><summary>Detail teknis</summary><div style="margin-top:6px;line-height:1.7;text-align:left">${lines.map(l=>'• '+esc(l)).join('<br>')}</div></details>`:'';
+  const rawUrl=TV.cur?TV.cur.u:'';
   return `<div class="tv-err"><div>⚠ ${esc(msg)}</div>${det}<div class="tv-eb">
     <button class="qb" type="button" onclick="tvReload()">↻ Coba lagi</button>
-    <button class="qb" type="button" onclick="tvForceProxy()">Coba lewat server</button></div></div>`;
+    <button class="qb" type="button" onclick="tvForceProxy()">Coba lewat server</button>
+    ${rawUrl?`<a class="qb" href="vlc://${esc(rawUrl)}" style="text-decoration:none">▶ Buka di VLC</a>`:''}
+    ${rawUrl?`<button class="qb" type="button" onclick="copyText('${esc(rawUrl)}').then(()=>toast('Link M3U8 disalin — tempel di VLC / IPTV Player','success'))">📋 Salin M3U8</button>`:''}
+  </div></div>`;
 }
 
 // Setelah semua percobaan gagal: tanyakan ke proxy apa yang sebenarnya terjadi (1 permintaan kecil)
