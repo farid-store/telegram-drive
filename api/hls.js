@@ -88,6 +88,7 @@ async function handle(req, opts = {}) {
   const sp = self.searchParams;
   const raw = sp.get('raw') === '1';
   const directSeg = sp.get('seg') === 'direct';
+  const spoofIp = sp.get('ip') === 'id';
 
   let target;
   try { target = new URL(sp.get('u') || ''); } catch { return json(400, { error: 'Parameter u (URL) tidak valid' }); }
@@ -97,16 +98,18 @@ async function handle(req, opts = {}) {
   const ref = cleanHeaderVal(sp.get('ref'), 500);
   const ua = cleanHeaderVal(sp.get('ua'), 300);
   const mkHeaders = u => {
-    const ipIndo = '36.80.112.10'; // IP Telkom Indonesia
     const h = {
       'User-Agent': ua || BROWSER_UA,
       'Accept': '*/*',
       'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
-      'X-Forwarded-For': ipIndo,
-      'X-Real-IP': ipIndo,
-      'True-Client-IP': ipIndo,
-      'CF-Connecting-IP': ipIndo,
     };
+    // Hanya pasang header IP Lokal jika mode "🇮🇩 IP Lokal" (&ip=id) diaktifkan dari UI
+    if (spoofIp) {
+      const ipIndo = (ip && ip !== 'unknown' && !ip.includes(':')) ? ip : '36.80.112.10';
+      h['X-Forwarded-For'] = ipIndo;
+      h['X-Real-IP'] = ipIndo;
+      h['True-Client-IP'] = ipIndo;
+    }
     if (/^https?:\/\//i.test(ref)) {
       h.Referer = ref;
       try { h.Origin = new URL(ref).origin; } catch {}
@@ -178,7 +181,8 @@ async function handle(req, opts = {}) {
       const selfBase = `${self.origin}${self.pathname}`;
       const extra = (ref ? `&ref=${encodeURIComponent(ref)}` : '')
         + (ua ? `&ua=${encodeURIComponent(ua)}` : '')
-        + (directSeg ? '&seg=direct' : '');
+        + (directSeg ? '&seg=direct' : '')
+        + (spoofIp ? '&ip=id' : '');
       return new Response(rewritePlaylist(text, cur.href, selfBase, extra, directSeg), {
         status: 200, headers: { ...base, 'Content-Type': 'application/vnd.apple.mpegurl' },
       });
