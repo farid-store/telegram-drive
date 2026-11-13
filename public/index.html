@@ -1895,7 +1895,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 // ============================================================
 const TV_PROXY=((document.querySelector('meta[name="tv-proxy"]')||{}).content||'/api/hls').trim();
 const TV_SOURCES=[
-  {n:'Indonesia',u:'https://mgi24.github.io/tvdigital/idwork.m3u'},
+  {n:'Indonesia (iptv-org)',u:'https://iptv-org.github.io/iptv/countries/id.m3u'},
+  {n:'Indonesia (Alternatif)',u:'https://mgi24.github.io/tvdigital/idwork.m3u'},
   {n:'Dunia — iptv-org',u:'https://iptv-org.github.io/iptv/index.m3u'},
 ];
 const TV={inited:false,all:[],view:[],shown:0,cur:null,hls:null,favs:[],mode:{},force:{},token:0,
@@ -1942,22 +1943,45 @@ function tvParse(text){
         n:((idx>=0?line.slice(idx+1).trim():'')||attrs['tvg-name']||'Channel').slice(0,120),
         l:attrs['tvg-logo']||'',
         g:((attrs['group-title']||'').split(';')[0].trim()||'Lainnya').slice(0,60),
-        ref:attrs['http-referrer']||attrs['http-referer']||'',
-        ua:attrs['http-user-agent']||'',
+        ref:attrs['http-referrer']||attrs['http-referer']||attrs['referer']||'',
+        ua:attrs['http-user-agent']||attrs['user-agent']||'',
       };
-    }else if(line.startsWith('#EXTVLCOPT:')&&cur){
-      const m=line.match(/^#EXTVLCOPT:http-(referrer|referer|user-agent)=(.*)$/i);
-      if(m){if(m[1].toLowerCase()==='user-agent')cur.ua=m[2].trim();else cur.ref=m[2].trim()}
+    }else if((line.startsWith('#EXTVLCOPT:')||line.startsWith('#KODIPROP:'))&&cur){
+      const m=line.match(/^#(?:EXTVLCOPT|KODIPROP):(?:http-)?(referrer|referer|user-agent|origin)=(.*)$/i);
+      if(m){
+        const k=m[1].toLowerCase(),val=m[2].trim().replace(/^["']|["']$/g,'');
+        if(k==='user-agent')cur.ua=val;
+        else if(k==='origin'&&!cur.ref)cur.ref=val;
+        else if(k!=='origin')cur.ref=val;
+      }
+    }else if(line.startsWith('#EXTGRP:')&&cur){
+      const g=line.slice(8).trim();
+      if(g&&cur.g==='Lainnya')cur.g=g.slice(0,60);
     }else if(line.startsWith('#')){
       continue;
     }else if(cur){
-      if(/^https?:\/\//i.test(line)){cur.u=line;out.push(cur)}
+      let u=line;
+      const pipe=line.indexOf('|');
+      if(pipe>0){
+        u=line.slice(0,pipe).trim();
+        const opts=line.slice(pipe+1).split(/[&|]/);
+        for(const op of opts){
+          const eq=op.indexOf('=');
+          if(eq>0){
+            const k=op.slice(0,eq).trim().toLowerCase();
+            let val=op.slice(eq+1).trim().replace(/^["']|["']$/g,'');
+            try{val=decodeURIComponent(val)}catch{}
+            if(k==='referer'||k==='referrer'||k==='http-referer'||k==='http-referrer'||(k==='origin'&&!cur.ref))cur.ref=val;
+            else if(k==='user-agent'||k==='http-user-agent')cur.ua=val;
+          }
+        }
+      }
+      if(/^https?:\/\//i.test(u)){cur.u=u;out.push(cur)}
       cur=null;
     }
   }
   return out;
 }
-
 async function tvFetchText(u){
   const attempt=async url=>{
     const ac=new AbortController();
@@ -2110,39 +2134,82 @@ function tvTry(ch,mode,token){
     const fail=err=>{if(done)return;tvDestroyHls();v.onloadeddata=v.onloadedmetadata=v.onerror=null;v.removeAttribute('src');finish({ok:false,err})};
     const stale=()=>token!==TV.token;
 
+    // Fallback autoplay: jika browser menolak autoplay dengan suara, otomatis mute lalu putar ulang
+    const safePlay=()=>{
+      const p=v.play();
+      if(p&&typeof p.catch==='function'){
+        p.catch(()=>{
+          if(stale())return;
+          v.muted=true;
+          v.play().then(()=>{
+            toast('Suara di-mute otomatis oleh browser — klik ikon speaker di player','info');
+          }).catch(()=>{
+            tvSetStatus('Tekan ▶ untuk memulai','warn');
+          });
+        });
+      }
+    };
+
     // file media biasa (mp4/webm/mp3…) → elemen <video> langsung
     if(/\.(mp4|webm|mkv|mp3|aac|ogg|opus)(\?|$)/i.test(ch.u)){
       v.src=src;
-      v.onloadeddata=()=>finish({ok:true});
+      v.onloadeddata=()=>{finish({ok:true});safePlay()};
       v.onerror=()=>fail('media');
       timer=setTimeout(()=>fail('timeout'),tmo);
-      v.play().catch(()=>{});
+      safePlay();
       return;
     }
     const H=window.Hls;
     if(!H||!H.isSupported()){
       if(v.canPlayType('application/vnd.apple.mpegurl')){ // Safari / iOS: HLS bawaan
         v.src=src;
-        v.onloadedmetadata=()=>{finish({ok:true});v.play().catch(()=>{})};
+        v.onloadedmetadata=()=>{finish({ok:true});safePlay()};
         v.onerror=()=>fail('native');
         timer=setTimeout(()=>fail('timeout'),tmo);
         return;
       }
       return finish({ok:false,err:'unsupported'});
     }
-    const hls=new H({enableWorker:true,lowLatencyMode:false,maxBufferLength:30,manifestLoadingTimeOut:10000,
-      manifestLoadingMaxRetry:1,levelLoadingMaxRetry:2,fragLoadingMaxRetry:3,liveSyncDurationCount:3});
+    const hls=new H({
+      enableWorker:false,
+      lowLatencyMode:false,
+      maxBufferLength:30,
+      manifestLoadingTimeOut:12000,
+      manifestLoadingMaxRetry:1,
+      levelLoadingTimeOut:12000,
+      levelLoadingMaxRetry:2,
+      fragLoadingTimeOut:15000,
+      fragLoadingMaxRetry:3,
+      liveSyncDurationCount:3,
+    });
     TV.hls=hls;
-    hls.on(H.Events.MANIFEST_PARSED,()=>{v.play().catch(()=>tvSetStatus('Tekan ▶ untuk memulai','warn'))});
+    hls.on(H.Events.MANIFEST_PARSED,()=>{
+      if(stale())return;
+      safePlay();
+    });
     // berhasil = segmen pertama benar-benar terunduh (bukti CORS & akses segmen beres, bukan hanya manifest)
-    hls.on(H.Events.FRAG_LOADED,()=>finish({ok:true}));
+    hls.on(H.Events.FRAG_LOADED,()=>{
+      if(stale())return;
+      netRetry=0;
+      finish({ok:true});
+    });
     hls.on(H.Events.ERROR,(ev,d)=>{
       if(stale()||!d||!d.fatal)return;
       if(!done){fail(d.details||d.type||'error');return}
       // sudah sempat berhasil → pulihkan otomatis saat sedang menonton
-      if(d.type===H.ErrorTypes.NETWORK_ERROR&&netRetry<3){netRetry++;tvSetStatus('Koneksi terputus, mencoba lagi…','warn');setTimeout(()=>{try{hls.startLoad()}catch{}},1500);return}
-      if(d.type===H.ErrorTypes.MEDIA_ERROR&&mediaRetry<2){mediaRetry++;try{hls.recoverMediaError()}catch{}return}
-      tvOverlay(tvErrHtml('Siaran terputus.'));tvSetStatus('Terputus','err');
+      if(d.type===H.ErrorTypes.NETWORK_ERROR&&netRetry<3){
+        netRetry++;
+        tvSetStatus('Koneksi terputus, mencoba lagi…','warn');
+        setTimeout(()=>{if(!stale()&&TV.hls===hls){try{hls.startLoad()}catch{}}},1500);
+        return;
+      }
+      if(d.type===H.ErrorTypes.MEDIA_ERROR&&mediaRetry<2){
+        mediaRetry++;
+        try{hls.recoverMediaError()}catch{}
+        return;
+      }
+      tvOverlay(tvErrHtml('Siaran terputus.'));
+      tvSetStatus('Terputus','err');
     });
     hls.loadSource(src);
     hls.attachMedia(v);
