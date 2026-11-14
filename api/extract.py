@@ -340,7 +340,7 @@ def extract(url):
     opts.update(js_runtime_opts())
     has_cookies = False
     host = (urlparse(url).hostname or "").lower()
-    is_bili = host == "b23.tv" or host.endswith("bilibili.com")
+    is_bili = host == "b23.tv" or host.endswith(("bilibili.com", "bilibili.tv"))
     ck = bili_cookie_file() if is_bili else cookie_file()
     if ck:
         opts["cookiefile"] = ck
