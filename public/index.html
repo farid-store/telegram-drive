@@ -1002,6 +1002,59 @@ body{min-height:100dvh;padding-bottom:calc(84px + env(safe-area-inset-bottom,0px
 .bw-ln{height:12px;border-radius:6px;margin-bottom:6px}.bw-ln.s{width:60%}
 @keyframes bwsh{to{background-position:-200% 0}}
 @media(max-width:1023px){body.bw-on{overflow:hidden}}
+
+/* ===== UI: baris format & tombol Download rapi di HP / tablet / desktop ===== */
+.fi{flex-wrap:wrap;align-items:center;justify-content:flex-start;gap:10px 12px;padding:12px 14px}
+.fi .fl{flex:1 1 190px;min-width:0}
+.fi .fi-meta{min-width:0;flex:1}
+.fi .fnfo{max-width:100%}
+.fi-act{display:flex;gap:8px;align-items:center;flex:0 0 auto;margin-left:auto}
+.fi .dlb{height:38px;padding:0 16px}
+.fi .cpb{width:38px;height:38px}
+.fi .mgb{background:rgba(91,199,116,.12);color:#5BC774;border:1px solid rgba(91,199,116,.35);flex:1 1 100%;order:3;margin:0;height:38px;display:flex;align-items:center;justify-content:center;gap:6px;white-space:normal;line-height:1.2;text-align:center}
+@media(max-width:560px){
+  .fi{padding:12px}
+  .fi::before{display:none}
+  .fi .qb2{width:62px;height:46px;font-size:.66rem}
+  .fi-act{flex:1 1 100%;margin-left:0;order:2}
+  .fi .dlb{flex:1;justify-content:center;height:42px}
+  .fi .cpb{width:42px;height:42px}
+}
+.pl-fail{margin-top:10px;padding:14px;border-radius:14px;background:#1C1C1E;text-align:left}
+.pl-fail b{display:block;color:#fff;font-size:.82rem;margin-bottom:4px}
+.pl-fail p{font-size:.72rem;color:#8E8E93;line-height:1.55;margin:0 0 10px}
+
+/* ===== UI: Browser ===== */
+.bw-bar{gap:8px;padding:10px 12px}
+.bw-sub{flex-wrap:wrap;gap:8px 10px;padding:8px 12px 10px}
+.bw-sp{flex:1 1 0;min-width:0;max-width:none;height:36px;-webkit-appearance:none;appearance:none;padding:0 34px 0 14px;font-size:.74rem;background:#1C1C1E url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%238E8E93' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 14px center}
+.bw-seg button{padding:8px 14px}
+.bw-sites{flex:1 1 100%;order:3;margin:0 -12px;padding:2px 12px;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
+.bw-chip{height:34px;padding:0 14px;font-size:.74rem}
+.bw-pop{position:absolute;right:12px;top:calc(100% - 4px);z-index:30;min-width:230px;background:#1C1C1E;border-radius:16px;box-shadow:0 12px 32px rgba(0,0,0,.7);padding:6px;display:flex;flex-direction:column}
+.bw-pop[hidden]{display:none}
+.bw-pop button{display:flex;gap:10px;align-items:center;padding:12px;border:none;background:none;color:#fff;font:600 .8rem 'Plus Jakarta Sans',sans-serif;border-radius:10px;cursor:pointer;text-align:left}
+.bw-pop button:hover{background:#262629}
+.bw-ck{background:none;width:32px;height:32px}
+.bw-ck input{-webkit-appearance:none;appearance:none;width:22px;height:22px;margin:0;border-radius:50%;border:2px solid rgba(255,255,255,.9);background:rgba(0,0,0,.5);cursor:pointer;display:grid;place-content:center}
+.bw-ck input:checked{background:#5BC774;border-color:#5BC774}
+.bw-ck input:checked::after{content:'✓';color:#fff;font-size:13px;font-weight:800;line-height:1}
+.bw-card.sel .bw-th{outline:3px solid #5BC774;outline-offset:-3px}
+.bw-note{justify-content:safe center}
+.bw-wl{display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;max-width:460px;margin:auto 0}
+.bw-wi{font-size:34px}
+.bw-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px;width:100%;margin-top:6px}
+.bw-tile{display:flex;flex-direction:column;align-items:center;gap:2px;padding:14px 8px;border:none;border-radius:16px;background:#141414;color:#fff;cursor:pointer;transition:.15s;font-family:inherit}
+.bw-tile:hover{background:#1C1C1E;transform:translateY(-2px)}
+.bw-tile span{font-size:24px}.bw-tile b{font-size:.78rem}.bw-tile small{font-size:.62rem;color:#8E8E93}
+.bw-tip{font-size:.7rem;color:#8E8E93;max-width:380px;line-height:1.6}
+#bw-grab code,#bw-sel #bw-sel-n{order:1;flex:1 1 0;min-width:0}
+#bw-grab>.bw-ic{order:2;flex:none;width:36px;height:36px}
+#bw-grab .bw-gh{order:0}
+#bw-grab #bw-back{order:3;flex:0 0 auto}
+#bw-grab .eb,#bw-sel .eb{order:4;flex:1 1 0;height:40px;padding:0 12px;white-space:nowrap}
+#bw-sel .eb{order:2}
+.bw-bd .bw-cb{margin-top:auto;padding-top:4px}
 </style>
 
 <meta name="theme-color" content="#050608">
@@ -1310,12 +1363,15 @@ body{min-height:100dvh;padding-bottom:calc(84px + env(safe-area-inset-bottom,0px
 <section class="bw" id="bw" hidden aria-label="Browser VaultDL">
   <div class="bw-bar">
     <button class="bw-ic" type="button" onclick="bwBackBtn()" title="Kembali" aria-label="Kembali">←</button>
-    <div class="bw-iw"><input class="bw-url" id="bw-url" type="text" inputmode="url" enterkeyhint="search" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Cari video atau ketik alamat…" oninput="bwSug()" onfocus="bwSug()" onblur="setTimeout(()=>{$('bw-sg').hidden=true},150)" onkeydown="if(event.key==='Enter')bwGo()"/><button class="bw-x" type="button" aria-label="Hapus teks" onmousedown="event.preventDefault()" onclick="bwClear()">✕</button></div>
-    <button class="bw-ic" type="button" onclick="bwPop()" title="Buka di jendela terpisah" aria-label="Buka di jendela terpisah">↗</button>
-    <button class="bw-ic" type="button" onclick="bwClip(true)" title="Ambil link dari clipboard" aria-label="Ambil link dari clipboard">📋</button>
+    <div class="bw-iw"><input class="bw-url" id="bw-url" type="text" inputmode="url" enterkeyhint="search" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Cari atau tempel link…" oninput="bwSug()" onfocus="bwSug()" onblur="setTimeout(()=>{$('bw-sg').hidden=true},150)" onkeydown="if(event.key==='Enter')bwGo()"/><button class="bw-x" type="button" aria-label="Hapus teks" onmousedown="event.preventDefault()" onclick="bwClear()">✕</button></div>
     <button class="bw-ic bw-go" type="button" onclick="bwGrabNow()" title="Grab &amp; Download link ini" aria-label="Grab dan Download">⬇</button>
+    <button class="bw-ic" type="button" onclick="bwMenu(event)" title="Menu lainnya" aria-label="Menu lainnya">⋯</button>
     <button class="bw-ic" type="button" onclick="bwClose()" title="Tutup browser" aria-label="Tutup browser">✕</button>
     <div class="bw-sg" id="bw-sg" hidden></div>
+    <div class="bw-pop" id="bw-pop" hidden>
+      <button type="button" onclick="bwPop()">↗&nbsp; Buka di jendela terpisah</button>
+      <button type="button" onclick="bwClip(true)">📋&nbsp; Tempel link dari clipboard</button>
+    </div>
   </div>
   <div class="bw-sub">
     <div class="bw-seg"><button id="bw-m-guest" class="on" type="button" onclick="bwMode('guest')">👤 Tamu</button><button id="bw-m-login" type="button" onclick="bwMode('login')">🔑 Login</button></div>
@@ -2172,16 +2228,15 @@ function fmtRow({m,i}){
   return `<div class="fi">
   <div class="fl">
     <span class="qb2 ${cls}">${esc(label)}</span>
-    <div style="min-width:0;flex:1">
+    <div class="fi-meta">
       <div style="display:flex;align-items:center;gap:6px">
         <span class="fe">${esc(ext)}</span>
         ${m.hls?'<span class="hls-tag">HLS</span>':''}
       </div>
       ${info?`<div class="fnfo" title="${esc(info)}">${esc(info)}</div>`:`<div class="fnfo">Direct Stream Ready</div>`}
-      ${noAud?`<button class="mgb" type="button" onclick="mergeDl(${i},this)" title="Gabungkan dengan audio terbaik — diproses di perangkat Anda, tanpa encode ulang">🔊 + Audio (gabung jadi 1 MP4)</button>`:''}
     </div>
   </div>
-  <div style="display:flex;gap:5px;align-items:center;flex-shrink:0">
+  <div class="fi-act">
     <button class="dlb" onclick="doDownload(${i},this)">
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v7.5M3 6.5 6 10l3-3.5M1 11h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       <span class="dt">${m.dl?'Download':'Salin Link'}</span>
@@ -2191,6 +2246,7 @@ function fmtRow({m,i}){
       <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="4.5" y="4.5" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M8.5 4.5V3A1.5 1.5 0 0 0 7 1.5H3A1.5 1.5 0 0 0 1.5 3v4A1.5 1.5 0 0 0 3 8.5h1.5" stroke="currentColor" stroke-width="1.3"/></svg>
     </button>
   </div>
+  ${noAud?`<button class="mgb" type="button" onclick="mergeDl(${i},this)" title="Gabungkan dengan audio terbaik — diproses di perangkat Anda, tanpa encode ulang">🔊 + Audio (gabung jadi 1 MP4)</button>`:''}
   <div class="pgb"><i></i></div>
 </div>`;
 }
@@ -2368,12 +2424,22 @@ async function copyMediaLink(i){
 // ============================================================
 // PLAYER INLINE & EMBED
 // ============================================================
+let PL={q:[],pos:0};
 function previewMedia(i){
   const m=CUR.medias[i];if(!m||!m.dl)return;
-  showPlayer(m.dl,`${CUR.title} — ${m.quality||m.extension}`,m.type==='audio');
+  // cadangan bila format pertama tak bisa diputar browser: yang ada audionya dulu, lalu resolusi lain
+  const rest=CUR.medias.map((x,k)=>({x,k})).filter(o=>o.k!==i&&o.x.dl&&o.x.type===m.type);
+  const sc=o=>(/tanpa audio/i.test(o.x.size||'')?1e5:0)-(resOf(o.x)||0);
+  rest.sort((a,b)=>sc(a)-sc(b));
+  PL={q:[i,...rest.map(o=>o.k)].slice(0,4),pos:0};
+  playCur();
+}
+function playCur(){
+  const k=PL.q[PL.pos],m=CUR.medias[k];
+  showPlayer(m.dl,`${CUR.title} — ${m.quality||m.extension}`,m.type==='audio',k);
 }
 
-function showPlayer(src,label,isAudio){
+function showPlayer(src,label,isAudio,k){
   $('vdl-player')?.remove();
   const w=document.createElement('div');
   w.id='vdl-player';w.className='player-wrap';
@@ -2386,11 +2452,41 @@ function showPlayer(src,label,isAudio){
     <div class="player-status" id="pl-status" style="display:none"></div>`;
   const z=$('zone');z.insertBefore(w,z.firstChild);
   w.scrollIntoView({behavior:'smooth',block:'start'});
+  const m=k!=null?CUR.medias[k]:null,ai=bestAudioIndex();
+  if(!isAudio&&m&&/tanpa audio/i.test(m.size||'')&&ai>=0)linkAudio(w.querySelector('video'),CUR.medias[ai].dl,w);
+}
+
+// Video tanpa audio (mis. Bilibili): putar audio terpisah berdampingan, disinkronkan dengan video
+function linkAudio(v,src,w){
+  const a=new Audio();a.preload='auto';a.src=src;
+  const go=()=>{try{a.currentTime=v.currentTime}catch{}a.play().catch(()=>{})};
+  v.addEventListener('play',go);v.addEventListener('playing',go);
+  v.addEventListener('pause',()=>a.pause());v.addEventListener('waiting',()=>a.pause());
+  v.addEventListener('seeking',()=>{try{a.currentTime=v.currentTime}catch{}});
+  v.addEventListener('timeupdate',()=>{if(!v.paused&&Math.abs(a.currentTime-v.currentTime)>.35)try{a.currentTime=v.currentTime}catch{}});
+  v.addEventListener('volumechange',()=>{a.volume=v.volume;a.muted=v.muted});
+  const obs=new MutationObserver(()=>{if(!document.body.contains(w)){a.pause();a.removeAttribute('src');obs.disconnect()}});
+  obs.observe($('zone'),{childList:true,subtree:true});
+  const s=$('pl-status');if(s){s.style.display='block';s.textContent='Pratinjau memakai audio terpisah. File hasil download tetap lengkap lewat tombol Download atau + Audio.'}
 }
 
 function playerErr(){
-  const s=$('pl-status');
-  if(s){s.style.display='block';s.textContent='Browser tidak bisa memutar format ini. Gunakan tombol Download.'}
+  const s=$('pl-status');if(!s)return;
+  if(PL.pos+1<PL.q.length){
+    PL.pos++;const m=CUR.medias[PL.q[PL.pos]];
+    toast(`Format tidak didukung browser — mencoba ${m.quality||m.extension}…`,'info');
+    playCur();return;
+  }
+  const k=PL.q[0],m=CUR.medias[k],ai=bestAudioIndex();
+  const merge=m&&/tanpa audio/i.test(m.size||'')&&ai>=0?`<button class="eb" type="button" onclick="plDo(${k},'merge')">🔊 + Audio</button>`:'';
+  s.style.display='block';s.className='player-status pl-fail';
+  s.innerHTML=`<b>Browser tidak bisa memutar format ini</b><p>Biasanya karena codec (HEVC/AV1) belum didukung perangkat. Filenya tetap bisa diunduh seperti biasa.</p><div class="errbtns"><button class="eb" style="background:#5BC774" type="button" onclick="plDo(${k},'dl')">⬇ Download</button>${merge}</div>`;
+}
+function plDo(k,what){
+  const sel=what==='merge'?`.mgb[onclick^="mergeDl(${k},"]`:`.dlb[onclick^="doDownload(${k},"]`;
+  const b=document.querySelector(sel);
+  if(!b){toast('Pilih format dari daftar di bawah','warn');return}
+  b.scrollIntoView({behavior:'smooth',block:'center'});b.click();
 }
 
 function openEmbed(embedUrl){
@@ -3495,7 +3591,7 @@ function bwFrame(src){
 function bwNote(type,u){
   const h=u?esc(hostOf(u)):'';
   const T={
-    welcome:`<b>🌐 Browser VaultDL</b><p>Pilih situs di atas.<br>👤 <b style="font-size:inherit">Tamu</b>: tampil di sini bila situs mengizinkan (mis. link video YouTube).<br>🔑 <b style="font-size:inherit">Login</b>: situs dibuka di jendela browser asli Anda supaya login tetap aman. Salin link, kembali ke sini — link terdeteksi otomatis.</p>`,
+    welcome:`<div class="bw-wl"><div class="bw-wi">🌐</div><b>Browser VaultDL</b><p>Cari video di kolom atas atau pilih situs di bawah. Tekan <b style="font-size:inherit;color:#5BC774">⬇ Grab</b> untuk langsung mengunduh tanpa menyalin link.</p><div class="bw-tiles">${BW_SITES.map((x,i)=>`<button type="button" class="bw-tile" onclick="bwSite(${i})"><span>${x.e}</span><b>${x.n}</b><small>${x.m==='login'?'🔑 Login':'👤 Tamu'}</small></button>`).join('')}</div><p class="bw-tip">👤 Tamu: tampil langsung di sini &nbsp;·&nbsp; 🔑 Login: dibuka di jendela browser Anda, lalu link terdeteksi otomatis.</p></div>`,
     noframe:`<b>${h} tidak bisa ditampilkan di dalam aplikasi ini</b><p>Situs ini melarang dibuka di dalam halaman lain. Buka di jendela terpisah, salin link video, lalu kembali ke sini — link akan terdeteksi otomatis.</p><button class="eb" style="background:#5BC774" type="button" onclick="bwPop()">↗ Buka di jendela</button>`,
     login:`<b>Jendela ${h} terbuka</b><p>Login di jendela tersebut, cari videonya, salin link-nya, lalu kembali ke sini. Jika jendela tidak muncul, izinkan pop-up untuk situs ini.</p><button class="eb" type="button" onclick="bwPop()">↗ Buka lagi</button>`
   };
@@ -3648,6 +3744,7 @@ function bwSel(i,el){
     if(bw.sel.size>=MAX_MULTI){el.checked=false;toast(`Maksimal ${MAX_MULTI} video per proses`,'warn');return}
     bw.sel.set(id,bwWatch(i));
   }else bw.sel.delete(id);
+  el.closest('.bw-card')?.classList.toggle('sel',el.checked);
   bwSelUpd();
 }
 function bwSelUpd(){
@@ -3655,7 +3752,7 @@ function bwSelUpd(){
   b.hidden=!n||bw.pane!=='res';
   $('bw-sel-n').textContent=n+' dipilih';$('bw-sel-b').textContent='⬇ Download '+n+' terpilih';
 }
-function bwSelClear(){bw.sel.clear();document.querySelectorAll('#bw-rl .bw-ck input').forEach(c=>{c.checked=false});bwSelUpd()}
+function bwSelClear(){bw.sel.clear();document.querySelectorAll('#bw-rl .bw-ck input').forEach(c=>{c.checked=false;c.closest('.bw-card')?.classList.remove('sel')});bwSelUpd()}
 function bwSendMulti(){
   const urls=[...bw.sel.values()];
   if(!urls.length)return;
@@ -3697,6 +3794,8 @@ function clearHist(){
   hist=[];try{localStorage.removeItem('vdl9')}catch{}
   renderHist();toast('Riwayat dibersihkan','success');
 }
+function bwMenu(e){e.stopPropagation();const p=$('bw-pop');p.hidden=!p.hidden}
+document.addEventListener('click',()=>{const p=$('bw-pop');if(p)p.hidden=true});
 function bwClear(){const i=$('bw-url');i.value='';i.focus();bwSug()}
 function histView(v){
   if(v!=='grid')v='list';
