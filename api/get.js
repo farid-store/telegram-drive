@@ -393,6 +393,8 @@ module.exports = async function handler(req, res) {
   let hint = 'Pastikan video publik (bukan privat / terhapus) lalu coba lagi.';
   if (kinds.includes('bot_check') || kinds.includes('login_required')) {
     hint = 'Platform ini memblokir IP server (YouTube/Instagram sering begini). Solusi: isi YTDLP_COOKIES_B64 (cookies akun), YTDLP_PROXY (proxy residential), atau COBALT_API_URL di Environment Variables Vercel lalu redeploy.';
+  } else if (kinds.includes('no_formats')) {
+    hint = 'YouTube tidak memberi daftar format (bukan video privat). Pastikan folder bin/qjs ikut ter-deploy dan requirements.txt berisi yt-dlp[default], lalu redeploy tanpa build cache.';
   } else if (kinds.includes('unavailable')) {
     hint = 'Video privat, dihapus, atau dibatasi wilayah.';
   }
