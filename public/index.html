@@ -17,7 +17,7 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#000000;
+  --bg:#050608;
   --s1:#141414;
   --s2:#1C1C1E;
   --s3:#262629;
@@ -41,14 +41,67 @@
 html{scroll-behavior:smooth}
 body{
   font-family:'Plus Jakarta Sans','Inter',-apple-system,BlinkMacSystemFont,sans-serif;
-  background:#000000;
+  background:#050608;
   color:#FFFFFF;
   min-height:100vh;
   overflow-x:hidden;
   padding-bottom:84px;
+  position:relative;
   -webkit-font-smoothing:antialiased;
 }
-.amb,.gbg{display:none!important}
+
+/* ================= AMBIENT CINEMATIC BACKGROUND ================= */
+.amb{
+  display:block;
+  position:fixed;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(91,199,116,.16) 0%, transparent 45%),
+    radial-gradient(circle at 85% 20%, rgba(59,130,246,.14) 0%, transparent 48%),
+    radial-gradient(circle at 50% 85%, rgba(245,197,24,.08) 0%, transparent 50%),
+    linear-gradient(180deg, #07090D 0%, #030405 100%);
+}
+.amb::before,.amb::after{
+  content:'';
+  position:absolute;
+  width:520px;
+  height:520px;
+  border-radius:50%;
+  filter:blur(110px);
+  opacity:.45;
+  animation:ambFloat 18s ease-in-out infinite alternate;
+}
+.amb::before{
+  top:-140px;
+  left:-120px;
+  background:radial-gradient(circle, rgba(91,199,116,.35), transparent 70%);
+}
+.amb::after{
+  bottom:-160px;
+  right:-120px;
+  background:radial-gradient(circle, rgba(96,165,250,.28), transparent 70%);
+  animation-delay:-9s;
+}
+@keyframes ambFloat{
+  0%{transform:translate(0,0) scale(1)}
+  100%{transform:translate(45px,35px) scale(1.12)}
+}
+.gbg{
+  display:block;
+  position:fixed;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,.025) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,.025) 1px, transparent 1px);
+  background-size:36px 36px;
+  mask-image:radial-gradient(ellipse 80% 70% at 50% 35%, #000 30%, transparent 100%);
+  -webkit-mask-image:radial-gradient(ellipse 80% 70% at 50% 35%, #000 30%, transparent 100%);
+}
 
 /* ================= TOP HEADER (LAYAR 1: "TV Series" + 4-Dots Grid Icon) ================= */
 nav{
@@ -56,9 +109,9 @@ nav{
   display:flex;align-items:center;justify-content:space-between;
   max-width:520px;margin:0 auto;
   padding:16px 20px 10px;height:64px;
-  background:rgba(0,0,0,.9);
+  background:rgba(5,6,8,.72);
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  border-bottom:none;
+  border-bottom:1px solid rgba(255,255,255,.04);
 }
 .logo{
   font-family:'Plus Jakarta Sans',sans-serif;
@@ -68,7 +121,8 @@ nav{
 }
 .logo-icon{
   width:32px;height:32px;border-radius:9999px;
-  background:#141414;color:#5BC774;
+  background:rgba(20,22,26,.85);color:#5BC774;
+  border:1px solid rgba(255,255,255,.06);
   display:flex;align-items:center;justify-content:center;
   font-size:14px;font-weight:800;
 }
@@ -77,7 +131,8 @@ nav{
 .nbadge{
   font-size:.68rem;font-weight:600;
   padding:5px 11px;border-radius:9999px;
-  background:#141414;color:#8E8E93;border:none;
+  background:rgba(20,22,26,.8);color:#8E8E93;
+  border:1px solid rgba(255,255,255,.06);
 }
 .grid-dots{
   width:36px;height:36px;border-radius:9999px;
@@ -106,10 +161,11 @@ nav{
   display:flex;align-items:center;gap:10px;
   height:44px;padding:0 18px 0 8px;
   border-radius:9999px;
-  background:#141414;color:#FFFFFF;
+  background:rgba(20,22,26,.78);color:#FFFFFF;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
   font-size:.82rem;font-weight:600;
   white-space:nowrap;cursor:pointer;flex-shrink:0;
-  border:1.5px solid transparent;
+  border:1.5px solid rgba(255,255,255,.06);
   transition:all .2s ease;
 }
 .pt:first-child{
@@ -128,7 +184,9 @@ nav{
 /* ================= SEGMENTED CONTROL (LAYAR 3: "TV Series | Films") ================= */
 .mode-tabs{
   display:flex;gap:2px;
-  background:#141414;
+  background:rgba(20,22,26,.78);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.06);
   padding:4px;border-radius:9999px;
   margin-bottom:20px;width:100%;
 }
@@ -155,7 +213,7 @@ nav{
   display:inline-flex;align-items:center;gap:6px;
   font-size:.68rem;font-weight:700;letter-spacing:.02em;
   color:#5BC774;padding:4px 10px;border-radius:9999px;
-  background:#141414;margin-bottom:0;
+  background:rgba(20,22,26,.8);border:1px solid rgba(91,199,116,.2);margin-bottom:0;
 }
 .live-dot{width:6px;height:6px;border-radius:50%;background:#5BC774;animation:blink 2s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
@@ -173,14 +231,18 @@ h1 em{font-style:normal;color:#5BC774;background:none;-webkit-text-fill-color:#5
 .main-card::before{display:none}
 .search-row{
   display:flex;align-items:center;gap:6px;
-  background:#141414;
-  border:1.5px solid transparent;
+  background:rgba(20,22,26,.82);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border:1.5px solid rgba(255,255,255,.07);
   border-radius:9999px;
   padding:5px 5px 5px 18px;
   height:54px;
-  transition:border-color .2s ease;
+  transition:border-color .2s ease,box-shadow .2s ease;
 }
-.search-row:focus-within{border-color:#5BC774}
+.search-row:focus-within{
+  border-color:#5BC774;
+  box-shadow:0 0 0 4px rgba(91,199,116,.12);
+}
 .url-input{
   flex:1;background:transparent;border:none;
   padding:8px 0;font-family:'Plus Jakarta Sans',sans-serif;
@@ -209,8 +271,10 @@ h1 em{font-style:normal;color:#5BC774;background:none;-webkit-text-fill-color:#5
 .quick-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
 .qb{
   font-size:.74rem;font-weight:600;
-  padding:7px 14px;border-radius:9999px;border:none;
-  background:#141414;color:#8E8E93;
+  padding:7px 14px;border-radius:9999px;
+  border:1px solid rgba(255,255,255,.06);
+  background:rgba(20,22,26,.78);color:#8E8E93;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
   cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;
   transition:all .18s ease;display:inline-flex;align-items:center;gap:5px;
 }
@@ -218,11 +282,21 @@ h1 em{font-style:normal;color:#5BC774;background:none;-webkit-text-fill-color:#5
 
 /* ================= HERO DETAIL RESULT CARD (LAYAR 2: "Money Heist" Backdrop + Watch CTA + Episodes) ================= */
 #zone{margin-bottom:26px}
-.lc{background:#141414;border-radius:24px;padding:36px 20px;text-align:center}
+.lc{
+  background:rgba(20,22,26,.78);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:24px;padding:36px 20px;text-align:center;
+}
 .lsp{width:32px;height:32px;border:2.5px solid #1C1C1E;border-top-color:#5BC774;border-radius:50%;animation:rot .7s linear infinite;margin:0 auto 12px}
 .lc p{font-size:.88rem;font-weight:600;color:#FFFFFF}
 .lc small{font-size:.74rem;color:#8E8E93;display:block;margin-top:4px}
-.ec{background:#141414;border-radius:24px;padding:18px;display:flex;gap:12px;animation:up .2s ease}
+.ec{
+  background:rgba(20,22,26,.78);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:24px;padding:18px;display:flex;gap:12px;animation:up .2s ease;
+}
 .ei{font-size:1.2rem;flex-shrink:0}
 .et{font-size:.88rem;font-weight:700;color:#FF4D6D}
 .es{font-size:.76rem;color:#8E8E93;margin-top:4px;line-height:1.55}
@@ -230,11 +304,12 @@ h1 em{font-style:normal;color:#5BC774;background:none;-webkit-text-fill-color:#5
 
 /* Hero Media Card (Persis Layar Tengah Money Heist) */
 .rc{
-  background:#000000;
+  background:rgba(12,14,18,.88);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
   border-radius:28px;
   overflow:hidden;
   animation:up .25s ease;
-  border:1px solid #141414;
+  border:1px solid rgba(255,255,255,.07);
 }
 .vi{
   position:relative;
@@ -253,7 +328,7 @@ h1 em{font-style:normal;color:#5BC774;background:none;-webkit-text-fill-color:#5
 }
 .vth::after{
   content:'';position:absolute;inset:0;
-  background:linear-gradient(180deg,rgba(0,0,0,.35) 0%,rgba(0,0,0,.15) 35%,rgba(0,0,0,.82) 72%,#000000 100%);
+  background:linear-gradient(180deg,rgba(0,0,0,.35) 0%,rgba(0,0,0,.15) 35%,rgba(12,14,18,.85) 72%,rgba(12,14,18,1) 100%);
 }
 .vth-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#141414;font-size:3rem}
 /* Tombol Back Bulat Putih di Kiri Atas Gambar (Persis Layar 2) */
@@ -298,7 +373,7 @@ h1 em{font-style:normal;color:#5BC774;background:none;-webkit-text-fill-color:#5
 }
 /* Full-Width Green "Watch / Download" CTA Button + Synopsis */
 .hero-cta-wrap{
-  position:relative;z-index:2;padding:14px 20px 10px;background:#000000;
+  position:relative;z-index:2;padding:14px 20px 10px;background:rgba(12,14,18,.95);
 }
 .hero-watch-btn{
   width:100%;height:52px;border-radius:9999px;border:none;
@@ -318,7 +393,7 @@ h1 em{font-style:normal;color:#5BC774;background:none;-webkit-text-fill-color:#5
 }
 
 /* Episodes / Format Header + Season Dropdown Pill (Layar 2) */
-.fp{padding:12px 20px 20px;border-top:none;background:#000000}
+.fp{padding:12px 20px 20px;border-top:none;background:rgba(12,14,18,.95)}
 .ep-bar{
   display:flex;align-items:center;justify-content:space-between;
   margin-bottom:12px;
@@ -340,21 +415,22 @@ h1 em{font-style:normal;color:#5BC774;background:none;-webkit-text-fill-color:#5
 
 /* Episode Item Row (Layar 2: Nomor Urut + Thumbnail Lanskap + Judul & Durasi) */
 .fg{display:none;padding:0}
-.fg.on{display:flex;flex-direction:column;gap:12px}
+.fg.on{display:flex;flex-direction:column;gap:12px;counter-reset:ep-counter}
 .fi{
   position:relative;overflow:hidden;
   display:flex;align-items:center;justify-content:space-between;gap:12px;
   padding:10px 12px;border-radius:16px;
-  background:#0A0A0A;border:none;transition:.18s;
+  background:rgba(24,26,32,.72);
+  border:1px solid rgba(255,255,255,.04);
+  transition:.18s;
   counter-increment:ep-counter;
 }
-.fg.on{counter-reset:ep-counter}
 .fi::before{
   content:counter(ep-counter);
   font-size:.88rem;font-weight:700;color:#FFFFFF;
   width:18px;text-align:center;flex-shrink:0;
 }
-.fi:hover{background:#141414}
+.fi:hover{background:#1C1C1E}
 .fl{display:flex;align-items:center;gap:12px;min-width:0;flex:1}
 .qb2{
   font-family:'Plus Jakarta Sans',sans-serif;
@@ -423,7 +499,8 @@ h1 em{font-style:normal;color:#5BC774;background:none;-webkit-text-fill-color:#5
   display:flex;align-items:center;justify-content:center;
   font-size:1.1rem;font-weight:800;flex-shrink:0;
   box-shadow:0 6px 16px rgba(0,0,0,.5);
-  border:2px solid #141414;
+  border:2px solid rgba(255,255,255,.08);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
 }
 .pc-n{
   font-size:.74rem;font-weight:600;color:#FFFFFF;
@@ -449,6 +526,7 @@ h1 em{font-style:normal;color:#5BC774;background:none;-webkit-text-fill-color:#5
   width:168px;height:228px;
   border-radius:24px;
   background:linear-gradient(145deg,#1C1C1E 0%,#0E0E10 100%);
+  border:1px solid rgba(255,255,255,.06);
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   font-size:3rem;margin-bottom:10px;
   position:relative;overflow:hidden;
@@ -491,6 +569,7 @@ h1 em{font-style:normal;color:#5BC774;background:none;-webkit-text-fill-color:#5
 .hi:hover{background:transparent;transform:translateX(3px)}
 .hic{
   width:96px;height:112px;border-radius:18px;
+  border:1px solid rgba(255,255,255,.06);
   display:flex;align-items:center;justify-content:center;
   font-size:1.4rem;font-weight:800;flex-shrink:0;
   box-shadow:0 6px 18px rgba(0,0,0,.5);
@@ -512,14 +591,17 @@ h1 em{font-style:normal;color:#5BC774;background:none;-webkit-text-fill-color:#5
 .hd{display:none}
 .he{
   text-align:center;padding:28px 16px;
-  background:#141414;border-radius:20px;
+  background:rgba(20,22,26,.78);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:20px;
   font-size:.8rem;color:#8E8E93;
 }
 
 /* ================= TV LIVE & MULTI LINK (DETAILED LIST VIEW LAYAR 3) ================= */
 .tv-player{
   position:relative;aspect-ratio:16/9;background:#000;
-  border-radius:24px;overflow:hidden;border:none;
+  border-radius:24px;overflow:hidden;border:1px solid rgba(255,255,255,.07);
   box-shadow:0 12px 32px rgba(0,0,0,.75);
 }
 .tv-player video{width:100%;height:100%;object-fit:contain;background:#000;display:block}
@@ -542,7 +624,7 @@ h1 em{font-style:normal;color:#5BC774;background:none;-webkit-text-fill-color:#5
 .tv-btns .qb.on{color:#F5C518}
 .tv-tools{display:flex;gap:8px;margin-bottom:12px}
 .tv-tools input,.tv-tools select,.tv-add input{
-  background:#141414;border:1.5px solid transparent;
+  background:rgba(20,22,26,.8);border:1.5px solid rgba(255,255,255,.06);
   border-radius:9999px;padding:10px 14px;color:#FFFFFF;
   font-family:'Plus Jakarta Sans',sans-serif;font-size:.78rem;outline:none;
 }
@@ -551,7 +633,7 @@ h1 em{font-style:normal;color:#5BC774;background:none;-webkit-text-fill-color:#5
 .tv-tools select{max-width:44%}
 .tv-meta{font-size:.72rem;color:#8E8E93;margin-bottom:12px}
 #tv-list{display:flex;flex-direction:column;gap:14px;max-height:520px;overflow:auto;padding-right:4px}
-.tv-empty{padding:24px;text-align:center;color:#8E8E93;font-size:.8rem;background:#141414;border-radius:18px}
+.tv-empty{padding:24px;text-align:center;color:#8E8E93;font-size:.8rem;background:rgba(20,22,26,.78);border-radius:18px}
 
 /* Channel Item formatted like Layar 3 Detailed List */
 .tvi{
@@ -559,11 +641,12 @@ h1 em{font-style:normal;color:#5BC774;background:none;-webkit-text-fill-color:#5
   padding:8px;border:none;border-radius:20px;
   background:transparent;cursor:pointer;transition:.18s;
 }
-.tvi:hover{background:#141414}
-.tvi.on{background:#141414;box-shadow:inset 0 0 0 1.5px #5BC774}
+.tvi:hover{background:rgba(20,22,26,.78)}
+.tvi.on{background:rgba(20,22,26,.88);box-shadow:inset 0 0 0 1.5px #5BC774}
 .tvi-l{
   width:84px;height:88px;border-radius:16px;
-  background:#141414;display:flex;align-items:center;justify-content:center;
+  background:rgba(20,22,26,.85);border:1px solid rgba(255,255,255,.06);
+  display:flex;align-items:center;justify-content:center;
   flex-shrink:0;overflow:hidden;font-size:1.4rem;
 }
 .tvi-l img{max-width:78%;max-height:78%;object-fit:contain}
@@ -579,10 +662,16 @@ h1 em{font-style:normal;color:#5BC774;background:none;-webkit-text-fill-color:#5
   font-size:.6rem;font-weight:800;
   padding:2px 5px;border-radius:4px;
 }
-.tvi-fav{background:#141414;border:none;color:#8E8E93;width:36px;height:36px;border-radius:9999px;font-size:1rem;cursor:pointer}
+.tvi-fav{background:rgba(20,22,26,.85);border:none;color:#8E8E93;width:36px;height:36px;border-radius:9999px;font-size:1rem;cursor:pointer}
 .tvi-fav.on{color:#F5C518}
-#tv-more{width:100%;margin-top:12px;height:44px;background:#141414;color:#FFFFFF}
-.tv-src{margin-top:14px;font-size:.74rem;color:#8E8E93;background:#141414;padding:14px;border-radius:18px}
+#tv-more{width:100%;margin-top:12px;height:44px;background:rgba(20,22,26,.85);color:#FFFFFF}
+.tv-src{
+  margin-top:14px;font-size:.74rem;color:#8E8E93;
+  background:rgba(20,22,26,.78);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.06);
+  padding:14px;border-radius:18px;
+}
 .tv-src summary{cursor:pointer;color:#FFFFFF;font-weight:700}
 .tv-src label{display:flex;gap:6px;align-items:center;margin-top:8px}
 #tv-srcs{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
@@ -595,14 +684,17 @@ h1 em{font-style:normal;color:#5BC774;background:none;-webkit-text-fill-color:#5
 /* Multi-Link Queue */
 #m-urls{
   width:100%;min-height:120px;resize:vertical;
-  background:#141414;border:1.5px solid transparent;border-radius:20px;
+  background:rgba(20,22,26,.82);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1.5px solid rgba(255,255,255,.06);border-radius:20px;
   padding:14px 16px;font-family:'JetBrains Mono',monospace;
   font-size:.78rem;color:#FFFFFF;outline:none;line-height:1.6;
 }
 #m-urls:focus{border-color:#5BC774}
 .m-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
 .m-row select{
-  flex:1;min-width:150px;height:44px;background:#141414;border:none;
+  flex:1;min-width:150px;height:44px;background:rgba(20,22,26,.82);
+  border:1px solid rgba(255,255,255,.06);
   border-radius:9999px;padding:0 16px;color:#FFFFFF;
   font-family:'Plus Jakarta Sans',sans-serif;font-size:.8rem;font-weight:600;
 }
@@ -611,7 +703,9 @@ h1 em{font-style:normal;color:#5BC774;background:none;-webkit-text-fill-color:#5
 .mi{
   position:relative;overflow:hidden;
   display:flex;align-items:center;gap:14px;
-  padding:10px;border:none;border-radius:18px;background:#141414;
+  padding:10px;border:1px solid rgba(255,255,255,.06);border-radius:18px;
+  background:rgba(20,22,26,.78);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
 }
 .mi-th{
   width:76px;height:82px;border-radius:14px;overflow:hidden;
@@ -631,8 +725,9 @@ h1 em{font-style:normal;color:#5BC774;background:none;-webkit-text-fill-color:#5
 /* ================= BOTTOM NAVIGATION BAR (LAYAR 1: Home, Films, TV Series, Look, Search) ================= */
 .bottom-nav{
   position:fixed;bottom:0;left:0;right:0;z-index:300;
-  height:68px;background:#000000;
-  border-top:1px solid rgba(255,255,255,.05);
+  height:68px;background:rgba(12,14,18,.82);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border-top:1px solid rgba(255,255,255,.06);
   display:flex;align-items:center;justify-content:space-around;
   max-width:520px;margin:0 auto;padding:0 8px;
 }
@@ -658,13 +753,13 @@ h1 em{font-style:normal;color:#5BC774;background:none;-webkit-text-fill-color:#5
 .eb:hover{background:#5BC774;color:#fff}
 details.dtl{margin-top:8px;font-size:.7rem;color:#8E8E93}
 details.dtl summary{cursor:pointer;color:#FFFFFF}
-.guide{background:#141414;border-left:3px solid #F5C518;border-radius:16px;padding:14px 16px;margin-bottom:14px;font-size:.76rem;line-height:1.6;position:relative;color:#8E8E93}
+.guide{background:rgba(20,22,26,.85);border-left:3px solid #F5C518;border-radius:16px;padding:14px 16px;margin-bottom:14px;font-size:.76rem;line-height:1.6;position:relative;color:#8E8E93}
 .guide strong{color:#F5C518}
 .guide-title{font-weight:700;color:#FFFFFF;margin-bottom:4px;display:block}
 .guide-close{position:absolute;top:10px;right:12px;background:none;border:none;color:#8E8E93;cursor:pointer}
 .pwa-btn{font-family:'Plus Jakarta Sans',sans-serif;font-size:.68rem;font-weight:700;padding:5px 12px;border-radius:9999px;border:none;background:#5BC774;color:#FFFFFF;cursor:pointer}
 
-.player-wrap{background:#141414;border-radius:24px;padding:16px;margin-bottom:16px;animation:up .25s ease}
+.player-wrap{background:rgba(20,22,26,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.07);border-radius:24px;padding:16px;margin-bottom:16px;animation:up .25s ease}
 .player-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .player-title{font-size:.82rem;font-weight:700;color:#FFFFFF}
 .player-close{background:#1C1C1E;border:none;color:#FFFFFF;width:30px;height:30px;border-radius:9999px;cursor:pointer}
@@ -686,7 +781,7 @@ footer a{color:#8E8E93;text-decoration:none;margin:0 6px}
 .ad-r{right:calc(50% - 260px - 16px - var(--adw,160px))}
 .ad-box{display:flex;justify-content:center;margin:0 auto;overflow:hidden;border-radius:14px;max-width:100%}
 .ad-mid{position:relative;z-index:1;margin:20px auto 0;max-width:100%;text-align:center}
-.ad-ph{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:1px dashed #27272A;border-radius:14px;background:#141414;color:#8E8E93;font-size:.7rem;max-width:100%;text-align:center}
+.ad-ph{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:1px dashed #27272A;border-radius:14px;background:rgba(20,22,26,.78);color:#8E8E93;font-size:.7rem;max-width:100%;text-align:center}
 .ad-ov{position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.82);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:16px}
 .ad-modal{background:#141414;border-radius:24px;padding:14px;max-width:min(96vw,780px)}
 .ad-mtop{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:.62rem;text-transform:uppercase;color:#8E8E93}
@@ -755,7 +850,7 @@ body{min-height:100dvh;padding-bottom:calc(84px + env(safe-area-inset-bottom,0px
   .search-row{height:60px}.url-input{font-size:1rem}
   .mt{height:40px;font-size:.88rem}
   .plts-wrap{margin:8px -24px 24px}.plts-track{padding:4px 24px}
-  .bottom-nav{bottom:14px;left:50%;right:auto;margin:0;transform:translateX(-50%);width:min(560px,calc(100% - 32px));max-width:none;height:64px;padding-bottom:0;border:1px solid rgba(255,255,255,.08);border-radius:9999px;background:rgba(20,20,20,.9);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+  .bottom-nav{bottom:14px;left:50%;right:auto;margin:0;transform:translateX(-50%);width:min(560px,calc(100% - 32px));max-width:none;height:64px;padding-bottom:0;border:1px solid rgba(255,255,255,.08);border-radius:9999px;background:rgba(16,18,24,.88);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
   body{padding-bottom:110px}
   #ts{bottom:96px}
 }
@@ -763,7 +858,7 @@ body{min-height:100dvh;padding-bottom:calc(84px + env(safe-area-inset-bottom,0px
 
 /* Browser terpadu */
 .bw-open{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:9999px;border:none;background:#5BC774;color:#fff;font:700 .72rem 'Plus Jakarta Sans',sans-serif;cursor:pointer;white-space:nowrap}
-.bw{position:fixed;inset:0;z-index:450;background:#000;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
+.bw{position:fixed;inset:0;z-index:450;background:#050608;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
 .bw[hidden]{display:none}
 .bw-bar,.bw-sub{display:flex;gap:6px;align-items:center;padding:10px 12px;background:#141414}
 .bw-sub{border-top:1px solid var(--b1);padding:8px 12px}
