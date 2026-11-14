@@ -19,6 +19,8 @@ import json
 import os
 import re
 import shutil
+import time
+import uuid
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 
@@ -44,6 +46,25 @@ def cookie_file():
     if not text.strip():
         return None
     path = "/tmp/yt_cookies.txt"
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(text)
+    return path
+
+
+def bili_cookie_file():
+    """Bilibili menolak (HTTP 412) permintaan tanpa cookie perangkat. Pakai cookies akun bila ada
+    (BILI_COOKIES_B64), kalau tidak buat cookie perangkat anonim seperti yang dibuat browser."""
+    text = ""
+    b64 = os.environ.get("BILI_COOKIES_B64", "").strip()
+    if b64:
+        try:
+            text = base64.b64decode(b64).decode("utf-8", "ignore")
+        except Exception:
+            text = ""
+    if not text.strip():
+        row = lambda n, v: "\t".join([".bilibili.com", "TRUE", "/", "FALSE", "2147483647", n, v])
+        text = "# Netscape HTTP Cookie File\n" + row("buvid3", f"{uuid.uuid4()}infoc") + "\n" + row("b_nut", str(int(time.time()))) + "\n"
+    path = "/tmp/bili_cookies.txt"
     with open(path, "w", encoding="utf-8") as f:
         f.write(text)
     return path
@@ -318,7 +339,9 @@ def extract(url):
     }
     opts.update(js_runtime_opts())
     has_cookies = False
-    ck = cookie_file()
+    host = (urlparse(url).hostname or "").lower()
+    is_bili = host == "b23.tv" or host.endswith("bilibili.com")
+    ck = bili_cookie_file() if is_bili else cookie_file()
     if ck:
         opts["cookiefile"] = ck
         has_cookies = True
@@ -377,6 +400,8 @@ def explain(msg):
         return "bot_check", "YouTube memblokir IP server (bot check). Perlu cookies (YTDLP_COOKIES_B64), proxy (YTDLP_PROXY), atau Cobalt."
     if "requested format is not available" in low or "only images are available" in low:
         return "no_formats", "YouTube tidak memberi daftar format video (bukan video privat). Biasanya karena yt-dlp belum punya JS runtime atau YouTube meminta PO token."
+    if "412" in low and ("precondition" in low or "bilibili" in low):
+        return "blocked", "Bilibili menolak IP server (HTTP 412). Isi BILI_COOKIES_B64 (cookies bilibili.com akun login) atau YTDLP_PROXY."
     if "login" in low or "empty media response" in low or "rate-limit" in low or "cookies" in low:
         return "login_required", "Platform meminta login / membatasi IP server. Isi YTDLP_COOKIES_B64 (cookies akun) atau gunakan proxy."
     if "private" in low or "unavailable" in low or "not available" in low or "removed" in low:
@@ -410,4 +435,6 @@ class handler(BaseHTTPRequestHandler):
             kind, msg = explain(e)
             if kind in ("bot_check", "login_required", "no_formats"):
                 msg += " [" + cookie_report() + "]"
+            elif kind == "blocked":
+                msg += " [cookies Bilibili: " + ("akun login" if os.environ.get("BILI_COOKIES_B64") else "anonim") + "; proxy: " + ("ya" if os.environ.get("YTDLP_PROXY") else "tidak") + "]"
             return self._send(502, {"error": msg, "kind": kind})
