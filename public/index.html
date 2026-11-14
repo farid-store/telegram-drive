@@ -107,11 +107,24 @@ body{
 nav{
   position:sticky;top:0;z-index:200;
   display:flex;align-items:center;justify-content:space-between;
-  max-width:520px;margin:0 auto;
+  max-width:var(--wrap);margin:0 auto;
   padding:16px 20px 10px;height:64px;
-  background:rgba(5,6,8,.72);
-  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  border-bottom:1px solid rgba(255,255,255,.04);
+  background:transparent;
+  backdrop-filter:none;-webkit-backdrop-filter:none;
+  border-bottom:none;
+}
+/* Gradasi halus penuh seukuran layar di bagian paling atas agar teks tetap terbaca saat di-scroll */
+nav::before{
+  content:'';
+  position:fixed;
+  top:0;left:0;right:0;
+  height:72px;
+  background:linear-gradient(180deg, rgba(5,6,8,.88) 0%, rgba(5,6,8,.45) 65%, transparent 100%);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  mask-image:linear-gradient(180deg, #000 55%, transparent 100%);
+  -webkit-mask-image:linear-gradient(180deg, #000 55%, transparent 100%);
+  pointer-events:none;
+  z-index:-1;
 }
 .logo{
   font-family:'Plus Jakarta Sans',sans-serif;
