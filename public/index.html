@@ -824,6 +824,8 @@ body{min-height:100dvh;padding-bottom:calc(84px + env(safe-area-inset-bottom,0px
 .bw-more.ld .lsp{display:block}.bw-more.ld .eb,.bw-more.end .eb{display:none}
 .bw-ic.bw-go{background:#5BC774}
 .bw-view{overflow:hidden}
+.mgb{margin-top:6px;height:28px;padding:0 12px;border:none;border-radius:9999px;background:#5BC774;color:#fff;font:700 .68rem 'Plus Jakarta Sans',sans-serif;cursor:pointer;white-space:nowrap;max-width:100%}
+.mgb:disabled{opacity:.75;cursor:default}
 .hl.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 12px}
 .hl.grid .hi{flex-direction:column;align-items:stretch;gap:10px}
 .hl.grid .hi:hover{transform:translateY(-2px)}
@@ -1909,6 +1911,7 @@ function fmtRow({m,i}){
   const ext=(m.extension||'').toUpperCase();
   const info=m.filename||m.size||'';
   const canPlay=(m.type==='video'||m.type==='audio')&&m.dl;
+  const noAud=m.type==='video'&&m.dl&&/tanpa audio/i.test(m.size||'')&&bestAudioIndex()>=0;
   return `<div class="fi">
   <div class="fl">
     <span class="qb2 ${cls}">${esc(label)}</span>
@@ -1918,6 +1921,7 @@ function fmtRow({m,i}){
         ${m.hls?'<span class="hls-tag">HLS</span>':''}
       </div>
       ${info?`<div class="fnfo" title="${esc(info)}">${esc(info)}</div>`:`<div class="fnfo">Direct Stream Ready</div>`}
+      ${noAud?`<button class="mgb" type="button" onclick="mergeDl(${i},this)" title="Gabungkan dengan audio terbaik — diproses di perangkat Anda, tanpa encode ulang">🔊 + Audio (gabung jadi 1 MP4)</button>`:''}
     </div>
   </div>
   <div style="display:flex;gap:5px;align-items:center;flex-shrink:0">
@@ -3443,6 +3447,53 @@ function histView(v){
   $('hv-list').classList.toggle('on',v==='list');$('hv-grid').classList.toggle('on',v==='grid');
 }
 try{histView(localStorage.getItem('vdl_hv')||'list')}catch{histView('list')}
+/* ---- Gabung video (tanpa audio) + audio → 1 MP4, diproses di perangkat (Mediabunny, tanpa encode ulang) ---- */
+const MERGE_ACTIVE=new Map();
+function bestAudioIndex(){
+  const a=(CUR&&CUR.medias)||[];
+  let i=a.findIndex(m=>m.type==='audio'&&m.dl&&(m.extension||'').toLowerCase()==='m4a');
+  if(i<0)i=a.findIndex(m=>m.type==='audio'&&m.dl);
+  return i;
+}
+async function fetchBlob(url,onProg,signal){
+  const r=await fetch(url,{signal});
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  const total=+r.headers.get('content-length')||0;
+  if(!r.body||!r.body.getReader)return await r.blob();
+  const rd=r.body.getReader(),parts=[];let got=0;
+  for(;;){const{done,value}=await rd.read();if(done)break;parts.push(value);got+=value.length;if(onProg)onProg(got,total)}
+  return new Blob(parts);
+}
+async function mergeDl(i,btn){
+  const m=CUR.medias[i],ai=bestAudioIndex(),am=CUR.medias[ai];
+  if(!m||!am)return;
+  if(MERGE_ACTIVE.has(i)){MERGE_ACTIVE.get(i).abort();return}
+  const mb=(String(m.size||'').match(/([\d.]+)\s*(MB|GB)/i)||[]);
+  const big=mb[1]&&(/GB/i.test(mb[2])?+mb[1]*1024:+mb[1])>600;
+  if(big&&!confirm('Videonya besar (>600 MB). Menggabungkan di perangkat bisa gagal karena memori terbatas. Lanjutkan?'))return;
+  const ac=new AbortController();MERGE_ACTIVE.set(i,ac);
+  const orig=btn.textContent,set=t=>{btn.textContent=t};
+  try{
+    set('⬇ Video… ✕');
+    const vb=await fetchBlob(m.dl,(g,t)=>set(t?`⬇ Video ${Math.round(g/t*100)}% ✕`:`⬇ Video ${fmtBytes(g)} ✕`),ac.signal);
+    set('⬇ Audio… ✕');
+    const ab=await fetchBlob(am.dl,(g,t)=>set(t?`⬇ Audio ${Math.round(g/t*100)}% ✕`:`⬇ Audio ${fmtBytes(g)} ✕`),ac.signal);
+    if(ac.signal.aborted)throw new DOMException('abort','AbortError');
+    set('⚙ Menggabung…');
+    const mod=await(window.__muxImport?window.__muxImport():import('/vendor/mux.mjs'));
+    const out=await mod.muxVideoAudio(vb,ab,p=>set('⚙ Menggabung '+Math.round(p*100)+'%'));
+    const name=(`${CUR.title||'video'} — ${parseQ(m.quality,m.extension).label}.mp4`).replace(/[\\/:*?"<>|]+/g,'').slice(0,120);
+    const url=URL.createObjectURL(out),a=document.createElement('a');
+    a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),60000);
+    toast('Video + audio tergabung — cek folder unduhan.','success');
+  }catch(e){
+    if(e&&e.name==='AbortError')toast('Dibatalkan','info');
+    else toast('Gagal menggabung: '+((e&&e.message)||e)+'. Unduh audio terpisah lalu gabung dengan aplikasi lain.','error');
+  }finally{
+    MERGE_ACTIVE.delete(i);set(orig);
+  }
+}
 window.addEventListener('focus',()=>setTimeout(bwClip,250));
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(bwClip,250)});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('bw').hidden&&e.target.tagName!=='INPUT')bwClose()});
