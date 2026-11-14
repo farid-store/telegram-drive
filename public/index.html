@@ -1023,6 +1023,7 @@ body{min-height:100dvh;padding-bottom:calc(84px + env(safe-area-inset-bottom,0px
 .pl-fail{margin-top:10px;padding:14px;border-radius:14px;background:#1C1C1E;text-align:left}
 .pl-fail b{display:block;color:#fff;font-size:.82rem;margin-bottom:4px}
 .pl-fail p{font-size:.72rem;color:#8E8E93;line-height:1.55;margin:0 0 10px}
+.pl-dbg{margin-top:10px;font:500 .62rem/1.5 'JetBrains Mono',monospace;color:#6B7280;word-break:break-word}
 
 /* ===== UI: Browser ===== */
 .bw-bar{gap:8px;padding:10px 12px}
@@ -2480,7 +2481,28 @@ function playerErr(){
   const k=PL.q[0],m=CUR.medias[k],ai=bestAudioIndex();
   const merge=m&&/tanpa audio/i.test(m.size||'')&&ai>=0?`<button class="eb" type="button" onclick="plDo(${k},'merge')">🔊 + Audio</button>`:'';
   s.style.display='block';s.className='player-status pl-fail';
-  s.innerHTML=`<b>Browser tidak bisa memutar format ini</b><p>Biasanya karena codec (HEVC/AV1) belum didukung perangkat. Filenya tetap bisa diunduh seperti biasa.</p><div class="errbtns"><button class="eb" style="background:#5BC774" type="button" onclick="plDo(${k},'dl')">⬇ Download</button>${merge}</div>`;
+  s.innerHTML=`<b>Browser tidak bisa memutar format ini</b><p id="pl-why">Memeriksa penyebabnya…</p><div class="errbtns"><button class="eb" style="background:#5BC774" type="button" onclick="plDo(${k},'dl')">⬇ Download</button>${merge}</div><div class="pl-dbg" id="pl-dbg"></div>`;
+  plProbe(k).then(r=>{const w=$('pl-why'),d=$('pl-dbg');if(w)w.textContent=r.why;if(d)d.textContent=r.tech});
+}
+// Diagnosa: kenapa pemutar gagal? (kode error media + cek singkat ke /api/dl)
+async function plProbe(k){
+  const m=CUR.medias[k]||{},v=document.querySelector('#vdl-player video,#vdl-player audio');
+  const er=v&&v.error,tech=[`format ${(m.extension||'?')} ${m.quality||''}`.trim()];
+  if(er)tech.push('MediaError '+er.code);
+  let st=0,ct='',rng=false;
+  try{
+    const r=await fetch(m.dl,{headers:{Range:'bytes=0-1'}});
+    st=r.status;ct=r.headers.get('content-type')||'';rng=r.status===206||r.headers.get('accept-ranges')==='bytes';
+    tech.push('HTTP '+st,ct||'tanpa content-type',rng?'Range: ya':'Range: tidak');
+    if(r.body&&r.body.cancel)r.body.cancel();
+  }catch(e){tech.push('cek gagal: '+(e.message||e))}
+  let why='Browser Anda menolak file ini. Biasanya karena codec video (HEVC/AV1) belum didukung perangkat. Filenya tetap bisa diunduh seperti biasa.';
+  if(st>=400)why=`Server media menolak permintaan (HTTP ${st}). Link kemungkinan sudah kedaluwarsa atau terikat IP — cari ulang videonya lalu coba lagi.`;
+  else if(!st)why='Tidak bisa menghubungi server unduhan. Periksa koneksi lalu coba lagi.';
+  else if(/m3u8|mpegurl|dash\+xml/i.test(ct)||['m3u8','mpd'].includes(m.extension))why='Ini format streaming (HLS/DASH) yang tidak bisa diputar langsung di browser. Gunakan tombol Download.';
+  else if(/^text\/|json/i.test(ct))why='Server mengembalikan halaman, bukan file video (link ditolak atau kedaluwarsa). Cari ulang videonya lalu coba lagi.';
+  else if(er&&er.code===3)why='Video terunduh tetapi gagal didekode — kemungkinan codec (HEVC/AV1) tidak didukung perangkat ini. Filenya tetap bisa diunduh.';
+  return{why,tech:tech.join(' · ')};
 }
 function plDo(k,what){
   const sel=what==='merge'?`.mgb[onclick^="mergeDl(${k},"]`:`.dlb[onclick^="doDownload(${k},"]`;
