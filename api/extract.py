@@ -48,6 +48,27 @@ def cookie_file():
     return path
 
 
+def cookie_report():
+    """Diagnosa singkat: apakah cookies terbaca & memuat tanda login (tanpa membocorkan nilainya)."""
+    try:
+        p = cookie_file()
+        if not p:
+            return "cookies: TIDAK terbaca — YTDLP_COOKIES_B64 kosong/belum aktif (pastikan sudah Redeploy dan variabelnya ada di environment Production)"
+        names = set()
+        for ln in open(p, encoding="utf-8", errors="ignore").read().splitlines():
+            raw = ln[len("#HttpOnly_"):] if ln.startswith("#HttpOnly_") else ln
+            if not raw.strip() or raw.startswith("#"):
+                continue
+            parts = raw.split("\t")
+            if len(parts) >= 7:
+                names.add(parts[5])
+        login = names & {"SAPISID", "__Secure-3PSID", "__Secure-1PSID", "SID", "LOGIN_INFO"}
+        state = "ada" if login else "TIDAK ADA (belum login saat ekspor?)"
+        return f"cookies: {len(names)} terbaca, tanda login: {state}"
+    except Exception as e:
+        return f"cookies: gagal diperiksa ({str(e)[:60]})"
+
+
 def human(n):
     if not n:
         return ""
@@ -365,4 +386,6 @@ class handler(BaseHTTPRequestHandler):
             return self._send(200, extract(url))
         except Exception as e:  # yt_dlp.utils.DownloadError, ValueError, dll
             kind, msg = explain(e)
+            if kind in ("bot_check", "login_required"):
+                msg += " [" + cookie_report() + "]"
             return self._send(502, {"error": msg, "kind": kind})
