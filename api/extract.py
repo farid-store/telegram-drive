@@ -18,6 +18,7 @@ import base64
 import json
 import os
 import re
+import shutil
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 
@@ -48,6 +49,23 @@ def cookie_file():
     return path
 
 
+def js_runtime_opts():
+    """YouTube kini butuh JS runtime (yt-dlp EJS) untuk membuka daftar format. Pakai binary QuickJS-ng
+    di bin/qjs (ikut ter-deploy), disalin ke /tmp agar bisa dieksekusi."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    src = next((p for p in (os.path.join(here, "..", "bin", "qjs"), "/var/task/bin/qjs") if os.path.isfile(p)), None)
+    if not src:
+        return {}
+    dst = "/tmp/qjs"
+    try:
+        if not os.path.isfile(dst) or os.path.getsize(dst) != os.path.getsize(src):
+            shutil.copyfile(src, dst)
+        os.chmod(dst, 0o755)
+    except Exception:
+        return {}
+    return {"js_runtimes": {"quickjs": {"path": dst}}}
+
+
 def cookie_report():
     """Diagnosa singkat: apakah cookies terbaca & memuat tanda login (tanpa membocorkan nilainya)."""
     try:
@@ -64,7 +82,8 @@ def cookie_report():
                 names.add(parts[5])
         login = names & {"SAPISID", "__Secure-3PSID", "__Secure-1PSID", "SID", "LOGIN_INFO"}
         state = "ada" if login else "TIDAK ADA (belum login saat ekspor?)"
-        return f"cookies: {len(names)} terbaca, tanda login: {state}"
+        js = "quickjs siap" if js_runtime_opts() else "TIDAK ADA (file bin/qjs belum ter-deploy)"
+        return f"cookies: {len(names)} terbaca, tanda login: {state}; JS runtime: {js}"
     except Exception as e:
         return f"cookies: gagal diperiksa ({str(e)[:60]})"
 
@@ -297,6 +316,7 @@ def extract(url):
         "cachedir": "/tmp/yt-dlp-cache",
         "retries": 2,
     }
+    opts.update(js_runtime_opts())
     has_cookies = False
     ck = cookie_file()
     if ck:
@@ -355,6 +375,8 @@ def explain(msg):
     low = m.lower()
     if "confirm you" in low and "bot" in low:
         return "bot_check", "YouTube memblokir IP server (bot check). Perlu cookies (YTDLP_COOKIES_B64), proxy (YTDLP_PROXY), atau Cobalt."
+    if "requested format is not available" in low or "only images are available" in low:
+        return "no_formats", "YouTube tidak memberi daftar format video (bukan video privat). Biasanya karena yt-dlp belum punya JS runtime atau YouTube meminta PO token."
     if "login" in low or "empty media response" in low or "rate-limit" in low or "cookies" in low:
         return "login_required", "Platform meminta login / membatasi IP server. Isi YTDLP_COOKIES_B64 (cookies akun) atau gunakan proxy."
     if "private" in low or "unavailable" in low or "not available" in low or "removed" in low:
@@ -386,6 +408,6 @@ class handler(BaseHTTPRequestHandler):
             return self._send(200, extract(url))
         except Exception as e:  # yt_dlp.utils.DownloadError, ValueError, dll
             kind, msg = explain(e)
-            if kind in ("bot_check", "login_required"):
+            if kind in ("bot_check", "login_required", "no_formats"):
                 msg += " [" + cookie_report() + "]"
             return self._send(502, {"error": msg, "kind": kind})
