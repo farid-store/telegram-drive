@@ -361,7 +361,17 @@ module.exports = async function handler(req, res) {
     if (deadline - Date.now() < 3000) { errors.push(`${name}: dilewati (waktu habis)`); continue; }
     if (name === 'cobalt' && !COBALT_API_URL) { errors.push('cobalt: tidak dikonfigurasi (opsional)'); continue; }
     try {
-      const out = await fn(url, ctx);
+      let out;
+      for (let k = 0; ; k++) {
+        try { out = await fn(url, ctx); break; }
+        catch (e) {
+          // YouTube bot-check bersifat acak per IP/instance: ulangi otomatis (maks. 2x) selama waktu masih cukup
+          const again = name === 'yt-dlp' && ['bot_check', 'login_required', 'no_formats'].includes(e.kind)
+            && k < 2 && deadline - Date.now() > 22000;
+          if (!again) throw e;
+          await new Promise(r => setTimeout(r, 500 * (k + 1)));
+        }
+      }
       const medias = (out.medias || []).map(normMedia).filter(Boolean);
       if (!medias.length) throw new Error('media kosong');
       const title = out.title || 'Video';
