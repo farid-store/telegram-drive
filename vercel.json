@@ -24,6 +24,9 @@
     },
     "api/xsearch.py": {
       "maxDuration": 30
+    },
+    "api/browse.js": {
+      "maxDuration": 30
     }
   },
   "headers": [
