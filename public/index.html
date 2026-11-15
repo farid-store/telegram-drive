@@ -1099,6 +1099,14 @@ body{min-height:100dvh;padding-bottom:calc(84px + env(safe-area-inset-bottom,0px
 .bw-bm span{width:24px;height:24px;border-radius:8px;background:#5BC774;color:#fff;display:grid;place-items:center;font-size:.7rem;flex:none}
 .bw-bm b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bw-bm i{position:absolute;right:6px;top:50%;transform:translateY(-50%);font-style:normal;color:#6B7280;padding:2px 5px}
+
+/* ===== Tampilan web penuh: lebar penuh, layar penuh, bar auto-sembunyi ===== */
+body.bw-wideon{--bwW:100vw}
+.bw.bw-imm .bw-bar,.bw.bw-imm .bw-tabs,.bw.bw-imm .bw-nav,.bw.bw-imm .bw-sub{display:none!important}
+.bw.bw-hid .bw-bar,.bw.bw-hid .bw-tabs,.bw.bw-hid .bw-nav{display:none}
+.bw-exit{position:absolute;top:calc(8px + env(safe-area-inset-top,0px));right:10px;z-index:70;height:34px;padding:0 14px;border:none;border-radius:9999px;background:rgba(0,0,0,.72);color:#fff;font:700 .7rem 'Plus Jakarta Sans',sans-serif;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);cursor:pointer;opacity:.9}
+.bw-exit[hidden]{display:none}
+@media(max-width:1023px){.bw-wide-btn{display:none}}
 </style>
 
 <meta name="theme-color" content="#050608">
@@ -1427,6 +1435,8 @@ body{min-height:100dvh;padding-bottom:calc(84px + env(safe-area-inset-bottom,0px
     <button class="bw-ic sm" type="button" onclick="bwTabSel(-1)" title="Beranda browser" aria-label="Beranda">🏠</button>
     <span class="bw-lock" id="bw-lock">🔒 lewat proxy</span>
     <button class="bw-ic sm" id="bw-star" type="button" onclick="bwBookmark()" title="Bookmark halaman ini" aria-label="Bookmark">☆</button>
+    <button class="bw-ic sm bw-wide-btn" type="button" onclick="bwWide()" title="Lebarkan panel (layar lebar)" aria-label="Lebarkan panel">⤢</button>
+    <button class="bw-ic sm" type="button" onclick="bwImm()" title="Layar penuh" aria-label="Layar penuh">⛶</button>
     <button class="bw-ic sm" type="button" onclick="bwPop()" title="Buka di jendela terpisah" aria-label="Buka di jendela">↗</button>
   </div>
   <div class="bw-sub" id="bw-subrow">
@@ -1435,6 +1445,7 @@ body{min-height:100dvh;padding-bottom:calc(84px + env(safe-area-inset-bottom,0px
     <div class="bw-sites" id="bw-sites"></div>
   </div>
   <div class="bw-stage" id="bw-stage"><div class="bw-web" id="bw-web" hidden></div><div class="bw-res" id="bw-res" hidden></div><div class="bw-view" id="bw-view"></div></div>
+  <button class="bw-exit" id="bw-exit" type="button" hidden onclick="bwImm(false)">⤡ Keluar layar penuh</button>
   <div class="bw-sheet" id="bw-set" hidden></div>
   <div class="bw-grab" id="bw-sel" hidden>
     <span id="bw-sel-n" style="flex:1;font-size:.76rem;font-weight:700"></span>
@@ -3598,7 +3609,7 @@ const BW_SITES=[
   {n:'Reddit',u:'https://www.reddit.com/',m:'guest',e:'👽'},
   {n:'Vimeo',u:'https://vimeo.com/',m:'guest',e:'🎞'},
   {n:'Wikipedia',u:'https://id.wikipedia.org/',m:'guest',e:'📚'},
-  {n:'DuckDuckGo',u:'https://duckduckgo.com/',m:'guest',e:'🦆'},
+  {n:'DuckDuckGo',u:'https://duckduckgo.com/html/',m:'guest',e:'🦆'},
   {n:'Dailymotion',u:'https://www.dailymotion.com/',m:'guest',e:'▶'}
 ];
 const BW_NOFRAME=/(^|\.)(youtube\.com|youtu\.be|tiktok\.com|instagram\.com|facebook\.com|fb\.watch|x\.com|twitter\.com|reddit\.com|linkedin\.com|pinterest\.com|google\.com|vimeo\.com|dailymotion\.com|twitch\.tv|soundcloud\.com|bilibili\.com)$/;
@@ -3638,6 +3649,7 @@ function bwOpen(u){
   if(u&&typeof u==='string')bwLoad(u);
 }
 function bwClose(){
+  bwImm(false);
   if(bw.pane==='web'){bwTabSel(-1)}
   $('bw-set').hidden=true;
   if(bw.pane==='view'){$('bw-view').innerHTML='';if(bw.res.length)bwPane('res');else bwNote('welcome')}
@@ -3718,6 +3730,7 @@ if(bw.view!=='grid'&&bw.view!=='list')bw.view=innerWidth>=640?'grid':'list';
 const BW_RANK={home:0,res:1,view:2,web:2};
 function bwPane(p){
   if(!$('bw').hidden&&BW_RANK[p]>BW_RANK[bw.pane]){try{history.pushState({bw:1},'');bw.h++}catch{}}
+  $('bw').classList.remove('bw-hid');
   bw.pane=p;$('bw-res').hidden=p!=='res';$('bw-view').hidden=(p==='res'||p==='web');
   $('bw-web').hidden=p!=='web';$('bw-nav').hidden=p!=='web';$('bw-subrow').hidden=p==='web';
   if(p!=='web'&&bw.at>=0){bw.at=-1;bwTabsRender()}
@@ -4015,6 +4028,10 @@ function bwTabsRender(){
 window.addEventListener('message',e=>{
   const d=e.data;if(!d||d.vdlBw!==1)return;
   const i=bw.tabs.findIndex(t=>t.frame.contentWindow===e.source);if(i<0)return;
+  if(d.t==='scroll'){      // HP: sembunyikan bar saat scroll ke bawah, tampilkan saat scroll ke atas
+    if(innerWidth<1024&&i===bw.at&&bw.pane==='web'&&!$('bw').classList.contains('bw-imm'))$('bw').classList.toggle('bw-hid',d.dir==='down');
+    return;
+  }
   const t=bw.tabs[i],u=String(d.url||'');
   if(!/^https?:\/\//i.test(u))return;
   if(d.t==='open'){bwWebOpen(u,true);return}
@@ -4022,7 +4039,7 @@ window.addEventListener('message',e=>{
   t.title=String(d.title||'').trim()||hostOf(u)||'Tab';
   if(t.skip){t.skip=false;t.nav=u}
   else if(u!==t.nav){t.hist=t.hist.slice(0,t.hi+1);t.hist.push(u);t.hi=t.hist.length-1;t.nav=u}
-  t.url=u;
+  t.url=u;$('bw').classList.remove('bw-hid');
   if(i===bw.at){bw.url=u;$('bw-url').value=u;bwBmStar()}
   bwTabsRender();
 });
@@ -4074,6 +4091,18 @@ async function bwDnsTest(){
     out.textContent=j.ok?`✓ wikipedia.org → ${j.ip} · ${j.ms} ms`:'✗ '+(j.error||'gagal');
   }catch{out.textContent='✗ Gagal menghubungi server'}
 }
+function bwWide(on){
+  const b=document.body;on=on===undefined?!b.classList.contains('bw-wideon'):on;
+  b.classList.toggle('bw-wideon',on);try{localStorage.setItem('bw_wide',on?'1':'')}catch{}
+}
+function bwImm(on){
+  const el=$('bw');on=on===undefined?!el.classList.contains('bw-imm'):on;
+  el.classList.toggle('bw-imm',on);$('bw-exit').hidden=!on;el.classList.remove('bw-hid');
+  if(on){try{const r=el.requestFullscreen&&el.requestFullscreen();if(r&&r.catch)r.catch(()=>{})}catch{}}
+  else if(document.fullscreenElement){try{document.exitFullscreen()}catch{}}
+}
+document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&$('bw').classList.contains('bw-imm'))bwImm(false)});
+try{if(localStorage.getItem('bw_wide'))document.body.classList.add('bw-wideon')}catch{}
 bwTabsRender();
 window.addEventListener('focus',()=>setTimeout(bwClip,250));
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(bwClip,250)});
