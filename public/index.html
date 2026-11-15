@@ -1056,6 +1056,49 @@ body{min-height:100dvh;padding-bottom:calc(84px + env(safe-area-inset-bottom,0px
 #bw-grab .eb,#bw-sel .eb{order:4;flex:1 1 0;height:40px;padding:0 12px;white-space:nowrap}
 #bw-sel .eb{order:2}
 .bw-bd .bw-cb{margin-top:auto;padding-top:4px}
+
+/* ===== Browser web: tab, navigasi, pengaturan ===== */
+.bw-tabs{display:flex;gap:6px;padding:6px 12px 0;overflow-x:auto;scrollbar-width:none;background:#141414;border-top:1px solid var(--b1)}
+.bw-tabs::-webkit-scrollbar{display:none}
+.bw-tab{flex:none;display:flex;align-items:center;gap:6px;max-width:170px;height:34px;padding:0 12px;border:none;border-radius:12px 12px 0 0;background:#1C1C1E;color:#8E8E93;font:600 .72rem 'Plus Jakarta Sans',sans-serif;cursor:pointer}
+.bw-tab b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bw-tab.on{background:#000;color:#fff}
+.bw-tab i{font-style:normal;color:#6B7280;padding:2px 4px;border-radius:6px}
+.bw-tab i:hover{color:#fff;background:#333}
+.bw-tab.plus{padding:0 14px;font-size:1rem}
+.bw-nav{display:flex;align-items:center;gap:6px;padding:6px 12px;background:#000;border-top:1px solid var(--b1)}
+.bw-nav[hidden]{display:none}
+.bw-ic.sm{width:34px;height:34px;font-size:14px}
+.bw-lock{flex:1;min-width:0;text-align:center;font-size:.66rem;color:#6B7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bw-web{position:absolute;inset:0;background:#fff}
+.bw-web[hidden]{display:none}
+.bw-wf{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff}
+.bw-wf[hidden]{display:none}
+.bw-sheet{position:absolute;inset:0;z-index:60;background:rgba(0,0,0,.65);display:flex;align-items:flex-end;justify-content:center}
+.bw-sheet[hidden]{display:none}
+.bw-sc{width:100%;max-width:560px;max-height:90%;overflow:auto;background:#141414;border-radius:22px 22px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom,0px));color:#fff}
+.bw-sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;font-size:1rem}
+.bw-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 0;font-size:.82rem;font-weight:600}
+.bw-row small{display:block;margin-top:2px;font-weight:400;color:#8E8E93;font-size:.7rem;line-height:1.4}
+.bw-row input{width:22px;height:22px;accent-color:#5BC774;flex:none}
+.bw-lbl{margin:10px 0 8px;font-size:.72rem;font-weight:700;color:#8E8E93;letter-spacing:.04em;text-transform:uppercase}
+.bw-opts{display:grid;gap:6px}
+.bw-opt{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:12px;background:#1C1C1E;font-size:.8rem;cursor:pointer}
+.bw-opt input{accent-color:#5BC774}
+.bw-in{width:100%;margin-top:8px;height:40px;border-radius:12px;border:1.5px solid transparent;background:#1C1C1E;color:#fff;padding:0 12px;font:500 16px 'Plus Jakarta Sans',sans-serif;outline:none}
+.bw-in:focus{border-color:#5BC774}
+.bw-act{display:flex;align-items:center;gap:10px;margin:12px 0;font-size:.74rem;color:#8E8E93}
+.bw-help{margin-top:6px;padding:12px;border-radius:14px;background:#0d0d0e;font-size:.72rem;line-height:1.6;color:#9CA3AF}
+.bw-help b{color:#fff}
+.bw-dev{display:flex;align-items:center;gap:8px;margin-top:8px}
+.bw-dev code{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;font:600 .68rem 'JetBrains Mono',monospace;color:#5BC774}
+.bw-dev button{height:28px;padding:0 10px;border:none;border-radius:9999px;background:#262629;color:#fff;font:700 .66rem 'Plus Jakarta Sans',sans-serif;cursor:pointer}
+.bw-bmh{margin:14px 0 6px;font-size:.72rem;font-weight:700;color:#8E8E93;align-self:flex-start}
+.bw-bms{display:flex;flex-wrap:wrap;gap:8px;width:100%}
+.bw-bm{position:relative;display:flex;align-items:center;gap:8px;max-width:100%;padding:8px 30px 8px 8px;border:none;border-radius:12px;background:#141414;color:#fff;font:600 .72rem 'Plus Jakarta Sans',sans-serif;cursor:pointer}
+.bw-bm span{width:24px;height:24px;border-radius:8px;background:#5BC774;color:#fff;display:grid;place-items:center;font-size:.7rem;flex:none}
+.bw-bm b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bw-bm i{position:absolute;right:6px;top:50%;transform:translateY(-50%);font-style:normal;color:#6B7280;padding:2px 5px}
 </style>
 
 <meta name="theme-color" content="#050608">
@@ -1370,16 +1413,29 @@ body{min-height:100dvh;padding-bottom:calc(84px + env(safe-area-inset-bottom,0px
     <button class="bw-ic" type="button" onclick="bwClose()" title="Tutup browser" aria-label="Tutup browser">✕</button>
     <div class="bw-sg" id="bw-sg" hidden></div>
     <div class="bw-pop" id="bw-pop" hidden>
+      <button type="button" onclick="bwTabNewBlank()">➕&nbsp; Tab baru</button>
+      <button type="button" onclick="bwBookmark()">⭐&nbsp; Bookmark halaman ini</button>
+      <button type="button" onclick="bwSetOpen()">🛡&nbsp; DNS &amp; Proxy…</button>
       <button type="button" onclick="bwPop()">↗&nbsp; Buka di jendela terpisah</button>
       <button type="button" onclick="bwClip(true)">📋&nbsp; Tempel link dari clipboard</button>
     </div>
   </div>
-  <div class="bw-sub">
+  <div class="bw-tabs" id="bw-tabs"></div>
+  <div class="bw-nav" id="bw-nav" hidden>
+    <button class="bw-ic sm" type="button" onclick="bwTabNav('fwd')" title="Maju" aria-label="Maju">→</button>
+    <button class="bw-ic sm" type="button" onclick="bwTabNav('reload')" title="Muat ulang" aria-label="Muat ulang">⟳</button>
+    <button class="bw-ic sm" type="button" onclick="bwTabSel(-1)" title="Beranda browser" aria-label="Beranda">🏠</button>
+    <span class="bw-lock" id="bw-lock">🔒 lewat proxy</span>
+    <button class="bw-ic sm" id="bw-star" type="button" onclick="bwBookmark()" title="Bookmark halaman ini" aria-label="Bookmark">☆</button>
+    <button class="bw-ic sm" type="button" onclick="bwPop()" title="Buka di jendela terpisah" aria-label="Buka di jendela">↗</button>
+  </div>
+  <div class="bw-sub" id="bw-subrow">
     <div class="bw-seg"><button id="bw-m-guest" class="on" type="button" onclick="bwMode('guest')">👤 Tamu</button><button id="bw-m-login" type="button" onclick="bwMode('login')">🔑 Login</button></div>
-    <select class="bw-sp" id="bw-sp" aria-label="Cari di" onchange="const v=$('bw-url').value.trim();if(v&&bwIsQuery(v))bwSearch(v)"><option value="yt">🔎 YouTube</option><option value="sc">🎧 SoundCloud</option><option value="bili">📺 Bilibili</option></select>
+    <select class="bw-sp" id="bw-sp" aria-label="Cari di" onchange="const v=$('bw-url').value.trim();if(v&&bwIsQuery(v))bwSearch(v)"><option value="yt">🔎 YouTube</option><option value="sc">🎧 SoundCloud</option><option value="bili">📺 Bilibili</option><optgroup label="Cari di web"><option value="web-ddg">🦆 DuckDuckGo</option><option value="web-bing">🔎 Bing</option><option value="web-google">🅖 Google</option></optgroup></select>
     <div class="bw-sites" id="bw-sites"></div>
   </div>
-  <div class="bw-stage" id="bw-stage"><div class="bw-res" id="bw-res" hidden></div><div class="bw-view" id="bw-view"></div></div>
+  <div class="bw-stage" id="bw-stage"><div class="bw-web" id="bw-web" hidden></div><div class="bw-res" id="bw-res" hidden></div><div class="bw-view" id="bw-view"></div></div>
+  <div class="bw-sheet" id="bw-set" hidden></div>
   <div class="bw-grab" id="bw-sel" hidden>
     <span id="bw-sel-n" style="flex:1;font-size:.76rem;font-weight:700"></span>
     <button class="eb" type="button" onclick="bwSelClear()">Kosongkan</button>
@@ -3541,6 +3597,8 @@ const BW_SITES=[
   {n:'Bilibili',u:'https://www.bilibili.com/',m:'guest',e:'📺'},
   {n:'Reddit',u:'https://www.reddit.com/',m:'guest',e:'👽'},
   {n:'Vimeo',u:'https://vimeo.com/',m:'guest',e:'🎞'},
+  {n:'Wikipedia',u:'https://id.wikipedia.org/',m:'guest',e:'📚'},
+  {n:'DuckDuckGo',u:'https://duckduckgo.com/html/',m:'guest',e:'🦆'},
   {n:'Dailymotion',u:'https://www.dailymotion.com/',m:'guest',e:'▶'}
 ];
 const BW_NOFRAME=/(^|\.)(youtube\.com|youtu\.be|tiktok\.com|instagram\.com|facebook\.com|fb\.watch|x\.com|twitter\.com|reddit\.com|linkedin\.com|pinterest\.com|google\.com|vimeo\.com|dailymotion\.com|twitch\.tv|soundcloud\.com|bilibili\.com)$/;
@@ -3580,6 +3638,8 @@ function bwOpen(u){
   if(u&&typeof u==='string')bwLoad(u);
 }
 function bwClose(){
+  if(bw.pane==='web'){bwTabSel(-1)}
+  $('bw-set').hidden=true;
   if(bw.pane==='view'){$('bw-view').innerHTML='';if(bw.res.length)bwPane('res');else bwNote('welcome')}
   $('bw').hidden=true;document.body.classList.remove('bw-on');$('bw-grab').hidden=true;$('bw-sg').hidden=true;
   if(bw.h>0){const n=bw.h;bw.h=0;bw.closing=true;try{history.go(-n)}catch{bw.closing=false}}
@@ -3600,6 +3660,7 @@ function bwLoad(u){
   const emb=bwEmbed(u);
   if(emb){bwFrame(emb);bwShowGrab(u);return}
   if(BW_NOFRAME.test(hostOf(u))){bwNote('noframe',u);return}
+  if(bw.set.proxy){bwWebOpen(u,false);return}
   bwFrame(u);
 }
 function bwFrame(src){
@@ -3613,8 +3674,8 @@ function bwFrame(src){
 function bwNote(type,u){
   const h=u?esc(hostOf(u)):'';
   const T={
-    welcome:`<div class="bw-wl"><div class="bw-wi">🌐</div><b>Browser VaultDL</b><p>Cari video di kolom atas atau pilih situs di bawah. Tekan <b style="font-size:inherit;color:#5BC774">⬇ Grab</b> untuk langsung mengunduh tanpa menyalin link.</p><div class="bw-tiles">${BW_SITES.map((x,i)=>`<button type="button" class="bw-tile" onclick="bwSite(${i})"><span>${x.e}</span><b>${x.n}</b><small>${x.m==='login'?'🔑 Login':'👤 Tamu'}</small></button>`).join('')}</div><p class="bw-tip">👤 Tamu: tampil langsung di sini &nbsp;·&nbsp; 🔑 Login: dibuka di jendela browser Anda, lalu link terdeteksi otomatis.</p></div>`,
-    noframe:`<b>${h} tidak bisa ditampilkan di dalam aplikasi ini</b><p>Situs ini melarang dibuka di dalam halaman lain. Buka di jendela terpisah, salin link video, lalu kembali ke sini — link akan terdeteksi otomatis.</p><button class="eb" style="background:#5BC774" type="button" onclick="bwPop()">↗ Buka di jendela</button>`,
+    welcome:`<div class="bw-wl"><div class="bw-wi">🌐</div><b>Browser VaultDL</b><p>Cari video di kolom atas atau pilih situs di bawah. Tekan <b style="font-size:inherit;color:#5BC774">⬇ Grab</b> untuk langsung mengunduh tanpa menyalin link.</p><div class="bw-tiles">${BW_SITES.map((x,i)=>`<button type="button" class="bw-tile" onclick="bwSite(${i})"><span>${x.e}</span><b>${x.n}</b><small>${x.m==='login'?'🔑 Login':'👤 Tamu'}</small></button>`).join('')}</div>${bw.bm&&bw.bm.length?`<div class="bw-bmh">⭐ Bookmark</div><div class="bw-bms">${bw.bm.map((b,i)=>`<button type="button" class="bw-bm" onclick="bwBmGo(${i})"><span>${esc(hostOf(b.u).slice(0,1).toUpperCase())}</span><b>${esc((b.t||hostOf(b.u)).slice(0,26))}</b><i onclick="bwBmDel(${i},event)" title="Hapus">✕</i></button>`).join('')}</div>`:''}<p class="bw-tip">👤 Tamu: tampil langsung di sini &nbsp;·&nbsp; 🔑 Login: dibuka di jendela browser Anda, lalu link terdeteksi otomatis.</p></div>`,
+    noframe:`<b>${h} tidak bisa ditampilkan di dalam aplikasi ini</b><p>Situs ini melarang dibuka di dalam halaman lain. Buka di jendela terpisah, salin link video, lalu kembali ke sini — link akan terdeteksi otomatis.</p><button class="eb" style="background:#5BC774" type="button" onclick="bwPop()">↗ Buka di jendela</button> <button class="eb" type="button" onclick="bwWebOpen(bw.url,false)">🌐 Coba lewat proxy</button>`,
     login:`<b>Jendela ${h} terbuka</b><p>Login di jendela tersebut, cari videonya, salin link-nya, lalu kembali ke sini. Jika jendela tidak muncul, izinkan pop-up untuk situs ini.</p><button class="eb" type="button" onclick="bwPop()">↗ Buka lagi</button>`
   };
   $('bw-view').innerHTML=`<div class="bw-note">${T[type]||''}</div>`;bwPane(type==='welcome'?'home':'view');
@@ -3654,10 +3715,13 @@ function bwUse(go){
 bw.res=[];bw.fromRes=false;bw.pane='home';bw.cont='';bw.q='';bw.loading=false;bw.ids=new Set();bw.io=null;bw.empty=0;
 try{bw.view=localStorage.getItem('bw_view')}catch{}
 if(bw.view!=='grid'&&bw.view!=='list')bw.view=innerWidth>=640?'grid':'list';
-const BW_RANK={home:0,res:1,view:2};
+const BW_RANK={home:0,res:1,view:2,web:2};
 function bwPane(p){
   if(!$('bw').hidden&&BW_RANK[p]>BW_RANK[bw.pane]){try{history.pushState({bw:1},'');bw.h++}catch{}}
-  bw.pane=p;$('bw-res').hidden=p!=='res';$('bw-view').hidden=p==='res';bwSelUpd();
+  bw.pane=p;$('bw-res').hidden=p!=='res';$('bw-view').hidden=(p==='res'||p==='web');
+  $('bw-web').hidden=p!=='web';$('bw-nav').hidden=p!=='web';$('bw-subrow').hidden=p==='web';
+  if(p!=='web'&&bw.at>=0){bw.at=-1;bwTabsRender()}
+  bwSelUpd();
 }
 function bwShowGrab(u){
   const c=cleanUrl(u);bw.seen=c;
@@ -3665,6 +3729,7 @@ function bwShowGrab(u){
   $('bw-gh').hidden=!(/(^|\.)bilibili\.com$/.test(hostOf(u))&&innerWidth<1024);
 }
 function bwBack(){
+  if(bw.pane==='web'){bwTabSel(-1);return}
   if(bw.pane==='view'){
     $('bw-view').innerHTML='';$('bw-grab').hidden=true;
     if(bw.res.length){bwPane('res');return}
@@ -3686,7 +3751,9 @@ async function bwFetch(q,c){
   return j;
 }
 async function bwSearch(q){
-  bw.p=$('bw-sp').value;bwQSave(q);bw.sel.clear();bw.url='';bw.fromRes=false;bw.q=q;bw.res=[];bw.cont='';bw.ids=new Set();bw.empty=0;bw.loading=true;
+  const sp=$('bw-sp').value;
+  if(sp.indexOf('web-')===0){bwQSave(q);bwWebOpen(bwWebSearchUrl(sp,q),false);return}
+  bw.p=sp;bwQSave(q);bw.sel.clear();bw.url='';bw.fromRes=false;bw.q=q;bw.res=[];bw.cont='';bw.ids=new Set();bw.empty=0;bw.loading=true;
   $('bw-grab').hidden=true;
   $('bw-view').innerHTML='<div class="bw-rl bw-sk '+bw.view+'">'+'<article class="bw-card"><div class="bw-th"></div><div class="bw-bd"><div class="bw-ln"></div><div class="bw-ln s"></div></div></article>'.repeat(8)+'</div>';bwPane('view');
   let j;
@@ -3754,7 +3821,7 @@ function bwGrabNow(){
 /* ---- Pilih banyak → Multi, Back sistem, riwayat/saran pencarian, riwayat download ---- */
 bw.h=0;bw.closing=false;bw.p='yt';bw.sel=new Map();bw.sg=[];bw.sgT=null;bw.qh=[];
 try{bw.qh=JSON.parse(localStorage.getItem('bw_q')||'[]')}catch{}
-function bwBackBtn(){if(bw.h>0)history.back();else bwBack()}
+function bwBackBtn(){if(bw.pane==='web'&&bwTabNav('back'))return;if(bw.h>0)history.back();else bwBack()}
 window.addEventListener('popstate',()=>{
   if(bw.closing){bw.closing=false;return}
   if($('bw').hidden)return;
@@ -3873,6 +3940,141 @@ async function mergeDl(i,btn){
     MERGE_ACTIVE.delete(i);set(orig);
   }
 }
+/* ---- Browser web: tab, proxy, DNS, bookmark ---- */
+bw.tabs=[];bw.at=-1;bw.tid=0;bw.k='';bw.kt=0;bw.px=null;
+bw.set={proxy:true,dns:'system',doh:''};
+try{Object.assign(bw.set,JSON.parse(localStorage.getItem('bw_set')||'{}'))}catch{}
+bw.bm=[];try{bw.bm=JSON.parse(localStorage.getItem('bw_bm')||'[]')}catch{}
+const bwSaveJ=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}};
+const BW_ENG={'web-ddg':'https://duckduckgo.com/html/?q=','web-bing':'https://www.bing.com/search?q=','web-google':'https://www.google.com/search?q='};
+const bwWebSearchUrl=(sp,q)=>(BW_ENG[sp]||BW_ENG['web-ddg'])+encodeURIComponent(q);
+
+async function bwProxyReady(){            // proxy ter-deploy? sekaligus ambil token akses (±6 jam)
+  if(bw.px===false)return false;
+  if(bw.k&&Date.now()-bw.kt<5*3600e3)return true;
+  try{
+    const r=await fetch('/api/browse?mint=1',{cache:'no-store'}),j=await r.json();
+    if(!r.ok||!j.ok)throw 0;
+    bw.k=j.k||'';bw.kt=Date.now();bw.px=true;return true;
+  }catch{bw.px=false;return false}
+}
+function bwProxySrc(u){
+  const s=bw.set;
+  return '/api/browse?u='+encodeURIComponent(u)+(bw.k?'&k='+encodeURIComponent(bw.k):'')+(s.dns&&s.dns!=='system'?'&dns='+s.dns+(s.dns==='custom'?'&doh='+encodeURIComponent(s.doh||''):''):'');
+}
+function bwTabMk(url){
+  const f=document.createElement('iframe');
+  f.className='bw-wf';f.hidden=true;
+  f.setAttribute('sandbox','allow-scripts allow-forms allow-popups allow-presentation');   // tanpa allow-same-origin: situs lain tak bisa menyentuh data aplikasi
+  f.allow='fullscreen; encrypted-media; picture-in-picture';
+  $('bw-web').appendChild(f);
+  const t={id:++bw.tid,url,title:hostOf(url)||'Tab',hist:[],hi:-1,nav:'',skip:false,frame:f};
+  bw.tabs.push(t);return bw.tabs.length-1;
+}
+async function bwWebOpen(u,newTab){
+  u=bwNorm(u);if(!u)return;
+  if(!bw.set.proxy||!(await bwProxyReady())){
+    if(bw.set.proxy&&bw.px===false)toast('Proxy web belum aktif (api/browse.js belum ter-deploy). Dibuka di jendela terpisah.','warn');
+    bw.url=u;$('bw-url').value=u;bwPop();return;
+  }
+  let i=bw.at;
+  if(newTab||i<0||!bw.tabs[i])i=bwTabMk(u);
+  bwTabLoad(i,u,false);bwTabSel(i);
+}
+function bwTabLoad(i,u,skip){const t=bw.tabs[i];t.skip=!!skip;t.url=u;t.frame.src=bwProxySrc(u)}
+function bwTabSel(i){
+  if(i<0||!bw.tabs[i]){
+    bw.at=-1;$('bw-url').value='';
+    if(bw.res.length)bwPane('res');else bwNote('welcome');
+    bwTabsRender();return;
+  }
+  bw.at=i;bw.tabs.forEach((t,k)=>{t.frame.hidden=k!==i});
+  const t=bw.tabs[i];bw.url=t.url;$('bw-url').value=t.url;$('bw-grab').hidden=true;
+  bwPane('web');bwTabsRender();bwBmStar();
+}
+function bwTabClose(i){
+  const t=bw.tabs[i];if(!t)return;
+  t.frame.remove();bw.tabs.splice(i,1);
+  if(bw.at===i){bw.tabs.length?bwTabSel(Math.min(i,bw.tabs.length-1)):bwTabSel(-1)}
+  else{if(bw.at>i)bw.at--;bwTabsRender()}
+}
+function bwTabNewBlank(){bwTabSel(-1);$('bw-url').focus()}
+function bwTabNav(w){
+  const t=bw.tabs[bw.at];if(!t)return false;
+  if(w==='back'){if(t.hi>0){t.hi--;bwTabLoad(bw.at,t.hist[t.hi],true);return true}return false}
+  if(w==='fwd'){if(t.hi<t.hist.length-1){t.hi++;bwTabLoad(bw.at,t.hist[t.hi],true);return true}return false}
+  if(w==='reload'){bwTabLoad(bw.at,t.url,true);return true}
+  return false;
+}
+function bwTabsRender(){
+  const el=$('bw-tabs');if(!el)return;
+  el.innerHTML=`<button class="bw-tab${bw.at<0?' on':''}" type="button" onclick="bwTabSel(-1)">🏠 <b>Beranda</b></button>`
+    +bw.tabs.map((t,i)=>`<div class="bw-tab${i===bw.at?' on':''}" onclick="bwTabSel(${i})"><b>${esc((t.title||'').slice(0,20))}</b><i onclick="event.stopPropagation();bwTabClose(${i})" title="Tutup tab">✕</i></div>`).join('')
+    +'<button class="bw-tab plus" type="button" onclick="bwTabNewBlank()" title="Tab baru">＋</button>';
+}
+window.addEventListener('message',e=>{
+  const d=e.data;if(!d||d.vdlBw!==1)return;
+  const i=bw.tabs.findIndex(t=>t.frame.contentWindow===e.source);if(i<0)return;
+  const t=bw.tabs[i],u=String(d.url||'');
+  if(!/^https?:\/\//i.test(u))return;
+  if(d.t==='open'){bwWebOpen(u,true);return}
+  if(d.t!=='nav')return;
+  t.title=String(d.title||'').trim()||hostOf(u)||'Tab';
+  if(t.skip){t.skip=false;t.nav=u}
+  else if(u!==t.nav){t.hist=t.hist.slice(0,t.hi+1);t.hist.push(u);t.hi=t.hist.length-1;t.nav=u}
+  t.url=u;
+  if(i===bw.at){bw.url=u;$('bw-url').value=u;bwBmStar()}
+  bwTabsRender();
+});
+function bwBookmark(){
+  const u=bw.url||$('bw-url').value;
+  if(!isUrl(u)){toast('Buka sebuah halaman dulu','warn');return}
+  const i=bw.bm.findIndex(b=>b.u===u);
+  if(i>=0){bw.bm.splice(i,1);toast('Bookmark dihapus','info')}
+  else{const t=bw.tabs[bw.at];bw.bm.unshift({u,t:(t&&t.title)||hostOf(u)});bw.bm=bw.bm.slice(0,30);toast('Bookmark disimpan','success')}
+  bwSaveJ('bw_bm',bw.bm);bwBmStar();
+}
+function bwBmStar(){const b=$('bw-star');if(b)b.textContent=bw.bm.some(x=>x.u===bw.url)?'★':'☆'}
+function bwBmGo(i){const b=bw.bm[i];if(b)bwWebOpen(b.u,false)}
+function bwBmDel(i,e){e.stopPropagation();bw.bm.splice(i,1);bwSaveJ('bw_bm',bw.bm);bwNote('welcome')}
+
+function bwCopy(t){try{navigator.clipboard.writeText(t);toast('Disalin: '+t,'success')}catch{toast('Salin manual: '+t,'info')}}
+function bwSetClose(){$('bw-set').hidden=true}
+function bwSetOpen(){
+  if(bw.px===false)bw.px=null;
+  const s=bw.set;
+  const opts=[['system','Sistem (bawaan server)'],['cloudflare','Cloudflare · 1.1.1.1'],['google','Google · 8.8.8.8'],['quad9','Quad9 · 9.9.9.9'],['custom','Kustom (URL DoH)']];
+  const dev=[['Android · DNS pribadi','dns.google'],['Android · DNS pribadi (Cloudflare)','1dot1dot1dot1.cloudflare-dns.com'],['Chrome/Edge · DNS aman','https://cloudflare-dns.com/dns-query'],['Windows/iPhone · DNS biasa','1.1.1.1']];
+  $('bw-set').innerHTML=`<div class="bw-sc"><div class="bw-sh"><b>🛡 DNS &amp; Proxy</b><button class="bw-ic" type="button" onclick="bwSetClose()" aria-label="Tutup">✕</button></div>
+  <label class="bw-row"><span>Buka situs lewat Proxy Web<small>Menampilkan situs apa pun di dalam aplikasi (tanpa login/cookie). Matikan bila ingin situs dibuka di jendela terpisah.</small></span><input type="checkbox" id="bws-px" ${s.proxy?'checked':''}></label>
+  <div class="bw-lbl">DNS yang dipakai proxy</div>
+  <div class="bw-opts">${opts.map(([v,l])=>`<label class="bw-opt"><input type="radio" name="bwdns" value="${v}" ${s.dns===v?'checked':''}><span>${l}</span></label>`).join('')}</div>
+  <input class="bw-in" id="bws-doh" type="url" inputmode="url" placeholder="https://dns.contoh/dns-query (DoH format JSON)" value="${esc(s.doh||'')}">
+  <div class="bw-act"><button class="eb" type="button" onclick="bwDnsTest()">Tes DNS</button><span id="bws-res"></span></div>
+  <div class="bw-help"><b>Catatan penting.</b> DNS di atas hanya dipakai <b>server proxy</b> saat mencari alamat situs. Aplikasi web tidak bisa mengubah DNS perangkat Anda. Agar situs yang diblokir ISP terbuka di semua aplikasi, ubah DNS di perangkat:
+  ${dev.map(([l,v])=>`<div class="bw-dev"><span style="flex:none;color:#6B7280">${esc(l)}</span><code>${esc(v)}</code><button type="button" onclick="bwCopy('${v}')">Salin</button></div>`).join('')}</div>
+  <div style="margin-top:14px"><button class="eb" style="background:#5BC774;width:100%;height:42px" type="button" onclick="bwSetSave()">Simpan</button></div></div>`;
+  $('bw-set').hidden=false;
+}
+function bwSetRead(){
+  const r=document.querySelector('input[name=bwdns]:checked');
+  return{proxy:!!$('bws-px').checked,dns:r?r.value:'system',doh:$('bws-doh').value.trim()};
+}
+function bwSetSave(){
+  bw.set=bwSetRead();bwSaveJ('bw_set',bw.set);bwSetClose();
+  toast('Pengaturan disimpan'+(bw.set.proxy?'':' — proxy dimatikan'),'success');
+}
+async function bwDnsTest(){
+  const o=bwSetRead(),out=$('bws-res');
+  out.textContent='Menguji…';
+  if(!(await bwProxyReady())){out.textContent='✗ Proxy belum ter-deploy (api/browse.js)';return}
+  try{
+    const q='/api/browse?dnstest=wikipedia.org&k='+encodeURIComponent(bw.k)+(o.dns!=='system'?'&dns='+o.dns+(o.dns==='custom'?'&doh='+encodeURIComponent(o.doh):''):'');
+    const j=await(await fetch(q,{cache:'no-store'})).json();
+    out.textContent=j.ok?`✓ wikipedia.org → ${j.ip} · ${j.ms} ms`:'✗ '+(j.error||'gagal');
+  }catch{out.textContent='✗ Gagal menghubungi server'}
+}
+bwTabsRender();
 window.addEventListener('focus',()=>setTimeout(bwClip,250));
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(bwClip,250)});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('bw').hidden&&e.target.tagName!=='INPUT')bwClose()});
