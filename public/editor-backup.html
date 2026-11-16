@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#09090b"/>
 <title>VaultDL Editor — potong, gabung, teks & musik</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Caveat:wght@700&family=Comic+Neue:wght@700&family=JetBrains+Mono:wght@500;600;700;800&family=Montserrat:ital,wght@0,700;0,800;0,900;1,800&family=Oswald:wght@600;700&family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Poppins:ital,wght@0,600;0,700;0,800;0,900;1,700&family=Rubik:wght@700;800&display=swap" rel="stylesheet"/>
 <style>
 /* ================= RESET & ANTI-SELECTION LOCK ================= */
 *,*::before,*::after{
@@ -106,7 +106,7 @@ input,select,textarea{font-family:inherit;color:var(--t1);transition:border-colo
   background:var(--s2);
   border:1px solid var(--b);
   font-size:13.5px;
-  display: inline-grid;
+  display:inline-grid;
   place-items:center;
   flex:0 0 32px;
   color:var(--t1);
@@ -483,6 +483,22 @@ input,select,textarea{font-family:inherit;color:var(--t1);transition:border-colo
   background:var(--s1);
 }
 
+/* Section Divider Label in Panel */
+.sec-lbl{
+  font-size:.66rem;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  color:var(--g-hover);
+  margin:14px 0 8px;
+  padding-bottom:4px;
+  border-bottom:1px solid var(--b);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.sec-lbl:first-child{margin-top:0}
+
 /* ================= FORM CONTROLS & ROWS (ANTI-CLIPPING) ================= */
 .row{
   display:flex;
@@ -576,6 +592,14 @@ input,select,textarea{font-family:inherit;color:var(--t1);transition:border-colo
   accent-color:var(--g);
   flex:0 0 17px;
   cursor:pointer;
+}
+.val-badge{
+  width:42px;
+  flex:0 0 42px;
+  text-align:right;
+  font-family:'JetBrains Mono',monospace;
+  font-size:.68rem;
+  color:var(--t2);
 }
 
 /* ================= BUTTONS & BARS ================= */
@@ -763,7 +787,7 @@ video.res{
 @media(min-width:960px){
   .main{
     display:grid;
-    grid-template-columns:minmax(0,1fr) 380px;
+    grid-template-columns:minmax(0,1fr) 390px;
     grid-template-rows:minmax(0,1fr);
   }
   .pn{
@@ -829,6 +853,44 @@ video.res{
 <script type="module">
 import {FONTS,drawText,drawOverlay,drawVideoFrame,videoLayout,clipLen,projectDuration,renderProject,probeMedia,computePeaks,createPool,audioSources,mixMono16k} from '/vendor/editor-core.mjs';
 
+/* ================= KOLEKSI FONT SOSIAL MEDIA POPULER ================= */
+const SOCIAL_FONTS = {
+  montserrat: "'Montserrat', sans-serif",
+  poppins: "'Poppins', sans-serif",
+  anton: "'Anton', Impact, sans-serif",
+  bebas: "'Bebas Neue', Impact, sans-serif",
+  oswald: "'Oswald', sans-serif",
+  rubik: "'Rubik', sans-serif",
+  jakarta: "'Plus Jakarta Sans', sans-serif",
+  playfair: "'Playfair Display', Georgia, serif",
+  comic: "'Comic Neue', cursive, sans-serif",
+  caveat: "'Caveat', cursive, sans-serif",
+  mono: "'JetBrains Mono', monospace"
+};
+try { Object.assign(FONTS, SOCIAL_FONTS); } catch {}
+
+const FONT_LABELS = {
+  montserrat: '🔥 Montserrat (CapCut / Hormozi)',
+  poppins: '✨ Poppins (Reels / TikTok Modern)',
+  anton: '⚡ Anton (Impact Tebal Viral)',
+  bebas: '🎬 Bebas Neue (Sinema / Judul)',
+  oswald: '📱 Oswald (Shorts Sempit & Tegas)',
+  rubik: '🎯 Rubik (Bulat & Bersih)',
+  jakarta: '💎 Plus Jakarta (Standar Modern)',
+  playfair: '👑 Playfair Display (Estetik / Kutipan)',
+  comic: '💬 Comic Neue (Kasual / Santai)',
+  caveat: '✍️ Caveat (Tulisan Tangan)',
+  sans: 'Sans-Serif (Bawaan)',
+  serif: 'Serif (Bawaan)',
+  mono: '⌨️ JetBrains Mono (Kode / Mesin Tik)',
+  impact: 'Impact Klasik',
+  rounded: 'Rounded (Bawaan)'
+};
+function fontOptionsHtml(selectedFont) {
+  const keys = [...new Set([...Object.keys(SOCIAL_FONTS), ...Object.keys(FONTS)])];
+  return keys.map(f => `<option value="${esc(f)}" ${selectedFont === f ? 'selected' : ''}>${esc(FONT_LABELS[f] || f)}</option>`).join('');
+}
+
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const uid=()=>Math.random().toString(36).slice(2,9);
@@ -843,6 +905,29 @@ const S={p:newP(),media:new Map(),sel:null,t:0,playing:false,zoom:60,hist:[],fut
 const exp={aspect:'auto',res:720,fps:30,quality:'high',format:'auto',busy:false,ac:null,result:null};
 window.__S=S;window.__exp=exp;
 const PKEY='vdl_ed_proj';
+
+/* ================= state subtitle & pre-visualization ================= */
+const asr={
+  src:'all',
+  lang:'auto',
+  model:'base',
+  mode:'2',          // '1' (1 kata), '2' (2-3 kata), '5' (4-6 kata), 'full' (kalimat)
+  casing:'none',     // 'none', 'upper', 'lower'
+  font:'montserrat',
+  size:7.5,
+  color:'#ffffff',
+  bg:false,
+  bgColor:'#000000',
+  bold:true,
+  pos:'bot',
+  x:0.5,
+  y:0.82,
+  preview:true,      // tampilkan contoh posisi & ukuran di layar pratinjau sebelum transkrip
+  busy:false,
+  ac:null,
+  pr:0,
+  st:''
+};
 
 /* ================= IndexedDB (media bertahan saat refresh) ================= */
 const idb={db:null,
@@ -950,7 +1035,6 @@ async function loadMedia(item,title,label){
   const ext=(item.extension||'mp4');
   return registerMedia(blob,`${title} — ${item.quality||ext}.${ext}`);
 }
-// wantAudio: ambil audio saja (musik); wantVideo: video (+ audio bila video-only)
 async function fetchFromUrl(url,mode,title0){
   try{
     ST('Mencari format…');
@@ -1037,6 +1121,12 @@ function fitCanvas(){
   cv.style.width=Math.max(40,Math.floor(w))+'px';cv.style.height=Math.max(40,Math.floor(h))+'px';
 }
 let fitKey='';
+function formatSampleText(mode, casing){
+  let s = mode==='1' ? 'CONTOH' : mode==='2' ? 'CONTOH TEKS' : mode==='5' ? 'CONTOH TEKS SUBTITLE VIRAL' : 'Contoh tampilan ukuran & posisi subtitle otomatis';
+  if(casing==='upper') return s.toUpperCase();
+  if(casing==='lower') return s.toLowerCase();
+  return s;
+}
 function draw(){
   const sc=Math.min(1,960/Math.max(S.p.w,S.p.h)),W=Math.max(2,Math.round(S.p.w*sc)),H=Math.max(2,Math.round(S.p.h*sc));
   if(cv.width!==W||cv.height!==H){cv.width=W;cv.height=H}
@@ -1049,7 +1139,24 @@ function draw(){
   }
   S.boxes=[];
   for(const o of S.p.o){if(S.t>=o.start&&S.t<o.end){const m=S.media.get(o.mid);if(m&&m.img)S.boxes.push({id:o.id,k:'o',b:drawOverlay(cx,m.img,m.w,m.h,o,W,H)})}}
-  for(const tx of S.p.t){if(S.t>=tx.start&&S.t<tx.end&&String(tx.text||'').trim())S.boxes.push({id:tx.id,k:'t',b:drawText(cx,tx,W,H)})}
+  let hasActiveSub=false;
+  for(const tx of S.p.t){
+    if(S.t>=tx.start&&S.t<tx.end&&String(tx.text||'').trim()){
+      if(tx.sub)hasActiveSub=true;
+      S.boxes.push({id:tx.id,k:'t',b:drawText(cx,tx,W,H)});
+    }
+  }
+  // Pre-visualization box saat di tab Subtitle & belum ada subtitle aktif di detik ini
+  if(S.tab==='sub'&&asr.preview&&!hasActiveSub){
+    const sample={
+      text:formatSampleText(asr.mode,asr.casing),
+      x:asr.x,y:asr.y,size:asr.size,color:asr.color,
+      bg:asr.bg,bgColor:asr.bgColor,bold:asr.bold,font:asr.font
+    };
+    const b=drawText(cx,sample,W,H);
+    S.boxes.push({id:'__asr_prev',k:'asr',b});
+    cx.save();cx.setLineDash([5,4]);cx.strokeStyle='#22d3ee';cx.lineWidth=1.5;cx.strokeRect(b.x-4,b.y-4,b.w+8,b.h+8);cx.restore();
+  }
   if(S.sel&&(S.sel.k==='t'||S.sel.k==='o')){
     const x=S.boxes.find(o=>o.id===S.sel.id);
     if(x){cx.save();cx.setLineDash([6,4]);cx.strokeStyle='#10b981';cx.lineWidth=2;cx.strokeRect(x.b.x,x.b.y,x.b.w,x.b.h);cx.restore()}
@@ -1058,7 +1165,7 @@ function draw(){
 function updatePH(){
   $('ph').style.left=(26+S.t*S.zoom)+'px';
   $('time').textContent=fmtT(S.t)+' / '+fmtT(dur());
-  $('empty').style.display=S.p.v.length||S.p.t.length||S.p.o.length?'none':'grid';
+  $('empty').style.display=S.p.v.length||S.p.t.length||S.p.o.length||S.tab==='sub'?'none':'grid';
   $('b-play').textContent=S.playing?'⏸':'▶';
 }
 function tick(now){
@@ -1212,19 +1319,54 @@ function delSel(){
 }
 function addText(){
   snap();
-  const t={id:uid(),text:'Teks baru',start:S.t,end:S.t+3,x:.5,y:.82,size:7,color:'#ffffff',bg:false,bgColor:'#000000',bold:true,font:'sans'};
+  const t={id:uid(),text:'Teks baru',start:S.t,end:S.t+3,x:asr.x??.5,y:asr.y??.82,size:asr.size||7.5,color:asr.color||'#ffffff',bg:asr.bg||false,bgColor:asr.bgColor||'#000000',bold:true,font:asr.font||'montserrat'};
   S.p.t.push(t);afterEdit();select('t',t.id);
 }
 
-/* ================= seret teks / overlay / posisi video di pratinjau ================= */
+/* ================= seret teks / overlay / panduan subtitle / posisi video di pratinjau ================= */
 cv.addEventListener('pointerdown',e=>{
   const r=cv.getBoundingClientRect(),px=(e.clientX-r.left)*cv.width/r.width,py=(e.clientY-r.top)*cv.height/r.height;
   const hit=[...S.boxes].reverse().find(o=>px>=o.b.x&&px<=o.b.x+o.b.w&&py>=o.b.y&&py<=o.b.y+o.b.h);
+  // Jika menyeret kotak panduan pratinjau subtitle (sebelum/sesudah transkrip di tab Subtitle)
+  if(hit&&hit.k==='asr'){
+    e.preventDefault();
+    const ox=asr.x,oy=asr.y,sx=e.clientX,sy=e.clientY;
+    const mv=ev=>{
+      asr.x=clamp(ox+(ev.clientX-sx)/r.width,0.05,0.95);
+      asr.y=clamp(oy+(ev.clientY-sy)/r.height,0.05,0.95);
+      const ax=$('a-x'),ay=$('a-y'),vx=$('a-vx'),vy=$('a-vy');
+      if(ax)ax.value=asr.x;if(ay)ay.value=asr.y;
+      if(vx)vx.textContent=Math.round(asr.x*100)+'%';
+      if(vy)vy.textContent=Math.round(asr.y*100)+'%';
+      S.dirty=true;
+    };
+    const up=()=>{removeEventListener('pointermove',mv);syncLiveSubs()};
+    addEventListener('pointermove',mv);addEventListener('pointerup',up,{once:true});
+    return;
+  }
   let it=null,mode='xy';
   if(hit){it=listOf(hit.k).find(t=>t.id===hit.id)}
   else if(S.sel&&S.sel.k==='v'){it=findItem(S.sel);mode='off'}
   if(!it)return;
-  e.preventDefault();snap();if(hit)select(hit.k,it.id);
+  e.preventDefault();snap();
+  if(hit&&S.tab==='sub'&&hit.k==='t'&&it.sub){
+    // Bila sedang di tab Subtitle dan menggeser salah satu teks subtitle, perbarui posisi default & seluruh subtitle
+    const ox=it.x,oy=it.y,sx=e.clientX,sy=e.clientY;
+    const mv=ev=>{
+      asr.x=clamp(ox+(ev.clientX-sx)/r.width,0.05,0.95);
+      asr.y=clamp(oy+(ev.clientY-sy)/r.height,0.05,0.95);
+      for(const t of S.p.t)if(t.sub){t.x=asr.x;t.y=asr.y}
+      const ax=$('a-x'),ay=$('a-y'),vx=$('a-vx'),vy=$('a-vy');
+      if(ax)ax.value=asr.x;if(ay)ay.value=asr.y;
+      if(vx)vx.textContent=Math.round(asr.x*100)+'%';
+      if(vy)vy.textContent=Math.round(asr.y*100)+'%';
+      S.dirty=true;
+    };
+    const up=()=>{removeEventListener('pointermove',mv);save()};
+    addEventListener('pointermove',mv);addEventListener('pointerup',up,{once:true});
+    return;
+  }
+  if(hit)select(hit.k,it.id);
   const kx=mode==='xy'?'x':'ox',ky=mode==='xy'?'y':'oy',ox=it[kx]||0,oy=it[ky]||0,sx=e.clientX,sy=e.clientY;
   const lo=mode==='xy'?0.02:-1,hi=mode==='xy'?0.98:1;
   const mv=ev=>{it[kx]=clamp(ox+(ev.clientX-sx)/r.width,lo,hi);it[ky]=clamp(oy+(ev.clientY-sy)/r.height,lo,hi);S.dirty=true;syncPos()};
@@ -1235,10 +1377,14 @@ function syncPos(){
   const it=S.sel&&findItem(S.sel);if(!it)return;
   const set=(id,v)=>{const el=$(id);if(el)el.value=v};
   set('p-x',it.x);set('p-y',it.y);set('p-ox',it.ox||0);set('p-oy',it.oy||0);
+  const vx=$('p-vx'),vy=$('p-vy'),vs=$('p-vs');
+  if(vx&&it.x!=null)vx.textContent=Math.round(it.x*100)+'%';
+  if(vy&&it.y!=null)vy.textContent=Math.round(it.y*100)+'%';
+  if(vs&&it.size!=null)vs.textContent=it.size;
 }
 
 /* ================= panel ================= */
-document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{S.tab=b.dataset.tab;renderPanel()}));
+document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{S.tab=b.dataset.tab;S.dirty=true;renderPanel()}));
 function renderPanel(){
   if(S.tab==='sub'){document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab==='sub'));return panelSub($('pp'))}
   document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===S.tab));
@@ -1319,15 +1465,22 @@ function panelProp(pp){
   const timing=`<div class="row"><label>Mulai (dtk)</label><input type="number" id="p-st" step=".1" min="0" value="${it.start!=null?it.start.toFixed(2):''}"></div>
     <div class="row"><label>Selesai (dtk)</label><input type="number" id="p-en" step=".1" min="0" value="${it.end!=null?it.end.toFixed(2):''}"></div>`;
   if(k==='t'){
-    pp.innerHTML=`<div class="row"><span class="l">Teks</span><textarea id="p-text">${esc(it.text)}</textarea></div>
-    <div class="row"><label>Ukuran</label><input type="range" id="p-size" min="2" max="24" step=".5" value="${it.size}"></div>
+    pp.innerHTML=`<div class="sec-lbl"><span>Konten & Gaya Teks</span></div>
+    <div class="row"><span class="l">Teks</span><textarea id="p-text">${esc(it.text)}</textarea></div>
+    <div class="row"><label>Font Sosmed</label><select id="p-font">${fontOptionsHtml(it.font)}</select></div>
+    <div class="row"><label>Ukuran</label><input type="range" id="p-size" min="2" max="24" step=".5" value="${it.size}"><span class="val-badge" id="p-vs">${it.size}</span></div>
     <div class="row"><label>Warna</label><input type="color" id="p-color" value="${it.color}"><label style="width:auto;flex:0 0 auto;margin-left:6px">Tebal</label><input type="checkbox" id="p-bold" ${it.bold?'checked':''}></div>
-    <div class="row"><label>Latar</label><input type="checkbox" id="p-bg" ${it.bg?'checked':''}><input type="color" id="p-bgc" value="${it.bgColor||'#000000'}"></div>
-    <div class="row"><label>Font</label><select id="p-font">${Object.keys(FONTS).map(f=>`<option value="${f}" ${it.font===f?'selected':''}>${f}</option>`).join('')}</select></div>
-    <div class="row"><label>Posisi X</label><input type="range" id="p-x" min="0" max="1" step=".005" value="${it.x}"></div>
-    <div class="row"><label>Posisi Y</label><input type="range" id="p-y" min="0" max="1" step=".005" value="${it.y}"></div>
-    <div class="bar"><button class="btn sm" data-p="top">Atas</button><button class="btn sm" data-p="mid">Tengah</button><button class="btn sm" data-p="bot">Bawah</button></div>
-    ${timing}<p class="hint">Teks juga bisa digeser langsung di pratinjau.</p>`;
+    <div class="row"><label>Kotak Latar</label><input type="checkbox" id="p-bg" ${it.bg?'checked':''}><input type="color" id="p-bgc" value="${it.bgColor||'#000000'}"></div>
+    <div class="sec-lbl"><span>Posisi & Waktu</span></div>
+    <div class="row"><label>Posisi X</label><input type="range" id="p-x" min="0.05" max="0.95" step=".005" value="${it.x}"><span class="val-badge" id="p-vx">${Math.round(it.x*100)}%</span></div>
+    <div class="row"><label>Posisi Y</label><input type="range" id="p-y" min="0.05" max="0.95" step=".005" value="${it.y}"><span class="val-badge" id="p-vy">${Math.round(it.y*100)}%</span></div>
+    <div class="bar">
+      <button class="btn sm" data-p="top">⬆ Atas</button>
+      <button class="btn sm" data-p="mid">⏺ Tengah</button>
+      <button class="btn sm" data-p="bot">⬇ Bawah</button>
+      <button class="btn sm" data-p="applyall" title="Terapkan font, ukuran, warna & posisi ini ke semua teks">✨ Terapkan ke Semua Teks</button>
+    </div>
+    ${timing}<p class="hint">Teks juga bisa digeser langsung dengan mouse/jari di layar pratinjau.</p>`;
   }else if(k==='o'){
     pp.innerHTML=`<p class="msg"><b>${esc(m.name||'?')}</b> · overlay gambar</p>
     <div class="row"><label>Ukuran</label><input type="range" id="p-ow" min=".05" max="1" step=".01" value="${it.w}"></div>
@@ -1337,7 +1490,7 @@ function panelProp(pp){
     ${timing}<p class="hint">Overlay (logo, stiker, watermark) juga bisa digeser langsung di pratinjau.</p>`;
   }else{
     pp.innerHTML=`<p class="msg"><b>${esc(m.name||'?')}</b><br>Durasi di timeline: ${fmtT(clipLen(it))} · sumber ${fmtT(it.in)}–${fmtT(it.out)}</p>
-    <div class="row"><label>Volume</label><input type="range" id="p-vol" min="0" max="2" step=".05" value="${it.vol??1}"><span id="p-vv" style="width:42px;flex:0 0 42px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:.68rem">${Math.round((it.vol??1)*100)}%</span></div>
+    <div class="row"><label>Volume</label><input type="range" id="p-vol" min="0" max="2" step=".05" value="${it.vol??1}"><span id="p-vv" class="val-badge">${Math.round((it.vol??1)*100)}%</span></div>
     ${k==='v'&&m.hasAudio?`<div class="row"><label>Bisukan</label><input type="checkbox" id="p-mute" ${it.mute?'checked':''}><span class="hint" style="margin:0">Matikan suara asli video</span></div>`:''}
     <div class="row"><label>Kecepatan</label><select id="p-spd">${SPEEDS.map(v=>`<option value="${v}" ${(it.speed||1)===v?'selected':''}>${v}×</option>`).join('')}</select></div>
     ${k==='v'?`<div class="row"><label>Zoom</label><input type="range" id="p-zoom" min="1" max="4" step=".02" value="${it.zoom||1}"></div>
@@ -1352,8 +1505,12 @@ $('pp').addEventListener('focusin',e=>{if(e.target.closest('#pp')&&/INPUT|TEXTAR
 $('pp').addEventListener('pointerdown',e=>{if(e.target.type==='range'&&S.tab==='prop')snap()});
 $('pp').addEventListener('input',propEdit((it,el)=>{
   const id=el.id;
-  if(id==='p-text')it.text=el.value;else if(id==='p-size')it.size=+el.value;else if(id==='p-color')it.color=el.value;
-  else if(id==='p-bgc')it.bgColor=el.value;else if(id==='p-x')it.x=+el.value;else if(id==='p-y')it.y=+el.value;
+  if(id==='p-text')it.text=el.value;
+  else if(id==='p-size'){it.size=+el.value;const s=$('p-vs');if(s)s.textContent=it.size}
+  else if(id==='p-color')it.color=el.value;
+  else if(id==='p-bgc')it.bgColor=el.value;
+  else if(id==='p-x'){it.x=+el.value;const vx=$('p-vx');if(vx)vx.textContent=Math.round(it.x*100)+'%'}
+  else if(id==='p-y'){it.y=+el.value;const vy=$('p-vy');if(vy)vy.textContent=Math.round(it.y*100)+'%'}
   else if(id==='p-ow')it.w=+el.value;else if(id==='p-op')it.op=+el.value;
   else if(id==='p-zoom')it.zoom=+el.value;else if(id==='p-ox')it.ox=+el.value;else if(id==='p-oy')it.oy=+el.value;
   else if(id==='p-vol'){it.vol=+el.value;const v=$('p-vv');if(v)v.textContent=Math.round(it.vol*100)+'%'}
@@ -1370,7 +1527,13 @@ $('pp').addEventListener('click',e=>{
   const it=findItem(S.sel);if(!it)return;
   if(b.dataset.p==='vreset'&&S.sel.k==='v'){snap();it.zoom=1;it.ox=0;it.oy=0;renderPanel();S.dirty=true;save();return}
   if(S.sel.k!=='t')return;
-  snap();it.y=b.dataset.p==='top'?.14:b.dataset.p==='mid'?.5:.84;it.x=.5;renderPanel();S.dirty=true;save();
+  snap();
+  if(b.dataset.p==='applyall'){
+    for(const t of S.p.t){t.font=it.font;t.size=it.size;t.color=it.color;t.bg=it.bg;t.bgColor=it.bgColor;t.bold=it.bold;t.x=it.x;t.y=it.y}
+    toast('Gaya & posisi diterapkan ke semua klip teks');
+    S.dirty=true;save();return;
+  }
+  it.y=b.dataset.p==='top'?.14:b.dataset.p==='mid'?.5:.82;it.x=.5;renderPanel();S.dirty=true;save();
 });
 
 /* ---- ekspor ---- */
@@ -1441,27 +1604,149 @@ async function newProject(){
   await idb.clear();save();renderTL();renderPanel();S.dirty=true;updBtns();
 }
 
-/* ================= subtitle otomatis (Whisper di browser) ================= */
-const asr={src:'all',lang:'auto',model:'base',size:6,color:'#ffffff',bg:true,pos:'bot',busy:false,ac:null,pr:0,st:''};
+/* ================= SUBTITLE OTOMATIS (PER KATA, PRE-VISUALIZATION & SOCIAL FONTS) ================= */
 const LANGS=[['auto','Deteksi otomatis',null],['id','Indonesia','indonesian'],['en','English','english'],['ms','Melayu','malay'],['ar','Arab','arabic'],['ja','Jepang','japanese'],['ko','Korea','korean'],['zh','Mandarin','chinese'],['hi','Hindi','hindi'],['es','Spanyol','spanish'],['fr','Prancis','french'],['de','Jerman','german'],['pt','Portugis','portuguese'],['ru','Rusia','russian'],['tr','Turki','turkish'],['th','Thai','thai'],['vi','Vietnam','vietnamese']];
+
 function panelSub(pp){
   const subs=S.p.t.filter(t=>t.sub).length;
-  pp.innerHTML=`<p class="msg"><b>Teks otomatis dari suara</b> — percakapan maupun vokal lagu. Diproses di perangkat Anda dengan Whisper. Pemakaian pertama mengunduh model (±40–250 MB) dari internet lalu disimpan di cache browser. Hasil perlu dikoreksi, terutama untuk lagu, musik keras, dan bahasa daerah.</p>
-  <div class="row"><label>Sumber</label><select id="a-src"><option value="all">Seluruh audio timeline</option><option value="sel">Klip yang dipilih</option></select></div>
+  pp.innerHTML=`
+  <div class="sec-lbl">
+    <span>1. Atur Ukuran, Font & Posisi Dulu</span>
+    <label style="display:inline-flex;align-items:center;gap:4px;font-size:.64rem;color:var(--t1);cursor:pointer;text-transform:none"><input type="checkbox" id="a-prev" ${asr.preview?'checked':''} style="width:13px;height:13px;accent-color:var(--g)"> Pratinjau di Layar</label>
+  </div>
+  <div class="row"><label>Gaya Tampil</label><select id="a-mode">
+    <option value="1">🔥 1 Kata (CapCut / Hormozi Punchy)</option>
+    <option value="2">⚡ 2–3 Kata (Reels / TikTok Cepat)</option>
+    <option value="5">📱 4–6 Kata (Satu Baris Pendek)</option>
+    <option value="full">🎬 Kalimat Utuh (Standar Film/YouTube)</option>
+  </select></div>
+  <div class="row"><label>Font Sosmed</label><select id="a-font">${fontOptionsHtml(asr.font)}</select></div>
+  <div class="row"><label>Format Huruf</label><select id="a-case">
+    <option value="none">Normal (Sesuai Ucapan)</option>
+    <option value="upper">HURUF BESAR SEMUA (VIRAL)</option>
+    <option value="lower">huruf kecil semua (estetik)</option>
+  </select></div>
+  <div class="row"><label>Ukuran Teks</label><input type="range" id="a-size" min="2.5" max="18" step=".5" value="${asr.size}"><span class="val-badge" id="a-vs">${asr.size}</span></div>
+  <div class="row"><label>Warna Teks</label><input type="color" id="a-color" value="${asr.color}"><label style="width:auto;flex:0 0 auto;margin-left:4px">Tebal</label><input type="checkbox" id="a-bold" ${asr.bold?'checked':''}><label style="width:auto;flex:0 0 auto;margin-left:4px">Latar</label><input type="checkbox" id="a-bg" ${asr.bg?'checked':''}><input type="color" id="a-bgc" value="${asr.bgColor}"></div>
+  <div class="row"><label>Posisi X</label><input type="range" id="a-x" min="0.05" max="0.95" step=".005" value="${asr.x}"><span class="val-badge" id="a-vx">${Math.round(asr.x*100)}%</span></div>
+  <div class="row"><label>Posisi Y</label><input type="range" id="a-y" min="0.05" max="0.95" step=".005" value="${asr.y}"><span class="val-badge" id="a-vy">${Math.round(asr.y*100)}%</span></div>
+  <div class="bar">
+    <button class="btn sm" data-apos="top">⬆ Atas (14%)</button>
+    <button class="btn sm" data-apos="mid">⏺ Tengah (50%)</button>
+    <button class="btn sm" data-apos="reels">📱 Area Aman Reels (74%)</button>
+    <button class="btn sm" data-apos="bot">⬇ Bawah (84%)</button>
+  </div>
+
+  <div class="sec-lbl"><span>2. Mesin Transkripsi Suara (Whisper AI)</span></div>
+  <div class="row"><label>Sumber Audio</label><select id="a-src"><option value="all">Seluruh audio timeline</option><option value="sel">Klip yang dipilih</option></select></div>
   <div class="row"><label>Bahasa</label><select id="a-lang">${LANGS.map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select></div>
-  <div class="row"><label>Model</label><select id="a-model"><option value="tiny">Tiny · ±40 MB · cepat, kurang akurat</option><option value="base">Base · ±75 MB · seimbang</option><option value="small">Small · ±250 MB · paling akurat, lambat</option></select></div>
-  <div class="row"><label>Ukuran</label><input type="range" id="a-size" min="3" max="12" step=".5" value="${asr.size}"></div>
-  <div class="row"><label>Warna</label><input type="color" id="a-color" value="${asr.color}"><label style="width:auto;flex:0 0 auto;margin-left:6px">Latar</label><input type="checkbox" id="a-bg" ${asr.bg?'checked':''}></div>
-  <div class="row"><label>Posisi</label><select id="a-pos"><option value="bot">Bawah</option><option value="mid">Tengah</option><option value="top">Atas</option></select></div>
-  <div class="bar"><button class="btn g" id="a-go" ${asr.busy?'disabled':''}>✨ Mulai transkripsi</button>${asr.busy?'<button class="btn" id="a-cancel">Batal</button>':''}</div>
+  <div class="row"><label>Model AI</label><select id="a-model"><option value="tiny">Tiny · ±40 MB · cepat</option><option value="base">Base · ±75 MB · akurat &amp; seimbang</option><option value="small">Small · ±250 MB · paling akurat</option></select></div>
+  <div class="bar"><button class="btn g" id="a-go" ${asr.busy?'disabled':''}>✨ Mulai Transkripsi</button>${asr.busy?'<button class="btn" id="a-cancel">Batal</button>':''}</div>
   <div class="prog"><i id="a-bar" style="width:${Math.round(asr.pr*100)}%"></i></div><div class="st" id="a-st">${esc(asr.st)}</div>
-  <div class="bar"><button class="btn sm" id="a-srt" ${subs?'':'disabled'}>⬇ Unduh .srt (${subs})</button><button class="btn sm" id="a-sty" ${subs?'':'disabled'}>Terapkan gaya ke semua</button><button class="btn sm" id="a-clr" ${subs?'':'disabled'}>🗑 Hapus subtitle</button></div>
-  <p class="hint">Subtitle muncul sebagai klip teks di track T — bisa diedit, digeser, dan dipotong seperti teks biasa.</p>`;
-  $('a-src').value=asr.src;$('a-lang').value=asr.lang;$('a-model').value=asr.model;$('a-pos').value=asr.pos;
+  <div class="bar">
+    <button class="btn sm" id="a-srt" ${subs?'':'disabled'}>⬇ Unduh .srt (${subs})</button>
+    <button class="btn sm" id="a-sty" ${subs?'':'disabled'}>🔄 Terapkan Gaya ke Subtitle (${subs})</button>
+    <button class="btn sm" id="a-clr" ${subs?'':'disabled'}>🗑 Hapus</button>
+  </div>
+  <p class="hint"><b>Tips:</b> Geser langsung kotak contoh di layar pratinjau untuk memosisikan teks sebelum transkrip. Bila sudah ada subtitle, mengubah ukuran/font/posisi di atas otomatis memperbarui seluruh subtitle.</p>`;
+
+  $('a-mode').value=asr.mode;
+  $('a-case').value=asr.casing;
+  $('a-src').value=asr.src;
+  $('a-lang').value=asr.lang;
+  $('a-model').value=asr.model;
 }
+
+function applyCasing(str, casing){
+  if(casing==='upper') return str.toUpperCase();
+  if(casing==='lower') return str.toLowerCase();
+  return str;
+}
+
+// Sinkronisasi langsung ke subtitle yang sudah ada saat user menggeser ukuran/posisi/font di tab Subtitle
+function syncLiveSubs(){
+  let changed=false;
+  for(const t of S.p.t){
+    if(t.sub){
+      t.font=asr.font;t.size=asr.size;t.color=asr.color;
+      t.bg=asr.bg;t.bgColor=asr.bgColor;t.bold=asr.bold;
+      t.x=asr.x;t.y=asr.y;
+      changed=true;
+    }
+  }
+  S.dirty=true;
+  if(changed)save();
+}
+
 const setASR=(t,p)=>{asr.st=t;if(p!=null)asr.pr=p;const a=$('a-st'),b=$('a-bar');if(a)a.textContent=t;if(b)b.style.width=Math.round(asr.pr*100)+'%'};
 const wrapText=(t,max=34)=>{const w=t.split(/\s+/),lines=[];let cur='';for(const x of w){if((cur+' '+x).trim().length>max&&cur){lines.push(cur);cur=x}else cur=(cur+' '+x).trim()}if(cur)lines.push(cur);return lines.join('\n')};
-const ypos=p=>p==='top'?.14:p==='mid'?.5:.86;
+
+// Mengelompokkan hasil transkripsi menjadi 1 kata, 2-3 kata, 4-6 kata, atau kalimat
+function segmentChunks(rawChunks, mode){
+  const words=[];
+  for(const ch of rawChunks){
+    const txt=String(ch.text||'').trim();
+    if(!txt||/^[\s.,!?…-]+$/.test(txt))continue;
+    const parts=txt.split(/\s+/).filter(Boolean);
+    const s0=ch.start??0, e0=Math.max(s0+0.15, ch.end??(s0+1.5));
+    const dur=(e0-s0)/parts.length;
+    parts.forEach((w,i)=>{
+      words.push({text:w, start:s0+i*dur, end:s0+(i+1)*dur});
+    });
+  }
+  if(!words.length) return [];
+  if(mode==='1'){
+    return words.map(w=>({text:w.text.replace(/^[.,!?]+|[.,!?]+$/g,'')||w.text, start:w.start, end:Math.max(w.end,w.start+0.18)}));
+  }
+  if(mode==='2'||mode==='5'){
+    const maxW = mode==='2' ? 3 : 5;
+    const maxChars = mode==='2' ? 18 : 32;
+    const out=[];
+    let grp=[];
+    const flush=()=>{
+      if(!grp.length)return;
+      const joined=grp.map(x=>x.text).join(' ');
+      out.push({
+        text: mode==='5' ? wrapText(joined, 26) : joined,
+        start: grp[0].start,
+        end: Math.max(grp[grp.length-1].end, grp[0].start+0.25)
+      });
+      grp=[];
+    };
+    for(const w of words){
+      const curLen=grp.map(x=>x.text).join(' ').length;
+      const pause=grp.length ? (w.start - grp[grp.length-1].end) : 0;
+      if(grp.length && (grp.length>=maxW || (curLen+1+w.text.length)>maxChars || pause>0.45)){
+        flush();
+      }
+      grp.push(w);
+      if(/[.!?]$/.test(w.text)) flush();
+    }
+    flush();
+    return out;
+  }
+  // mode === 'full' (kalimat utuh, otomatis pecah bila terlalu panjang)
+  const out=[];
+  let grp=[];
+  const flush=()=>{
+    if(!grp.length)return;
+    out.push({
+      text: wrapText(grp.map(x=>x.text).join(' '), 34),
+      start: grp[0].start,
+      end: Math.max(grp[grp.length-1].end, grp[0].start+0.4)
+    });
+    grp=[];
+  };
+  for(const w of words){
+    const pause=grp.length ? (w.start - grp[grp.length-1].end) : 0;
+    if(grp.length && (grp.length>=11 || pause>0.65)) flush();
+    grp.push(w);
+    if(/[.!?]$/.test(w.text) && grp.length>=3) flush();
+  }
+  flush();
+  return out;
+}
+
 let asrPipe=null,asrKey='';
 async function transcribe(pcm,o,onStat,signal){
   if(window.__asrMock)return window.__asrMock(pcm,o);
@@ -1477,15 +1762,22 @@ async function transcribe(pcm,o,onStat,signal){
     asrKey=o.model;
   }
   const out=[],BLOCK=120*16000,lang=(LANGS.find(l=>l[0]===o.lang)||[])[2];
+  const wantWord = o.mode !== 'full';
   for(let s=0;s<pcm.length;s+=BLOCK){
     if(signal.aborted)throw new DOMException('Dibatalkan','AbortError');
     const seg=pcm.subarray(s,Math.min(pcm.length,s+BLOCK)),off=s/16000;
     onStat(`Mentranskripsi… ${fmtT(off)} / ${fmtT(pcm.length/16000)}`,s/pcm.length);
-    const r=await asrPipe(seg,{return_timestamps:true,chunk_length_s:30,stride_length_s:5,task:'transcribe',...(lang?{language:lang}:{})});
-    for(const c of r.chunks||[]){const a=c.timestamp&&c.timestamp[0]!=null?c.timestamp[0]:0,b=c.timestamp&&c.timestamp[1]!=null?c.timestamp[1]:Math.min(seg.length/16000,a+3);out.push({text:String(c.text||'').trim(),start:off+a,end:off+b})}
+    let r;
+    try{
+      r=await asrPipe(seg,{return_timestamps:wantWord?'word':true,chunk_length_s:30,stride_length_s:5,task:'transcribe',...(lang?{language:lang}:{})});
+    }catch{
+      r=await asrPipe(seg,{return_timestamps:true,chunk_length_s:30,stride_length_s:5,task:'transcribe',...(lang?{language:lang}:{})});
+    }
+    for(const c of r.chunks||[]){const a=c.timestamp&&c.timestamp[0]!=null?c.timestamp[0]:0,b=c.timestamp&&c.timestamp[1]!=null?c.timestamp[1]:Math.min(seg.length/16000,a+(wantWord?.35:3));out.push({text:String(c.text||'').trim(),start:off+a,end:off+b})}
   }
   return out;
 }
+
 async function runASR(){
   if(asr.busy)return;
   let sources,c0,c1;
@@ -1500,17 +1792,33 @@ async function runASR(){
     const pcm=await mixMono16k(sources,pool,c0,c1,p=>setASR(`Menyiapkan audio… ${Math.round(p*100)}%`,p*0.08),asr.ac.signal);
     let peak=0;for(let i=0;i<pcm.length;i+=64)peak=Math.max(peak,Math.abs(pcm[i]));
     if(peak<0.002)throw new Error('Audio hampir senyap — tidak ada suara untuk ditranskripsi');
-    const chunks=await transcribe(pcm,{lang:asr.lang,model:asr.model},(t,p)=>setASR(t,0.08+p*0.9),asr.ac.signal);
-    const y=ypos(asr.pos);let n=0;
+    const rawChunks=await transcribe(pcm,{lang:asr.lang,model:asr.model,mode:asr.mode},(t,p)=>setASR(t,0.08+p*0.9),asr.ac.signal);
+    const grouped=segmentChunks(rawChunks, asr.mode);
+    let n=0;
     snap();
-    S.p.t=S.p.t.filter(x=>!(x.sub&&x.start>=c0-0.01&&x.start<c1));   // ganti subtitle lama di rentang yang sama
-    for(const ch of chunks){
+    S.p.t=S.p.t.filter(x=>!(x.sub&&x.start>=c0-0.01&&x.start<c1));
+    for(const ch of grouped){
       if(!ch.text||/^[\s.,!?…-]+$/.test(ch.text))continue;
-      const st=c0+ch.start,en=Math.min(c1,c0+Math.max(ch.end,ch.start+0.5));
-      S.p.t.push({id:uid(),text:wrapText(ch.text),start:st,end:Math.max(en,st+0.3),x:.5,y,size:asr.size,color:asr.color,bg:asr.bg,bgColor:'#000000',bold:true,font:'sans',sub:true});n++;
+      const st=c0+ch.start,en=Math.min(c1,c0+Math.max(ch.end,ch.start+0.18));
+      S.p.t.push({
+        id:uid(),
+        text:applyCasing(ch.text, asr.casing),
+        start:st,
+        end:Math.max(en,st+0.18),
+        x:asr.x,
+        y:asr.y,
+        size:asr.size,
+        color:asr.color,
+        bg:asr.bg,
+        bgColor:asr.bgColor||'#000000',
+        bold:asr.bold,
+        font:asr.font||'montserrat',
+        sub:true
+      });
+      n++;
     }
     S.p.t.sort((a,b)=>a.start-b.start);
-    asr.busy=false;afterEdit();setASR(n?`✓ ${n} baris subtitle ditambahkan di track T`:'Tidak ada ucapan yang terdeteksi',n?1:0);
+    asr.busy=false;afterEdit();setASR(n?`✓ ${n} klip subtitle ditambahkan di track T`:'Tidak ada ucapan yang terdeteksi',n?1:0);
     if(n)toast(n+' subtitle ditambahkan');
   }catch(err){
     asr.busy=false;renderPanel();
@@ -1518,16 +1826,51 @@ async function runASR(){
     else{setASR('✗ '+(err.message||err),0);toast(err.message||String(err),true)}
   }finally{pool.dispose()}
 }
+
 const srtT=t=>{const ms=Math.round(t*1000),h=Math.floor(ms/3600000),m=Math.floor(ms%3600000/60000),s=Math.floor(ms%60000/1000),x=ms%1000,p=(n,l=2)=>String(n).padStart(l,'0');return `${p(h)}:${p(m)}:${p(s)},${p(x,3)}`};
 function srtOf(items){return items.slice().sort((a,b)=>a.start-b.start).map((t,i)=>`${i+1}\n${srtT(t.start)} --> ${srtT(t.end)}\n${String(t.text).replace(/\n+/g,'\n')}\n`).join('\n')}
 window.__srtOf=srtOf;
+
 $('pp').addEventListener('change',e=>{
   const id=e.target.id;if(!id||id.slice(0,2)!=='a-')return;
-  if(id==='a-src')asr.src=e.target.value;else if(id==='a-lang')asr.lang=e.target.value;else if(id==='a-model')asr.model=e.target.value;
-  else if(id==='a-bg')asr.bg=e.target.checked;else if(id==='a-pos')asr.pos=e.target.value;else if(id==='a-color')asr.color=e.target.value;
+  if(id==='a-src')asr.src=e.target.value;
+  else if(id==='a-lang')asr.lang=e.target.value;
+  else if(id==='a-model')asr.model=e.target.value;
+  else if(id==='a-mode'){asr.mode=e.target.value;S.dirty=true}
+  else if(id==='a-font'){asr.font=e.target.value;syncLiveSubs()}
+  else if(id==='a-case'){
+    asr.casing=e.target.value;
+    for(const t of S.p.t)if(t.sub&&asr.casing!=='none')t.text=applyCasing(t.text,asr.casing);
+    S.dirty=true;save();renderTL();
+  }
+  else if(id==='a-bold'){asr.bold=e.target.checked;syncLiveSubs()}
+  else if(id==='a-bg'){asr.bg=e.target.checked;syncLiveSubs()}
+  else if(id==='a-bgc'){asr.bgColor=e.target.value;syncLiveSubs()}
+  else if(id==='a-color'){asr.color=e.target.value;syncLiveSubs()}
+  else if(id==='a-prev'){asr.preview=e.target.checked;S.dirty=true}
 });
-$('pp').addEventListener('input',e=>{if(e.target.id==='a-size')asr.size=+e.target.value});
+
+$('pp').addEventListener('input',e=>{
+  const id=e.target.id;if(!id||id.slice(0,2)!=='a-')return;
+  if(id==='a-size'){asr.size=+e.target.value;const s=$('a-vs');if(s)s.textContent=asr.size;syncLiveSubs()}
+  else if(id==='a-color'){asr.color=e.target.value;syncLiveSubs()}
+  else if(id==='a-bgc'){asr.bgColor=e.target.value;syncLiveSubs()}
+  else if(id==='a-x'){asr.x=+e.target.value;const vx=$('a-vx');if(vx)vx.textContent=Math.round(asr.x*100)+'%';syncLiveSubs()}
+  else if(id==='a-y'){asr.y=+e.target.value;const vy=$('a-vy');if(vy)vy.textContent=Math.round(asr.y*100)+'%';syncLiveSubs()}
+});
+
 $('pp').addEventListener('click',e=>{
+  const posBtn=e.target.closest('[data-apos]');
+  if(posBtn){
+    const p=posBtn.dataset.apos;
+    asr.x=0.5;
+    asr.y=p==='top'?0.14:p==='mid'?0.5:p==='reels'?0.74:0.84;
+    const ax=$('a-x'),ay=$('a-y'),vx=$('a-vx'),vy=$('a-vy');
+    if(ax)ax.value=asr.x;if(ay)ay.value=asr.y;
+    if(vx)vx.textContent='50%';if(vy)vy.textContent=Math.round(asr.y*100)+'%';
+    syncLiveSubs();
+    return;
+  }
   const id=e.target.id;if(!id||id.slice(0,2)!=='a-')return;
   if(id==='a-go')runASR();
   else if(id==='a-cancel'&&asr.ac)asr.ac.abort();
@@ -1536,7 +1879,17 @@ $('pp').addEventListener('click',e=>{
     const url=URL.createObjectURL(new Blob([srtOf(subs)],{type:'text/plain;charset=utf-8'})),a=document.createElement('a');
     a.href=url;a.download='subtitle.srt';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);
   }
-  else if(id==='a-sty'){snap();for(const t of S.p.t)if(t.sub){t.size=asr.size;t.color=asr.color;t.bg=asr.bg;t.y=ypos(asr.pos)}S.dirty=true;save();renderTL()}
+  else if(id==='a-sty'){
+    snap();
+    for(const t of S.p.t)if(t.sub){
+      t.font=asr.font;t.size=asr.size;t.color=asr.color;
+      t.bg=asr.bg;t.bgColor=asr.bgColor;t.bold=asr.bold;
+      t.x=asr.x;t.y=asr.y;
+      if(asr.casing!=='none')t.text=applyCasing(t.text,asr.casing);
+    }
+    toast('Gaya diterapkan ke seluruh subtitle');
+    S.dirty=true;save();renderTL();
+  }
   else if(id==='a-clr'){snap();S.p.t=S.p.t.filter(t=>!t.sub);S.sel=null;afterEdit()}
 });
 
