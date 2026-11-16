@@ -4,7 +4,7 @@
 // CATATAN MONETAG PUSH: format Push Notifications Monetag meminta file /sw.js di root domain.
 // Dua service worker tidak bisa berbagi satu scope, jadi isinya digabung di file ini:
 // tempel isi sw.js dari Monetag di bagian "MONETAG PUSH" paling bawah. Jika tidak memakai Push, biarkan kosong.
-const V = 'vdl-v4';
+const V = 'vdl-v5';
 const SHELL = ['/', '/manifest.webmanifest', '/icons/icon-192.png'];
 
 self.addEventListener('install', e => {
@@ -25,7 +25,7 @@ self.addEventListener('fetch', e => {
   if (u.origin !== location.origin || u.pathname.startsWith('/api/')) return;
 
   // Halaman: ambil dari jaringan dulu (selalu versi terbaru), cadangan dari cache saat offline
-  if (r.mode === 'navigate') {
+  if (r.mode === 'navigate' || u.pathname.startsWith('/vendor/')) {   // modul editor selalu versi terbaru
     const key = u.origin + u.pathname;
     e.respondWith(
       fetch(r).then(res => {
