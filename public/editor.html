@@ -1062,7 +1062,6 @@ function toast(m,err){const e=document.createElement('div');e.className='toast'+
 const newP=()=>({w:1280,h:720,fps:30,aspect:'auto',res:720,fit:'fit',v:[],a:[],t:[],o:[]});
 const S={p:newP(),media:new Map(),sel:null,t:0,playing:false,zoom:60,hist:[],fut:[],tab:'media',dirty:true,last:0,boxes:[],snap:true,safeZone:false};
 const exp={aspect:'auto',res:720,fps:30,quality:'high',format:'auto',busy:false,ac:null,result:null};
-/* State untuk Source Monitor (Pratinjau & Pilih Scene sebelum masuk timeline) */
 const mon={mid:null,in:0,out:0,loop:true};
 window.__S=S;window.__exp=exp;window.__mon=mon;
 const PKEY='vdl_ed_proj';
@@ -1157,16 +1156,13 @@ function autoCorrectText(text, glossaryStr){
       if(!m){out.push(tok);continue}
       const [,pre,core,post]=m;
       const low=core.toLowerCase();
-      // Buang pengulangan kata yang sama persis berurutan (e.g. "yang yang")
       if(low===prevClean && low.length>1) continue;
       prevClean=low;
 
       let res=core;
-      // 1. Cek kamus typo umum
       if(COMMON_FIXES[low]){
         res=preserveCase(core, COMMON_FIXES[low]);
       } else if(customWords.length && low.length>=3){
-        // 2. Fuzzy match terhadap Kamus Kata Khusus milik user
         const maxDist = low.length<=4 ? 1 : (low.length<=7 ? 2 : 3);
         let best=null, bestD=maxDist+1;
         for(const cw of customWords){
@@ -1459,7 +1455,6 @@ function drawSafeZone(ctx, W, H){
   const isVert = H > W * 1.1;
   ctx.fillStyle='rgba(244,63,94,0.16)';
   if(isVert){
-    // Top bar (11%), Bottom caption/nav (22%), Right social icons (15%)
     const topH=H*0.11, botH=H*0.22, rightW=W*0.16;
     ctx.fillRect(0,0,W,topH);
     ctx.fillRect(0,H-botH,W,botH);
@@ -1472,7 +1467,6 @@ function drawSafeZone(ctx, W, H){
     ctx.font='600 '+Math.max(10,Math.round(W*0.025))+'px "Plus Jakarta Sans",sans-serif';
     ctx.fillText('SAFE ZONE (REELS / TIKTOK / SHORTS)', W*0.06, topH+Math.max(14,W*0.04));
   } else {
-    // 10% title-safe margin for landscape/square
     const mx=W*0.08, my=H*0.10;
     ctx.strokeStyle='rgba(34,211,238,0.65)';
     ctx.lineWidth=1.5;
@@ -2196,7 +2190,7 @@ $('srt-file').addEventListener('change',e=>{
   e.target.value='';
 });
 
-/* ================= SUBTITLE OTOMATIS (PER KATA, PRE-VISUALIZATION, PRESETS & AUTO-CORRECTION) ================= */
+/* ================= SUBTITLE OTOMATIS (BEAT-ALIGNED, AUTO-CORRECTION & PRESETS) ================= */
 const LANGS=[['auto','Otomatis (cocok untuk campur ID + EN)',null],['id','Indonesia','indonesian'],['en','English','english'],['ms','Melayu','malay'],['ar','Arab','arabic'],['ja','Jepang','japanese'],['ko','Korea','korean'],['zh','Mandarin','chinese'],['hi','Hindi','hindi'],['es','Spanyol','spanish'],['fr','Prancis','french'],['de','Jerman','german'],['pt','Portugis','portuguese'],['ru','Rusia','russian'],['tr','Turki','turkish'],['th','Thai','thai'],['vi','Vietnam','vietnamese']];
 
 function panelSub(pp){
@@ -2235,11 +2229,15 @@ function panelSub(pp){
     <button class="btn sm" data-apos="bot">⬇ Bawah</button>
   </div>
 
-  <div class="sec-lbl"><span>2. Auto-Correction & Kamus Kata</span></div>
+  <div class="sec-lbl"><span>2. Auto-Correction & Sync Beat</span></div>
   <div class="row"><label>Auto-Correct</label><label style="width:auto;flex:1;display:flex;gap:6px;align-items:center;text-transform:none"><input type="checkbox" id="a-corr" ${asr.autoCorrect?'checked':''}> Perbaiki typo, kata berulang &amp; cocokkan kamus</label></div>
   <div class="row"><span class="l">Kamus Khusus</span><textarea id="a-gloss" style="min-height:46px" placeholder="Pisahkan dengan koma, misal: VaultDL, Fibonacci, Bitcoin, CapCut">${esc(asr.glossary)}</textarea></div>
   <div class="bar">
-    <button class="btn sm" id="a-fixnow" ${subs?'':'disabled'} title="Jalankan Auto-Correct pada subtitle yang sudah ada di timeline">🪄 Koreksi Subtitle (${subs})</button>
+    <button class="btn sm" id="a-fixnow" ${subs?'':'disabled'} title="Jalankan Auto-Correct pada subtitle yang sudah ada">🪄 Koreksi (${subs})</button>
+    <button class="btn sm" data-ashift="-0.1" ${subs?'':'disabled'} title="Majukan semua subtitle 0.1 detik">⏪ -0.1s</button>
+    <button class="btn sm" data-ashift="-0.05" ${subs?'':'disabled'} title="Majukan 0.05 detik">◀ -0.05s</button>
+    <button class="btn sm" data-ashift="0.05" ${subs?'':'disabled'} title="Mundurkan 0.05 detik">▶ +0.05s</button>
+    <button class="btn sm" data-ashift="0.1" ${subs?'':'disabled'} title="Mundurkan semua subtitle 0.1 detik">⏩ +0.1s</button>
   </div>
 
   <div class="sec-lbl"><span>3. Mesin Transkripsi Suara (Whisper AI)</span></div>
@@ -2247,7 +2245,7 @@ function panelSub(pp){
   <div class="row"><label>Bahasa</label><select id="a-lang">${LANGS.map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select></div>
   <div class="row"><label>Model AI</label><select id="a-model"><option value="tiny">Tiny · ±40 MB · cepat, kurang akurat</option><option value="base">Base · ±75 MB · seimbang</option><option value="small">Small · ±250 MB · akurat (disarankan tanpa GPU)</option><option value="turbo">Large-v3-Turbo · ±0,8–1 GB · paling akurat (butuh WebGPU)</option></select></div>
   <div class="row"><label>Akurasi</label><label style="width:auto;flex:1;display:flex;gap:6px;align-items:center;text-transform:none"><input type="checkbox" id="a-beam" ${asr.beam?'checked':''}> Mode teliti (beam search, lebih lambat)</label></div>
-  <div class="row"><label>Bersihkan</label><label style="width:auto;flex:1;display:flex;gap:6px;align-items:center;text-transform:none"><input type="checkbox" id="a-clean" ${asr.clean?'checked':''}> Filter noise, lewati bagian senyap &amp; buang halusinasi</label></div>
+  <div class="row"><label>Bersihkan</label><label style="width:auto;flex:1;display:flex;gap:6px;align-items:center;text-transform:none"><input type="checkbox" id="a-clean" ${asr.clean?'checked':''}> Filter noise, kunci ke beat suara &amp; buang halusinasi</label></div>
   <p class="hint" id="a-off">${esc(asr.offline||'Model diunduh sekali saja lalu tersimpan di browser — setelah itu transkripsi berjalan 100% offline.')}</p>
   <div class="bar"><button class="btn g" id="a-go" ${asr.busy?'disabled':''}>✨ Mulai Transkripsi</button>${asr.busy?'<button class="btn" id="a-cancel">Batal</button>':''}</div>
   <div class="prog"><i id="a-bar" style="width:${Math.round(asr.pr*100)}%"></i></div><div class="st" id="a-st">${esc(asr.st)}</div>
@@ -2257,7 +2255,7 @@ function panelSub(pp){
     <button class="btn sm" id="a-sty" ${subs?'':'disabled'}>🔄 Terapkan Gaya</button>
     <button class="btn sm" id="a-clr" ${subs?'':'disabled'}>🗑 Hapus</button>
   </div>
-  <p class="hint"><b>Tips:</b> Geser langsung kotak contoh di layar pratinjau untuk memosisikan teks sebelum transkrip. Bila sudah ada subtitle, mengubah ukuran/font/posisi di atas otomatis memperbarui seluruh subtitle.</p>`;
+  <p class="hint"><b>Tips:</b> Jika ingin transkrip satu klip saja, klik klipnya di timeline lalu pilih Sumber Audio = <b>Klip yang dipilih</b>.</p>`;
 
   $('a-mode').value=asr.mode;
   $('a-case').value=asr.casing;
@@ -2290,21 +2288,81 @@ function syncLiveSubs(){
 const setASR=(t,p)=>{asr.st=t;if(p!=null)asr.pr=p;const a=$('a-st'),b=$('a-bar');if(a)a.textContent=t;if(b)b.style.width=Math.round(asr.pr*100)+'%'};
 const wrapText=(t,max=34)=>{const w=t.split(/\s+/),lines=[];let cur='';for(const x of w){if((cur+' '+x).trim().length>max&&cur){lines.push(cur);cur=x}else cur=(cur+' '+x).trim()}if(cur)lines.push(cur);return lines.join('\n')};
 
-function segmentChunks(rawChunks, mode){
+/* ---- Penyelarasan Timestamp ke Gelombang Suara (Beat Alignment) ---- */
+function alignToSpeech(chunks, pcm, sr=16000){
+  const totalDur=pcm.length/sr;
+  if(!chunks.length||totalDur<=0)return [];
+  const step=Math.round(sr*0.01); // resolusi 10ms
+  const nF=Math.floor(pcm.length/step);
+  const env=new Float32Array(nF);
+  for(let i=0;i<nF;i++){
+    let sum=0;
+    for(let j=i*step,k=j+step;j<k;j++)sum+=pcm[j]*pcm[j];
+    env[i]=Math.sqrt(sum/step);
+  }
+  const sorted=Array.from(env).sort((a,b)=>a-b);
+  const floor=sorted[Math.floor(nF*0.15)]||0;
+  const top=sorted[Math.floor(nF*0.95)]||0;
+  const thr=Math.max(0.005, floor*2.2, top*0.06);
+
+  const out=[];
+  for(const ch of chunks){
+    let s=clamp(ch.start, 0, Math.max(0, totalDur-0.05));
+    let e=clamp(ch.end, s+0.08, totalDur);
+    const f0=clamp(Math.floor(s*100), 0, nF-1);
+    const f1=clamp(Math.ceil(e*100), f0+1, nF);
+
+    // Cek apakah rentang ini benar-benar punya suara (buang halusinasi di area senyap)
+    let maxE=0;
+    for(let i=f0;i<f1;i++)if(env[i]>maxE)maxE=env[i];
+    if(maxE < thr*0.55) continue;
+
+    // Geser titik mulai (start) pas ke momen suara mulai keluar (maks geser 0.35 detik)
+    const maxScanS=Math.min(f1-8, f0+35);
+    for(let i=f0;i<maxScanS;i++){
+      if(env[i]>=thr){s=i*0.01;break}
+    }
+    // Pangkas jeda senyap berlebih di akhir kata (maks pangkas 0.35 detik)
+    const minScanE=Math.max(Math.floor(s*100)+12, f1-35);
+    for(let i=f1-1;i>=minScanE;i--){
+      if(env[i]>=thr){e=Math.min(e, (i+4)*0.01);break}
+    }
+
+    if(e-s < 0.12) e=Math.min(totalDur, s+0.12);
+    if(s < totalDur-0.05) out.push({...ch, start:s, end:e});
+  }
+  // Cegah tumpang tindih antar subtitle
+  for(let i=1;i<out.length;i++){
+    if(out[i].start < out[i-1].end) out[i-1].end = Math.max(out[i-1].start+0.08, out[i].start);
+  }
+  return out;
+}
+
+function segmentChunks(rawChunks, mode, maxDur){
   const words=[];
   for(const ch of rawChunks){
     const txt=String(ch.text||'').trim();
     if(!txt||/^[\s.,!?…-]+$/.test(txt))continue;
     const parts=txt.split(/\s+/).filter(Boolean);
-    const s0=ch.start??0, e0=Math.max(s0+0.15, ch.end??(s0+1.5));
-    const dur=(e0-s0)/parts.length;
-    parts.forEach((w,i)=>{
-      words.push({text:w, start:s0+i*dur, end:s0+(i+1)*dur});
-    });
+    const s0=clamp(ch.start??0, 0, maxDur);
+    const e0=clamp(Math.max(s0+0.12, ch.end??(s0+1.2)), s0+0.12, maxDur);
+    if(parts.length===1){
+      words.push({text:parts[0], start:s0, end:e0});
+    } else {
+      // Distribusi durasi proporsional berdasarkan panjang huruf tiap kata
+      const weights=parts.map(w=>Math.max(2, w.replace(/[^\p{L}\p{N}]/gu,'').length));
+      const sumW=weights.reduce((a,b)=>a+b,0);
+      let cur=s0;
+      parts.forEach((w,i)=>{
+        const d=(e0-s0)*(weights[i]/sumW);
+        words.push({text:w, start:cur, end:Math.min(maxDur, cur+d)});
+        cur+=d;
+      });
+    }
   }
   if(!words.length) return [];
   if(mode==='1'){
-    return words.map(w=>({text:w.text.replace(/^[.,!?]+|[.,!?]+$/g,'')||w.text, start:w.start, end:Math.max(w.end,w.start+0.18)}));
+    return words.map(w=>({text:w.text.replace(/^[.,!?]+|[.,!?]+$/g,'')||w.text, start:w.start, end:Math.min(maxDur, Math.max(w.end,w.start+0.15))}));
   }
   if(mode==='2'||mode==='5'){
     const maxW = mode==='2' ? 3 : 5;
@@ -2317,14 +2375,14 @@ function segmentChunks(rawChunks, mode){
       out.push({
         text: mode==='5' ? wrapText(joined, 26) : joined,
         start: grp[0].start,
-        end: Math.max(grp[grp.length-1].end, grp[0].start+0.25)
+        end: Math.min(maxDur, Math.max(grp[grp.length-1].end, grp[0].start+0.2))
       });
       grp=[];
     };
     for(const w of words){
       const curLen=grp.map(x=>x.text).join(' ').length;
       const pause=grp.length ? (w.start - grp[grp.length-1].end) : 0;
-      if(grp.length && (grp.length>=maxW || (curLen+1+w.text.length)>maxChars || pause>0.45)){
+      if(grp.length && (grp.length>=maxW || (curLen+1+w.text.length)>maxChars || pause>0.4)){
         flush();
       }
       grp.push(w);
@@ -2340,13 +2398,13 @@ function segmentChunks(rawChunks, mode){
     out.push({
       text: wrapText(grp.map(x=>x.text).join(' '), 34),
       start: grp[0].start,
-      end: Math.max(grp[grp.length-1].end, grp[0].start+0.4)
+      end: Math.min(maxDur, Math.max(grp[grp.length-1].end, grp[0].start+0.35))
     });
     grp=[];
   };
   for(const w of words){
     const pause=grp.length ? (w.start - grp[grp.length-1].end) : 0;
-    if(grp.length && (grp.length>=11 || pause>0.65)) flush();
+    if(grp.length && (grp.length>=11 || pause>0.6)) flush();
     grp.push(w);
     if(/[.!?]$/.test(w.text) && grp.length>=3) flush();
   }
@@ -2407,7 +2465,7 @@ function speechRegions(pcm,sr=16000){
   for(let i=0;i<n;i++){let sum=0;for(let j=i*fr,k=j+fr;j<k;j++)sum+=pcm[j]*pcm[j];e[i]=Math.sqrt(sum/fr)}
   const sorted=Array.from(e).sort((a,b)=>a-b),floor=sorted[Math.floor(n*0.1)]||0,top=sorted[Math.floor(n*0.95)]||0;
   const thr=Math.max(0.004,floor*2.5,top*0.04);
-  const fps=sr/fr,hang=Math.round(0.5*fps),pad=Math.round(0.25*fps),MAX=Math.round(28*fps);
+  const fps=sr/fr,hang=Math.round(0.4*fps),pad=Math.round(0.15*fps),MAX=Math.round(28*fps);
   let regs=[],st=-1,last=-1;
   for(let i=0;i<n;i++){
     if(e[i]>=thr){if(st<0)st=i;last=i}
@@ -2421,7 +2479,7 @@ function speechRegions(pcm,sr=16000){
       let best=a+MAX,bv=1e9;for(let i=a+Math.round(15*fps);i<a+MAX;i++){if(e[i]<bv){bv=e[i];best=i}}
       out.push([a,best]);a=best;
     }
-    if(b-a>Math.round(0.3*fps))out.push([a,b]);
+    if(b-a>Math.round(0.25*fps))out.push([a,b]);
   }
   return out.map(([a,b])=>[a*fr/sr,Math.min(pcm.length/sr,b*fr/sr)]);
 }
@@ -2437,24 +2495,32 @@ async function transcribe(pcm,o,onStat,signal){
   if(window.__asrMock)return window.__asrMock(pcm,o);
   await loadASR(o.model,onStat);
   const lang=(LANGS.find(l=>l[0]===o.lang)||[])[2],wantWord=o.mode!=='full';
+  const totalDur=pcm.length/16000;
   if(o.clean)pcm=cleanPCM(pcm);
-  const regs=o.clean?speechRegions(pcm):[[0,pcm.length/16000]];
+  const regs=o.clean?speechRegions(pcm):[[0,totalDur]];
   if(!regs.length)return [];
   const out=[],total=regs.reduce((s,r)=>s+(r[1]-r[0]),0);let done=0;
   const gen={task:'transcribe',...(lang?{language:lang}:{}),...(o.beam?{num_beams:3}:{}),};
   for(const [t0,t1] of regs){
     if(signal.aborted)throw new DOMException('Dibatalkan','AbortError');
     const seg=pcm.subarray(Math.floor(t0*16000),Math.ceil(t1*16000));
-    onStat(`Mentranskripsi… ${fmtT(t0)} / ${fmtT(pcm.length/16000)}`,done/total);
+    const segDur=seg.length/16000;
+    onStat(`Mentranskripsi… ${fmtT(t0)} / ${fmtT(totalDur)}`,done/total);
     let r;
     try{r=await asrPipe(seg,{return_timestamps:wantWord?'word':true,chunk_length_s:30,stride_length_s:5,...gen})}
     catch{try{r=await asrPipe(seg,{return_timestamps:true,chunk_length_s:30,stride_length_s:5,...gen})}catch{r=await asrPipe(seg,{return_timestamps:true,chunk_length_s:30,stride_length_s:5,task:'transcribe',...(lang?{language:lang}:{})})}}
     done+=t1-t0;
     let items=[];
     for(const c of r.chunks||[]){
-      const a=c.timestamp&&c.timestamp[0]!=null?c.timestamp[0]:0,b=c.timestamp&&c.timestamp[1]!=null?c.timestamp[1]:Math.min(seg.length/16000,a+(wantWord?.35:3));
+      let a=c.timestamp&&c.timestamp[0]!=null?c.timestamp[0]:0;
+      let b=c.timestamp&&c.timestamp[1]!=null?c.timestamp[1]:Math.min(segDur,a+(wantWord?.35:2.5));
+      // Hard clamp ketat ke dalam segmen audio
+      a=clamp(a, 0, Math.max(0, segDur-0.05));
+      b=clamp(Math.max(b, a+0.08), a+0.08, segDur);
       const txt=String(c.text||'').trim();if(!txt)continue;
-      items.push({text:txt,start:t0+a,end:t0+b});
+      if(t0+a < totalDur-0.05){
+        items.push({text:txt, start:t0+a, end:Math.min(totalDur, t0+b)});
+      }
     }
     if(o.clean){
       const whole=items.map(x=>x.text).join(' ');
@@ -2481,22 +2547,26 @@ async function runASR(){
     const pcm=await mixMono16k(sources,pool,c0,c1,p=>setASR(`Menyiapkan audio… ${Math.round(p*100)}%`,p*0.08),asr.ac.signal);
     let peak=0;for(let i=0;i<pcm.length;i+=64)peak=Math.max(peak,Math.abs(pcm[i]));
     if(peak<0.002)throw new Error('Audio hampir senyap — tidak ada suara untuk ditranskripsi');
-    const rawChunks=await transcribe(pcm,{lang:asr.lang,model:asr.model,mode:asr.mode,beam:asr.beam,clean:asr.clean},(t,p)=>setASR(t,0.08+p*0.9),asr.ac.signal);
-    const grouped=segmentChunks(rawChunks, asr.mode);
+    const rawChunks=await transcribe(pcm,{lang:asr.lang,model:asr.model,mode:asr.mode,beam:asr.beam,clean:asr.clean},(t,p)=>setASR(t,0.08+p*0.88),asr.ac.signal);
+    const maxDur=c1-c0;
+    let grouped=segmentChunks(rawChunks, asr.mode, maxDur);
+    if(asr.clean) grouped=alignToSpeech(grouped, pcm, 16000);
     let n=0;
     snap();
     S.p.t=S.p.t.filter(x=>!(x.sub&&x.start>=c0-0.01&&x.start<c1));
     for(const ch of grouped){
       if(!ch.text||/^[\s.,!?…-]+$/.test(ch.text))continue;
+      const st=c0+ch.start;
+      if(st >= c1-0.05) continue; // Kunci ketat: tidak boleh di luar audio
+      const en=Math.min(c1, Math.max(c0+ch.end, st+0.12));
       let txt=ch.text;
       if(asr.autoCorrect) txt=autoCorrectText(txt, asr.glossary);
       txt=applyCasing(txt, asr.casing);
-      const st=c0+ch.start,en=Math.min(c1,c0+Math.max(ch.end,ch.start+0.18));
       S.p.t.push({
         id:uid(),
         text:txt,
         start:st,
-        end:Math.max(en,st+0.18),
+        end:en,
         x:asr.x,
         y:asr.y,
         size:asr.size,
@@ -2510,8 +2580,8 @@ async function runASR(){
       n++;
     }
     S.p.t.sort((a,b)=>a.start-b.start);
-    asr.busy=false;afterEdit();setASR(n?`✓ ${n} klip subtitle ditambahkan di track T`:'Tidak ada ucapan yang terdeteksi',n?1:0);
-    if(n)toast(n+' subtitle ditambahkan');
+    asr.busy=false;afterEdit();setASR(n?`✓ ${n} klip subtitle tersinkronisasi di track T`:'Tidak ada ucapan yang terdeteksi',n?1:0);
+    if(n)toast(n+' subtitle ditambahkan & diselaraskan ke beat');
   }catch(err){
     asr.busy=false;renderPanel();
     if(err&&err.name==='AbortError')setASR('Dibatalkan',0);
@@ -2556,6 +2626,21 @@ $('pp').addEventListener('input',e=>{
 });
 
 $('pp').addEventListener('click',e=>{
+  const shiftBtn=e.target.closest('[data-ashift]');
+  if(shiftBtn){
+    const dt=+shiftBtn.dataset.ashift;
+    const D=dur();
+    snap();
+    for(const t of S.p.t){
+      if(!t.sub)continue;
+      const len=t.end-t.start;
+      t.start=clamp(t.start+dt, 0, Math.max(0, D-0.1));
+      t.end=clamp(t.start+len, t.start+0.1, Math.max(D, t.start+0.1));
+    }
+    afterEdit();
+    toast(`Timing semua subtitle digeser ${dt>0?'+':''}${dt} dtk`);
+    return;
+  }
   const preBtn=e.target.closest('[data-apre]');
   if(preBtn){
     const p=SUB_PRESETS[preBtn.dataset.apre];
