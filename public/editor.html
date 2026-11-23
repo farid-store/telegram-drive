@@ -319,11 +319,13 @@ input,select,textarea{font-family:inherit;color:var(--t1);transition:border-colo
   white-space:nowrap;
 }
 .trk{
+  --lh:36px;--ct:3px;
   position:relative;
-  height:36px;
+  height:var(--lh);
   border-bottom:1px solid rgba(255,255,255,.045);
-  background:linear-gradient(90deg,rgba(255,255,255,.012) 1px,transparent 1px);
-  background-size:60px 100%;
+  background:linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);
+  background-size:var(--gw,60px) 100%;
+  background-position:26px 0;
 }
 .trk:nth-child(even){background-color:rgba(255,255,255,.012)}
 .trk .lab{
@@ -345,7 +347,7 @@ input,select,textarea{font-family:inherit;color:var(--t1);transition:border-colo
 /* Timeline Clips */
 .clip{
   position:absolute;
-  top:3px;
+  top:calc(var(--lh,36px)*var(--ln,0) + var(--ct,3px));
   height:30px;
   border-radius:6px;
   overflow:hidden;
@@ -906,9 +908,19 @@ video.res{
   .tl{
     height:clamp(185px,28dvh,228px);
   }
-  .trk{height:40px}
-  .clip{top:4px;height:32px}
+  .trk{--lh:40px;--ct:4px}
+  .clip{height:32px}
+  .tl.tall{height:clamp(260px,46dvh,420px)}
 }
+.tl.tall{height:clamp(220px,42dvh,360px)}
+.ruler span.mn{border-left-color:rgba(255,255,255,.07);color:transparent}
+.clip.nr{padding:0 4px}
+.clip.nr span{display:none}
+.clip.nr i{width:5px}
+.tp .zg{display:flex;align-items:center;gap:5px;margin-left:auto;flex:0 0 auto}
+.tp .zs{width:96px;accent-color:var(--g);height:20px;flex:0 0 96px}
+.tp .zv{font:600 .62rem 'JetBrains Mono',monospace;color:var(--t2);min-width:42px;text-align:center}
+.tp .ib.on{background:var(--g);color:#042f2e;border-color:transparent}
 </style>
 </head>
 <body>
@@ -937,8 +949,14 @@ video.res{
         <button class="ib" id="b-del" title="Hapus yang dipilih (Delete)">🗑</button>
         <button class="ib" id="b-text" title="Tambah teks di playhead">T</button>
         <span class="sep"></span>
-        <button class="ib" id="b-zo" title="Perkecil timeline">−</button>
-        <button class="ib" id="b-zi" title="Perbesar timeline">＋</button>
+        <div class="zg">
+          <button class="ib" id="b-zo" title="Perkecil timeline ( - )">−</button>
+          <input type="range" class="zs" id="zs" min="0" max="1000" step="1" value="500" title="Zoom timeline (atau Ctrl + scroll / cubit dengan 2 jari)">
+          <button class="ib" id="b-zi" title="Perbesar timeline ( + )">＋</button>
+          <span class="zv" id="zv">100%</span>
+          <button class="ib" id="b-zf" title="Muat semua klip ke layar ( 0 )">⤢</button>
+          <button class="ib" id="b-th" title="Perbesar / kecilkan tinggi timeline">⇕</button>
+        </div>
       </div>
       <div class="tl" id="tl"><div class="tl-in" id="tlin">
         <div class="ruler" id="ruler"></div>
@@ -1017,8 +1035,10 @@ const PKEY='vdl_ed_proj';
 /* ================= state subtitle & pre-visualization ================= */
 const asr={
   src:'all',
-  lang:'auto',
-  model:'base',
+  lang:'id',
+  model:(typeof navigator!=='undefined'&&navigator.gpu)?'turbo':'small',
+  beam:true,
+  clean:true,
   mode:'2',
   casing:'none',
   font:'montserrat',
@@ -1298,7 +1318,8 @@ function draw(){
   }
 }
 function updatePH(){
-  $('ph').style.left=(26+S.t*S.zoom)+'px';
+  const phx=26+S.t*S.zoom;$('ph').style.left=phx+'px';
+  if(S.playing&&!laneLock){const tl=$('tl');if(phx>tl.scrollLeft+tl.clientWidth-30||phx<tl.scrollLeft+26)tl.scrollLeft=Math.max(0,phx-80)}
   $('time').textContent=fmtT(S.t)+' / '+fmtT(dur());
   $('empty').style.display=S.p.v.length||S.p.t.length||S.p.o.length||S.tab==='sub'?'none':'grid';
   $('b-play').textContent=S.playing?'⏸':'▶';
@@ -1323,41 +1344,79 @@ function pause(){S.playing=false;for(const e of els.values())e.pause();S.dirty=t
 function seek(t){S.t=clamp(t,0,dur());seekPending=true;S.dirty=true;if(S.playing){for(const e of els.values())e.pause()}}
 
 /* ================= timeline ================= */
-function fitZoom(){const w=$('tl').clientWidth-40,D=Math.max(5,dur());S.zoom=clamp(w/D,8,240);renderTL();S.dirty=true}
+const ZMIN=0.25,ZMAX=1500;
+let laneLock=null;
+function fitZoom(){const w=$('tl').clientWidth-40,D=Math.max(5,dur());S.zoom=clamp(w/D,ZMIN,ZMAX);renderTL();$('tl').scrollLeft=0;S.dirty=true}
 const listOf=k=>k==='v'?S.p.v:k==='a'?S.p.a:k==='o'?S.p.o:S.p.t;
 function findItem(s){return listOf(s.k).find(x=>x.id===s.id)}
 function select(k,id){S.sel=k?{k,id}:null;renderTL();if(k){S.tab='prop'}renderPanel();S.dirty=true}
-function rulerStep(){for(const s of [.5,1,2,5,10,15,30,60,120,300,600])if(s*S.zoom>=64)return s;return 600}
+const RSTEPS=[1/30,1/15,.1,.2,.5,1,2,5,10,15,30,60,120,300,600,1800,3600];
+function rulerStep(){for(const s of RSTEPS)if(s*S.zoom>=64)return s;return 3600}
+const rulerT=(t,st)=>{if(st>=1)return fmtT(t).replace(/\.0$/,'');const m=Math.floor(t/60),sc=t-m*60;return m+':'+(sc<10?'0':'')+sc.toFixed(st<.1?2:1)};
+/* ---- zoom ---- */
+const z2s=z=>Math.round(Math.log(z/ZMIN)/Math.log(ZMAX/ZMIN)*1000);
+const s2z=v=>ZMIN*Math.pow(ZMAX/ZMIN,v/1000);
+function updZoomUI(){const a=$('zs'),b=$('zv');if(a)a.value=z2s(S.zoom);if(b)b.textContent=Math.round(S.zoom/60*100)+'%'}
+function setZoom(z,ax){
+  const tl=$('tl');z=clamp(z,ZMIN,ZMAX);if(Math.abs(z-S.zoom)<1e-9){updZoomUI();return}
+  let a;
+  if(ax==null){const px=26+S.t*S.zoom-tl.scrollLeft;a=(px>=26&&px<=tl.clientWidth)?px:26+(tl.clientWidth-26)/2}
+  else a=ax-tl.getBoundingClientRect().left;
+  const tAt=(tl.scrollLeft+a-26)/S.zoom;
+  S.zoom=z;renderTL();
+  tl.scrollLeft=Math.max(0,26+tAt*z-a);
+  updZoomUI();
+}
+/* ---- lane (baris) otomatis supaya klip yang tumpang tindih tidak menumpuk ---- */
+function computeLanes(){
+  const map=new Map(),cnt={a:1,o:1,t:1},mw=14/S.zoom;
+  const pack=(k,items,s0,e0)=>{
+    const arr=items.map(it=>({id:it.id,s:s0(it),e:Math.max(e0(it),s0(it)+mw)})).sort((x,y)=>x.s-y.s);
+    const ends=[];
+    for(const x of arr){let l=ends.findIndex(e=>e<=x.s+1e-4);if(l<0){l=ends.length;ends.push(0)}ends[l]=x.e;map.set(x.id,l)}
+    cnt[k]=Math.max(1,ends.length);
+  };
+  pack('a',S.p.a,c=>c.start,c=>c.start+clipLen(c));
+  pack('o',S.p.o,o=>o.start,o=>o.end);
+  pack('t',S.p.t,t=>t.start,t=>t.end);
+  return {map,cnt};
+}
 function renderTL(){
   const D=Math.max(dur(),5),width=26+(D+6)*S.zoom;
   $('tlin').style.width=width+'px';
   const st=rulerStep();let rh='';
-  for(let t=0;t<=D+6;t+=st)rh+=`<span style="left:${26+t*S.zoom}px">${fmtT(t).replace('.0','')}</span>`;
+  const sub=st>=1?(st>=10?5:st>=2?(st===2?2:5):5):2;
+  for(let i=0,t=0;t<=D+6;i++,t=i*st)rh+=`<span style="left:${26+t*S.zoom}px">${rulerT(t,st)}</span>`;
+  for(let i=0,t=0;t<=D+6&&st*S.zoom>=120;i++,t=i*st/sub)if(i%sub)rh+=`<span class="mn" style="left:${26+t*S.zoom}px"></span>`;
   $('ruler').innerHTML=rh;
+  $('tlin').style.setProperty('--gw',(st*S.zoom)+'px');
+  const LK=laneLock||computeLanes();
   const nm=mid=>(S.media.get(mid)||{}).name||'?';
   const mk=(k,items,pos,len,label)=>items.map(it=>{
     const [s,l]=[pos(it),len(it)],sel=S.sel&&S.sel.k===k&&S.sel.id===it.id,sp=(k==='v'||k==='a')&&it.speed&&it.speed!==1?` ×${it.speed}`:'';
-    return `<div class="clip ${k}${sel?' sel':''}" data-k="${k}" data-id="${it.id}" style="left:${26+s*S.zoom}px;width:${Math.max(14,l*S.zoom)}px"><i class="hl"></i><span>${esc(label(it))}${sp}</span><i class="hr"></i></div>`;
+    const w=Math.max(14,l*S.zoom),ln=LK.map.get(it.id)||0;
+    return `<div class="clip ${k}${sel?' sel':''}${w<34?' nr':''}" data-k="${k}" data-id="${it.id}" style="left:${26+s*S.zoom}px;width:${w}px;${ln?`--ln:${ln};`:''}"><i class="hl"></i><span>${esc(label(it))}${sp}</span><i class="hr"></i></div>`;
   }).join('');
   const L=videoLayout(S.p),pos=new Map(L.map(x=>[x.clip.id,x.start]));
   setTrack('trk-v','🎬',mk('v',S.p.v,c=>pos.get(c.id),clipLen,c=>nm(c.mid)));
   setTrack('trk-a','🎵',mk('a',S.p.a,c=>c.start,clipLen,c=>nm(c.mid)));
   setTrack('trk-o','🖼',mk('o',S.p.o,o=>o.start,o=>o.end-o.start,o=>nm(o.mid)));
   setTrack('trk-t','T',mk('t',S.p.t,t=>t.start,t=>t.end-t.start,t=>t.text||'(kosong)'));
+  for(const [k,id] of [['a','trk-a'],['o','trk-o'],['t','trk-t']])$(id).style.height=`calc(var(--lh)*${LK.cnt[k]})`;
   paintWaves();
-  updatePH();
+  updatePH();updZoomUI();
 }
 function setTrack(id,lab,html){$(id).innerHTML=`<div class="lab">${lab}</div>`+html}
 function paintWaves(){
   document.querySelectorAll('.clip.v,.clip.a').forEach(el=>{
     const k=el.dataset.k,it=listOf(k).find(x=>x.id===el.dataset.id);if(!it)return;
     const m=S.media.get(it.mid);if(!m||!m.peaks||(k==='v'&&it.mute))return;
-    const w=Math.max(14,Math.round(clipLen(it)*S.zoom)),h=32,c=document.createElement('canvas');
+    const wReal=Math.max(14,Math.round(clipLen(it)*S.zoom)),w=Math.min(wReal,6000),h=32,c=document.createElement('canvas'),rz=S.zoom*w/wReal;
     c.width=w;c.height=h;c.className='wf';
     const g=c.getContext('2d'),{peaks,bucket}=m.peaks,sp=it.speed||1;
     g.fillStyle='rgba(255,255,255,.5)';
     for(let x=0;x<w;x++){
-      const t0=it.in+(x/S.zoom)*sp,t1=it.in+((x+1)/S.zoom)*sp;let mx=0;
+      const t0=it.in+(x/rz)*sp,t1=it.in+((x+1)/rz)*sp;let mx=0;
       for(let i=Math.floor(t0/bucket),e=Math.min(peaks.length-1,Math.floor(t1/bucket));i<=e;i++)if(peaks[i]>mx)mx=peaks[i];
       const a=Math.min(1,mx*2.4)*(h/2-3);
       g.fillRect(x,h/2-a,1,Math.max(1,a*2));
@@ -1398,7 +1457,7 @@ $('tlin').addEventListener('pointerdown',e=>{
   e.preventDefault();
   const k=el.dataset.k,id=el.dataset.id,it=listOf(k).find(x=>x.id===id);if(!it)return;
   const mode=e.target.classList.contains('hl')?'hl':e.target.classList.contains('hr')?'hr':'mv';
-  snap();select(k,id);
+  laneLock=computeLanes();snap();select(k,id);
   const x0=e.clientX,o=JSON.parse(JSON.stringify(it)),mdur=((S.media.get(it.mid)||{}).dur)||1e9,sp=it.speed||1;
   let vTarget=null;
   const layout=videoLayout(S.p),origIdx=S.p.v.findIndex(c=>c.id===id),Ls=origIdx>=0?layout[origIdx].start:0;
@@ -1428,7 +1487,7 @@ $('tlin').addEventListener('pointerdown',e=>{
     showSnap(sn);renderTL();S.dirty=true;
   };
   const up=()=>{
-    removeEventListener('pointermove',mv);showSnap(null);
+    removeEventListener('pointermove',mv);showSnap(null);laneLock=null;
     if(k==='v'&&mode==='mv'&&vTarget!==null&&vTarget!==origIdx){const [c]=S.p.v.splice(origIdx,1);S.p.v.splice(vTarget,0,c)}
     afterEdit();
   };
@@ -1883,7 +1942,7 @@ async function newProject(){
 }
 
 /* ================= SUBTITLE OTOMATIS (PER KATA, PRE-VISUALIZATION & SOCIAL FONTS) ================= */
-const LANGS=[['auto','Deteksi otomatis',null],['id','Indonesia','indonesian'],['en','English','english'],['ms','Melayu','malay'],['ar','Arab','arabic'],['ja','Jepang','japanese'],['ko','Korea','korean'],['zh','Mandarin','chinese'],['hi','Hindi','hindi'],['es','Spanyol','spanish'],['fr','Prancis','french'],['de','Jerman','german'],['pt','Portugis','portuguese'],['ru','Rusia','russian'],['tr','Turki','turkish'],['th','Thai','thai'],['vi','Vietnam','vietnamese']];
+const LANGS=[['auto','Otomatis (cocok untuk campur ID + EN)',null],['id','Indonesia','indonesian'],['en','English','english'],['ms','Melayu','malay'],['ar','Arab','arabic'],['ja','Jepang','japanese'],['ko','Korea','korean'],['zh','Mandarin','chinese'],['hi','Hindi','hindi'],['es','Spanyol','spanish'],['fr','Prancis','french'],['de','Jerman','german'],['pt','Portugis','portuguese'],['ru','Rusia','russian'],['tr','Turki','turkish'],['th','Thai','thai'],['vi','Vietnam','vietnamese']];
 
 function panelSub(pp){
   const subs=S.p.t.filter(t=>t.sub).length;
@@ -1918,7 +1977,10 @@ function panelSub(pp){
   <div class="sec-lbl"><span>2. Mesin Transkripsi Suara (Whisper AI)</span></div>
   <div class="row"><label>Sumber Audio</label><select id="a-src"><option value="all">Seluruh audio timeline</option><option value="sel">Klip yang dipilih</option></select></div>
   <div class="row"><label>Bahasa</label><select id="a-lang">${LANGS.map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select></div>
-  <div class="row"><label>Model AI</label><select id="a-model"><option value="tiny">Tiny · ±40 MB · cepat</option><option value="base">Base · ±75 MB · akurat &amp; seimbang</option><option value="small">Small · ±250 MB · paling akurat</option></select></div>
+  <div class="row"><label>Model AI</label><select id="a-model"><option value="tiny">Tiny · ±40 MB · cepat, kurang akurat</option><option value="base">Base · ±75 MB · seimbang</option><option value="small">Small · ±250 MB · akurat (disarankan tanpa GPU)</option><option value="turbo">Large-v3-Turbo · ±0,8–1 GB · paling akurat (butuh WebGPU)</option></select></div>
+  <div class="row"><label>Akurasi</label><label style="width:auto;flex:1;display:flex;gap:6px;align-items:center;text-transform:none"><input type="checkbox" id="a-beam" ${asr.beam?'checked':''}> Mode teliti (beam search, lebih lambat)</label></div>
+  <div class="row"><label>Bersihkan</label><label style="width:auto;flex:1;display:flex;gap:6px;align-items:center;text-transform:none"><input type="checkbox" id="a-clean" ${asr.clean?'checked':''}> Filter noise, lewati bagian senyap &amp; buang halusinasi</label></div>
+  <p class="hint" id="a-off">${esc(asr.offline||'Model diunduh sekali saja lalu tersimpan di browser — setelah itu transkripsi berjalan 100% offline.')}</p>
   <div class="bar"><button class="btn g" id="a-go" ${asr.busy?'disabled':''}>✨ Mulai Transkripsi</button>${asr.busy?'<button class="btn" id="a-cancel">Batal</button>':''}</div>
   <div class="prog"><i id="a-bar" style="width:${Math.round(asr.pr*100)}%"></i></div><div class="st" id="a-st">${esc(asr.st)}</div>
   <div class="bar">
@@ -1933,6 +1995,7 @@ function panelSub(pp){
   $('a-src').value=asr.src;
   $('a-lang').value=asr.lang;
   $('a-model').value=asr.model;
+  refreshOfflineState();
 }
 
 function applyCasing(str, casing){
@@ -2023,32 +2086,116 @@ function segmentChunks(rawChunks, mode){
 }
 
 let asrPipe=null,asrKey='';
+const ASR_MODELS={
+  tiny :[{id:'onnx-community/whisper-tiny',device:'webgpu',dtype:{encoder_model:'fp32',decoder_model_merged:'q4'}},{id:'Xenova/whisper-tiny',device:'wasm',dtype:'q8'}],
+  base :[{id:'onnx-community/whisper-base',device:'webgpu',dtype:{encoder_model:'fp32',decoder_model_merged:'q4'}},{id:'Xenova/whisper-base',device:'wasm',dtype:'q8'}],
+  small:[{id:'onnx-community/whisper-small',device:'webgpu',dtype:{encoder_model:'fp32',decoder_model_merged:'q4'}},{id:'Xenova/whisper-small',device:'wasm',dtype:'q8'}],
+  turbo:[{id:'onnx-community/whisper-large-v3-turbo',device:'webgpu',dtype:{encoder_model:'fp16',decoder_model_merged:'q4'}}]
+};
+const TJS_URL='https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1';
+async function refreshOfflineState(){
+  const el=$('a-off');if(!el)return;
+  let msg='Model diunduh sekali saja lalu tersimpan di browser — setelah itu transkripsi berjalan 100% offline.';
+  try{
+    if(window.caches){
+      const names=await caches.keys();let found=false;
+      const ids=(ASR_MODELS[asr.model]||[]).map(x=>x.id);
+      for(const n of names){const c=await caches.open(n);for(const rq of await c.keys()){if(ids.some(i=>rq.url.includes('/'+i+'/'))){found=true;break}}if(found)break}
+      if(found)msg='✓ Model ini sudah tersimpan di perangkat — transkripsi bisa dijalankan tanpa internet.';
+    }
+  }catch{}
+  asr.offline=msg;const e2=$('a-off');if(e2)e2.textContent=msg;
+}
+async function loadASR(model,onStat){
+  if(asrPipe&&asrKey===model)return;
+  onStat('Memuat mesin transkripsi…',0);
+  const T=await import(TJS_URL);
+  T.env.allowLocalModels=false;T.env.useBrowserCache=true;
+  try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch{}
+  const prog=p=>{if(p.status==='progress'&&p.total)onStat(`Mengunduh model (hanya sekali)… ${Math.round(p.loaded/p.total*100)}% ${p.file?'('+String(p.file).split('/').pop()+')':''}`,0);else if(p.status==='ready')onStat('Model siap…',0)};
+  let lastErr=null;
+  for(const c of ASR_MODELS[model]||ASR_MODELS.small){
+    if(c.device==='webgpu'&&!navigator.gpu)continue;
+    try{
+      try{if(T.env.backends&&T.env.backends.onnx&&T.env.backends.onnx.wasm)T.env.backends.onnx.wasm.proxy=(c.device==='wasm')}catch{}
+      asrPipe=await T.pipeline('automatic-speech-recognition',c.id,{device:c.device,dtype:c.dtype,progress_callback:prog});
+      asrKey=model;refreshOfflineState();return;
+    }catch(err){lastErr=err;asrPipe=null}
+  }
+  throw new Error(model==='turbo'&&!navigator.gpu?'Model Turbo membutuhkan WebGPU (Chrome/Edge terbaru). Pilih model Small.':'Gagal memuat model: '+((lastErr&&lastErr.message)||'periksa koneksi untuk unduhan pertama'));
+}
+
+/* ---- pra-pemrosesan audio: high-pass 80 Hz + normalisasi volume ---- */
+function cleanPCM(pcm){
+  const out=new Float32Array(pcm.length),a=Math.exp(-2*Math.PI*80/16000);let px=0,py=0;
+  for(let i=0;i<pcm.length;i++){const x=pcm[i];py=a*(py+x-px);px=x;out[i]=py}
+  const sorted=[];for(let i=0;i<out.length;i+=16)sorted.push(Math.abs(out[i]));sorted.sort((m,n)=>m-n);
+  const ref=sorted[Math.floor(sorted.length*0.995)]||0;
+  if(ref>0.003){const g=Math.min(8,0.85/ref);if(g>1.05)for(let i=0;i<out.length;i++)out[i]=Math.max(-1,Math.min(1,out[i]*g))}
+  return out;
+}
+/* ---- VAD sederhana berbasis energi: potong di jeda, lewati senyap ---- */
+function speechRegions(pcm,sr=16000){
+  const fr=Math.round(sr*0.03),n=Math.floor(pcm.length/fr),e=new Float32Array(n);
+  for(let i=0;i<n;i++){let sum=0;for(let j=i*fr,k=j+fr;j<k;j++)sum+=pcm[j]*pcm[j];e[i]=Math.sqrt(sum/fr)}
+  const sorted=Array.from(e).sort((a,b)=>a-b),floor=sorted[Math.floor(n*0.1)]||0,top=sorted[Math.floor(n*0.95)]||0;
+  const thr=Math.max(0.004,floor*2.5,top*0.04);
+  const fps=sr/fr,hang=Math.round(0.5*fps),pad=Math.round(0.25*fps),MAX=Math.round(28*fps);
+  let regs=[],st=-1,last=-1;
+  for(let i=0;i<n;i++){
+    if(e[i]>=thr){if(st<0)st=i;last=i}
+    else if(st>=0&&i-last>hang){regs.push([st,last+1]);st=-1}
+  }
+  if(st>=0)regs.push([st,last+1]);
+  const out=[];
+  for(let [a,b] of regs){
+    a=Math.max(0,a-pad);b=Math.min(n,b+pad);
+    while(b-a>MAX){ // pecah di titik paling sunyi antara 15–28 dtk
+      let best=a+MAX,bv=1e9;for(let i=a+Math.round(15*fps);i<a+MAX;i++){if(e[i]<bv){bv=e[i];best=i}}
+      out.push([a,best]);a=best;
+    }
+    if(b-a>Math.round(0.3*fps))out.push([a,b]);
+  }
+  return out.map(([a,b])=>[a*fr/sr,Math.min(pcm.length/sr,b*fr/sr)]);
+}
+const HALLU=[/terima kasih (telah|sudah|atas) (menonton|menyaksikan|perhatian)/i,/jangan lupa (like|subscribe|berlangganan)/i,/thanks? (you )?for (watching|listening)/i,/please subscribe/i,/subtitles? (by|made by)/i,/amara\.org/i,/subtitle(s)? oleh/i,/^\W*(you|bye|hmm+|uh+|um+)\W*$/i,/^\W*(ya|oke|ok)\W*$/i];
+function isHallu(t){return HALLU.some(r=>r.test(t))}
+function dedupeWords(arr){ // buang pengulangan kata yang sama >3x berturut-turut (loop khas Whisper)
+  const out=[];let run=0,prev='';
+  for(const w of arr){const k=w.text.toLowerCase().replace(/[^\p{L}\p{N}]/gu,'');if(k&&k===prev){run++}else{run=1;prev=k}if(run<=3)out.push(w)}
+  return out;
+}
+
 async function transcribe(pcm,o,onStat,signal){
   if(window.__asrMock)return window.__asrMock(pcm,o);
-  if(!asrPipe||asrKey!==o.model){
-    onStat('Memuat mesin transkripsi…',0);
-    const T=await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1');
-    T.env.allowLocalModels=false;
-    try{if(T.env.backends&&T.env.backends.onnx&&T.env.backends.onnx.wasm)T.env.backends.onnx.wasm.proxy=true}catch{}
-    const prog=p=>{if(p.status==='progress'&&p.total)onStat(`Mengunduh model… ${Math.round(p.loaded/p.total*100)}% ${p.file?'('+String(p.file).split('/').pop()+')':''}`,0)};
-    const id='Xenova/whisper-'+o.model;
-    try{asrPipe=await T.pipeline('automatic-speech-recognition',id,{device:navigator.gpu?'webgpu':'wasm',progress_callback:prog})}
-    catch{asrPipe=await T.pipeline('automatic-speech-recognition',id,{device:'wasm',progress_callback:prog})}
-    asrKey=o.model;
-  }
-  const out=[],BLOCK=120*16000,lang=(LANGS.find(l=>l[0]===o.lang)||[])[2];
-  const wantWord = o.mode !== 'full';
-  for(let s=0;s<pcm.length;s+=BLOCK){
+  await loadASR(o.model,onStat);
+  const lang=(LANGS.find(l=>l[0]===o.lang)||[])[2],wantWord=o.mode!=='full';
+  if(o.clean)pcm=cleanPCM(pcm);
+  const regs=o.clean?speechRegions(pcm):[[0,pcm.length/16000]];
+  if(!regs.length)return [];
+  const out=[],total=regs.reduce((s,r)=>s+(r[1]-r[0]),0);let done=0;
+  const gen={task:'transcribe',...(lang?{language:lang}:{}),...(o.beam?{num_beams:3}:{}),};
+  for(const [t0,t1] of regs){
     if(signal.aborted)throw new DOMException('Dibatalkan','AbortError');
-    const seg=pcm.subarray(s,Math.min(pcm.length,s+BLOCK)),off=s/16000;
-    onStat(`Mentranskripsi… ${fmtT(off)} / ${fmtT(pcm.length/16000)}`,s/pcm.length);
+    const seg=pcm.subarray(Math.floor(t0*16000),Math.ceil(t1*16000));
+    onStat(`Mentranskripsi… ${fmtT(t0)} / ${fmtT(pcm.length/16000)}`,done/total);
     let r;
-    try{
-      r=await asrPipe(seg,{return_timestamps:wantWord?'word':true,chunk_length_s:30,stride_length_s:5,task:'transcribe',...(lang?{language:lang}:{})});
-    }catch{
-      r=await asrPipe(seg,{return_timestamps:true,chunk_length_s:30,stride_length_s:5,task:'transcribe',...(lang?{language:lang}:{})});
+    try{r=await asrPipe(seg,{return_timestamps:wantWord?'word':true,chunk_length_s:30,stride_length_s:5,...gen})}
+    catch{try{r=await asrPipe(seg,{return_timestamps:true,chunk_length_s:30,stride_length_s:5,...gen})}catch{r=await asrPipe(seg,{return_timestamps:true,chunk_length_s:30,stride_length_s:5,task:'transcribe',...(lang?{language:lang}:{})})}}
+    done+=t1-t0;
+    let items=[];
+    for(const c of r.chunks||[]){
+      const a=c.timestamp&&c.timestamp[0]!=null?c.timestamp[0]:0,b=c.timestamp&&c.timestamp[1]!=null?c.timestamp[1]:Math.min(seg.length/16000,a+(wantWord?.35:3));
+      const txt=String(c.text||'').trim();if(!txt)continue;
+      items.push({text:txt,start:t0+a,end:t0+b});
     }
-    for(const c of r.chunks||[]){const a=c.timestamp&&c.timestamp[0]!=null?c.timestamp[0]:0,b=c.timestamp&&c.timestamp[1]!=null?c.timestamp[1]:Math.min(seg.length/16000,a+(wantWord?.35:3));out.push({text:String(c.text||'').trim(),start:off+a,end:off+b})}
+    if(o.clean){
+      const whole=items.map(x=>x.text).join(' ');
+      if(isHallu(whole)&&whole.length<60)items=[];
+      else if(!wantWord)items=items.filter(x=>!isHallu(x.text));
+      items=dedupeWords(items);
+    }
+    out.push(...items);
   }
   return out;
 }
@@ -2067,7 +2214,7 @@ async function runASR(){
     const pcm=await mixMono16k(sources,pool,c0,c1,p=>setASR(`Menyiapkan audio… ${Math.round(p*100)}%`,p*0.08),asr.ac.signal);
     let peak=0;for(let i=0;i<pcm.length;i+=64)peak=Math.max(peak,Math.abs(pcm[i]));
     if(peak<0.002)throw new Error('Audio hampir senyap — tidak ada suara untuk ditranskripsi');
-    const rawChunks=await transcribe(pcm,{lang:asr.lang,model:asr.model,mode:asr.mode},(t,p)=>setASR(t,0.08+p*0.9),asr.ac.signal);
+    const rawChunks=await transcribe(pcm,{lang:asr.lang,model:asr.model,mode:asr.mode,beam:asr.beam,clean:asr.clean},(t,p)=>setASR(t,0.08+p*0.9),asr.ac.signal);
     const grouped=segmentChunks(rawChunks, asr.mode);
     let n=0;
     snap();
@@ -2110,7 +2257,9 @@ $('pp').addEventListener('change',e=>{
   const id=e.target.id;if(!id||id.slice(0,2)!=='a-')return;
   if(id==='a-src')asr.src=e.target.value;
   else if(id==='a-lang')asr.lang=e.target.value;
-  else if(id==='a-model')asr.model=e.target.value;
+  else if(id==='a-model'){asr.model=e.target.value;refreshOfflineState()}
+  else if(id==='a-beam')asr.beam=e.target.checked;
+  else if(id==='a-clean')asr.clean=e.target.checked;
   else if(id==='a-mode'){asr.mode=e.target.value;S.dirty=true}
   else if(id==='a-font'){asr.font=e.target.value;syncLiveSubs()}
   else if(id==='a-case'){
@@ -2175,8 +2324,26 @@ $('b-split').onclick=()=>splitAt(S.t);
 $('b-del').onclick=delSel;
 $('b-text').onclick=addText;
 $('b-undo').onclick=undo;$('b-redo').onclick=redo;
-$('b-zi').onclick=()=>{S.zoom=clamp(S.zoom*1.4,8,300);renderTL()};
-$('b-zo').onclick=()=>{S.zoom=clamp(S.zoom/1.4,8,300);renderTL()};
+$('b-zi').onclick=()=>setZoom(S.zoom*1.5);
+$('b-zo').onclick=()=>setZoom(S.zoom/1.5);
+$('b-zf').onclick=()=>fitZoom();
+$('zs').addEventListener('input',e=>setZoom(s2z(+e.target.value)));
+$('b-th').onclick=()=>{$('tl').classList.toggle('tall');$('b-th').classList.toggle('on',$('tl').classList.contains('tall'));S.dirty=true};
+// Ctrl/Cmd + scroll (juga cubit di trackpad) = zoom di posisi kursor; scroll biasa = geser horizontal bila tidak ada scroll vertikal
+$('tl').addEventListener('wheel',e=>{
+  const tl=$('tl');
+  if(e.ctrlKey||e.metaKey){e.preventDefault();setZoom(S.zoom*Math.exp(-e.deltaY*(e.deltaMode===1?0.05:0.0025)),e.clientX)}
+  else if(!e.shiftKey&&Math.abs(e.deltaY)>Math.abs(e.deltaX)&&tl.scrollHeight<=tl.clientHeight+1){e.preventDefault();tl.scrollLeft+=e.deltaY}
+},{passive:false});
+// cubit 2 jari di layar sentuh
+(()=>{
+  const tl=$('tl');let pz=null;
+  const dist=e=>Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+  tl.addEventListener('touchstart',e=>{if(e.touches.length===2)pz={d:dist(e),z:S.zoom}},{passive:true});
+  tl.addEventListener('touchmove',e=>{if(pz&&e.touches.length===2){e.preventDefault();setZoom(pz.z*dist(e)/pz.d,(e.touches[0].clientX+e.touches[1].clientX)/2)}},{passive:false});
+  tl.addEventListener('touchend',e=>{if(e.touches.length<2)pz=null},{passive:true});
+  tl.addEventListener('touchcancel',()=>{pz=null},{passive:true});
+})();
 $('b-exp').onclick=()=>{S.tab='exp';renderPanel();$('pp').scrollTop=0};
 addEventListener('keydown',e=>{
   if(/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;
@@ -2184,6 +2351,9 @@ addEventListener('keydown',e=>{
   if(k===' '){e.preventDefault();S.playing?pause():play()}
   else if(k==='s'&&!e.ctrlKey&&!e.metaKey)splitAt(S.t);
   else if(k==='delete'||k==='backspace')delSel();
+  else if(!e.ctrlKey&&!e.metaKey&&(k==='+'||k==='=')){setZoom(S.zoom*1.5)}
+  else if(!e.ctrlKey&&!e.metaKey&&(k==='-'||k==='_')){setZoom(S.zoom/1.5)}
+  else if(!e.ctrlKey&&!e.metaKey&&k==='0'){fitZoom()}
   else if(k==='arrowleft'){seek(S.t-(e.shiftKey?1:1/S.p.fps))}
   else if(k==='arrowright'){seek(S.t+(e.shiftKey?1:1/S.p.fps))}
   else if((e.ctrlKey||e.metaKey)&&k==='z'){e.preventDefault();e.shiftKey?redo():undo()}
@@ -2211,6 +2381,7 @@ window.addEventListener('beforeunload',save);
   gc();renderTL();renderPanel();fitZoom();requestAnimationFrame(tick);
   await processQueue();
 })();
+try{if('serviceWorker' in navigator)navigator.serviceWorker.register('/editor-offline-sw.js',{scope:'/'}).catch(()=>{})}catch{}
 window.__api={addVideo,addAudio,addOverlay,addText,splitAt,delSel,select,seek,play,pause,undo,redo,registerMedia,runExport,fitZoom,newProject,runASR,applyDims,snapAt,openMonitor};
 </script>
 </body>
