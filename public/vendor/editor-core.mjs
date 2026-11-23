@@ -1,5 +1,5 @@
 // editor-core.mjs — inti editor video VaultDL: model timeline, gambar teks/overlay, render/ekspor offline,
-// gelombang suara, dan penyiapan audio untuk transkripsi. Semua berjalan di browser (WebCodecs via Mediabunny, MPL-2.0).
+// gelombang suara, split-screen streamer, dan penyiapan audio untuk transkripsi.
 import {
   Input, Output, BlobSource, ALL_FORMATS, Mp4OutputFormat, WebMOutputFormat, BufferTarget,
   CanvasSink, AudioBufferSink, CanvasSource, AudioBufferSource,
@@ -18,11 +18,8 @@ const SR = 48000;
 const makeCanvas = (w, h) => typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(w, h) : Object.assign(document.createElement('canvas'), { width: w, height: h });
 
 /* ---------------- model ---------------- */
-// project = { w,h,fps,aspect,res,fit,
-//   v:[{id,mid,in,out,vol,mute,speed,zoom,ox,oy}],  a:[{id,mid,start,in,out,vol,speed}],
-//   t:[{id,text,start,end,x,y,size,color,bg,bgColor,bold,font,sub}],  o:[{id,mid,start,end,x,y,w,op}] }
 export const srcLen = c => Math.max(0, c.out - c.in);
-export const clipLen = c => srcLen(c) / (c.speed || 1);          // panjang di timeline
+export const clipLen = c => srcLen(c) / (c.speed || 1);
 export function videoLayout(p) {
   let t = 0;
   return p.v.map(clip => { const s = t; t += clipLen(clip); return { clip, start: s, end: t }; });
@@ -33,7 +30,7 @@ export function projectDuration(p) {
   return v > 0 ? v : audioEnd(p);
 }
 
-/* ---------------- bingkai video: muat / isi / latar blur ---------------- */
+/* ---------------- bingkai video: muat / isi / latar blur / split stream ---------------- */
 export function placeFrame(sw, sh, W, H, fit, zoom = 1, ox = 0, oy = 0) {
   let k = fit === 'fill' ? Math.max(W / sw, H / sh) : Math.min(W / sw, H / sh);
   k *= zoom || 1;
@@ -50,8 +47,40 @@ function blurBackdrop(ctx, src, sw, sh, W, H) {
   ctx.drawImage(_bg, 0, 0, W, H);
   ctx.fillStyle = 'rgba(0,0,0,.3)'; ctx.fillRect(0, 0, W, H); ctx.restore();
 }
+function drawSplitFrame(ctx, src, sw, sh, W, H, clip) {
+  const ratio = Math.min(0.65, Math.max(0.2, clip?.spRatio ?? 0.38));
+  const topH = Math.round(H * ratio);
+  const botH = H - topH;
+
+  // 1. Layar Atas: Facecam Streamer (fokus ke koordinat camX, camY 0..1)
+  const camZoom = clip?.camZoom ?? 2.6;
+  const fx = clip?.camX ?? 0.85;
+  const fy = clip?.camY ?? 0.80;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, 0, W, topH); ctx.clip();
+  const kTop = Math.max(W / sw, topH / sh) * camZoom;
+  const tw = sw * kTop, th = sh * kTop;
+  const tx = Math.min(0, Math.max(W - tw, W / 2 - fx * tw));
+  const ty = Math.min(0, Math.max(topH - th, topH / 2 - fy * th));
+  ctx.drawImage(src, tx, ty, tw, th);
+  ctx.restore();
+
+  // 2. Layar Bawah: Gameplay (menggunakan zoom, ox, oy utama klip)
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, topH, W, botH); ctx.clip();
+  const pb = placeFrame(sw, sh, W, botH, 'fill', clip?.zoom || 1, clip?.ox || 0, clip?.oy || 0);
+  ctx.drawImage(src, pb.x, topH + pb.y, pb.w, pb.h);
+  ctx.restore();
+
+  // Garis pemisah tipis
+  ctx.save();
+  ctx.fillStyle = 'rgba(255,255,255,0.18)';
+  ctx.fillRect(0, topH - 1, W, 2);
+  ctx.restore();
+}
 export function drawVideoFrame(ctx, src, sw, sh, W, H, clip, fit) {
   if (!sw || !sh) return;
+  if (fit === 'split') return drawSplitFrame(ctx, src, sw, sh, W, H, clip);
   if (fit === 'blur') blurBackdrop(ctx, src, sw, sh, W, H);
   const p = placeFrame(sw, sh, W, H, fit === 'fill' ? 'fill' : 'fit', clip && clip.zoom, clip && clip.ox, clip && clip.oy);
   ctx.drawImage(src, p.x, p.y, p.w, p.h);
@@ -141,7 +170,7 @@ export async function mixRange(sources, getSink, c0, c1, sr, ch) {
     if (a1 <= a0) continue;
     const sink = await getSink(s.mid); if (!sink) continue;
     for await (const wb of sink.buffers(s.in + (a0 - s.tl) * s.sp, s.in + (a1 - s.tl) * s.sp)) {
-      let when = s.tl + (wb.timestamp - s.in) / s.sp, off = 0, l = wb.buffer.duration;   // l & off: detik di dalam buffer
+      let when = s.tl + (wb.timestamp - s.in) / s.sp, off = 0, l = wb.buffer.duration;
       if (when < a0) { off = (a0 - when) * s.sp; when = a0; l -= off; }
       if (when + l / s.sp > a1) l = (a1 - when) * s.sp;
       if (l <= 0) continue;
@@ -153,7 +182,6 @@ export async function mixRange(sources, getSink, c0, c1, sr, ch) {
   }
   return octx.startRendering();
 }
-// audio mono 16 kHz (untuk Whisper) dari rentang timeline [c0,c1)
 export async function mixMono16k(sources, pool, c0, c1, onProgress, signal) {
   const SR16 = 16000, total = Math.max(1, Math.round((c1 - c0) * SR16)), out = new Float32Array(total);
   let pos = 0;
