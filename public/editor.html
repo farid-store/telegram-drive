@@ -65,6 +65,29 @@ html,body{
 button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:none;transition:background .15s,border-color .15s,color .15s,transform .12s,box-shadow .15s}
 input,select,textarea{font-family:inherit;color:var(--t1);transition:border-color .15s,box-shadow .15s,background .15s}
 
+/* ================= GLOBAL DRAG & DROP OVERLAY ================= */
+.drop-ov{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  background:rgba(9,9,11,.85);
+  backdrop-filter:blur(8px);
+  display:none;
+  place-items:center;
+  pointer-events:none;
+}
+.drop-ov.show{display:grid}
+.drop-ov-box{
+  padding:32px 44px;
+  border-radius:16px;
+  border:2px dashed var(--g);
+  background:rgba(16,185,129,.1);
+  text-align:center;
+  box-shadow:0 20px 50px rgba(0,0,0,.6);
+}
+.drop-ov-box b{display:block;font-size:1.1rem;color:var(--g-hover);margin-bottom:6px}
+.drop-ov-box span{font-size:.82rem;color:var(--t2)}
+
 /* ================= APP SHELL ================= */
 .app{
   display:flex;
@@ -889,7 +912,9 @@ video.res{
 @media(max-width:480px){
   .snl{font-size:0}
   .snl::before{content:'🧲';font-size:.82rem}
-  .pbar select{max-width:44%}
+  .szl{font-size:0}
+  .szl::before{content:'📱';font-size:.82rem}
+  .pbar select{max-width:38%}
   .tb{padding:0 10px;height:44px;flex-basis:44px}
 }
 @media(min-width:960px){
@@ -924,6 +949,12 @@ video.res{
 </style>
 </head>
 <body>
+<div class="drop-ov" id="drop-ov">
+  <div class="drop-ov-box">
+    <b>📂 Lepas file di sini untuk mengimpor</b>
+    <span>Mendukung Video, Audio, Gambar, atau file Subtitle (.srt)</span>
+  </div>
+</div>
 <div class="app">
   <header class="tb">
     <a href="/" class="ib" title="Kembali ke VaultDL" style="text-decoration:none;color:#fff">←</a>
@@ -937,15 +968,18 @@ video.res{
       <div class="pbar">
         <select id="sel-asp" title="Rasio / ukuran video"></select>
         <select id="sel-fit" title="Cara mengisi bingkai"><option value="fit">Muat (bingkai hitam)</option><option value="fill">Isi penuh (crop)</option><option value="blur">Latar blur</option></select>
-        <span class="sp"></span><label class="snapt" title="Menempel ke playhead & tepi klip lain"><input type="checkbox" id="snap" checked> <span class="snl">🧲 Snap</span></label>
+        <span class="sp"></span>
+        <label class="snapt" title="Tampilkan panduan area aman Reels / TikTok / Shorts (tidak ikut terekspor)"><input type="checkbox" id="safez"> <span class="szl">📱 Safe Zone</span></label>
+        <label class="snapt" title="Menempel ke playhead & tepi klip lain"><input type="checkbox" id="snap" checked> <span class="snl">🧲 Snap</span></label>
       </div>
-      <div class="pv"><canvas id="cv" width="640" height="360"></canvas><div id="empty"><div>Belum ada klip di timeline.<br>Impor atau klik media di tab <b>Media</b> → pilih scene → tambahkan ke timeline.</div></div></div>
+      <div class="pv"><canvas id="cv" width="640" height="360"></canvas><div id="empty"><div>Belum ada klip di timeline.<br>Tarik file ke sini atau klik media di tab <b>Media</b> → pilih scene → tambahkan ke timeline.</div></div></div>
       <div class="tp">
         <button class="ib" id="b-start" title="Ke awal">⏮</button>
         <button class="ib play" id="b-play" title="Putar / jeda (Spasi)">▶</button>
         <span class="time" id="time">0:00.0 / 0:00.0</span>
         <span class="sep"></span>
         <button class="ib" id="b-split" title="Potong di posisi playhead (S)">✂</button>
+        <button class="ib" id="b-dup" title="Duplikasi klip yang dipilih (Ctrl+D)">⧉</button>
         <button class="ib" id="b-del" title="Hapus yang dipilih (Delete)">🗑</button>
         <button class="ib" id="b-text" title="Tambah teks di playhead">T</button>
         <span class="sep"></span>
@@ -974,6 +1008,7 @@ video.res{
   </div>
 </div>
 <input type="file" id="file" accept="video/*,audio/*,image/*" multiple hidden/>
+<input type="file" id="srt-file" accept=".srt,.vtt,text/plain" hidden/>
 <script type="module">
 import {FONTS,drawText,drawOverlay,drawVideoFrame,videoLayout,clipLen,projectDuration,renderProject,probeMedia,computePeaks,createPool,audioSources,mixMono16k} from '/vendor/editor-core.mjs';
 
@@ -1025,20 +1060,25 @@ function toast(m,err){const e=document.createElement('div');e.className='toast'+
 
 /* ================= state ================= */
 const newP=()=>({w:1280,h:720,fps:30,aspect:'auto',res:720,fit:'fit',v:[],a:[],t:[],o:[]});
-const S={p:newP(),media:new Map(),sel:null,t:0,playing:false,zoom:60,hist:[],fut:[],tab:'media',dirty:true,last:0,boxes:[],snap:true};
+const S={p:newP(),media:new Map(),sel:null,t:0,playing:false,zoom:60,hist:[],fut:[],tab:'media',dirty:true,last:0,boxes:[],snap:true,safeZone:false};
 const exp={aspect:'auto',res:720,fps:30,quality:'high',format:'auto',busy:false,ac:null,result:null};
 /* State untuk Source Monitor (Pratinjau & Pilih Scene sebelum masuk timeline) */
 const mon={mid:null,in:0,out:0,loop:true};
 window.__S=S;window.__exp=exp;window.__mon=mon;
 const PKEY='vdl_ed_proj';
+const GKEY='vdl_ed_gloss';
 
-/* ================= state subtitle & pre-visualization ================= */
+/* ================= state subtitle, preset & auto-correction ================= */
+let savedGloss='';
+try{savedGloss=localStorage.getItem(GKEY)||''}catch{}
 const asr={
   src:'all',
   lang:'id',
   model:(typeof navigator!=='undefined'&&navigator.gpu)?'turbo':'small',
   beam:true,
   clean:true,
+  autoCorrect:true,
+  glossary:savedGloss,
   mode:'2',
   casing:'none',
   font:'montserrat',
@@ -1056,6 +1096,96 @@ const asr={
   pr:0,
   st:''
 };
+
+const SUB_PRESETS={
+  hormozi:{mode:'1',font:'montserrat',size:9.5,color:'#facc15',bold:true,bg:false,bgColor:'#000000',casing:'upper',x:0.5,y:0.72},
+  clean:{mode:'2',font:'poppins',size:6.5,color:'#ffffff',bold:true,bg:true,bgColor:'#000000',casing:'none',x:0.5,y:0.80},
+  viral:{mode:'2',font:'anton',size:10,color:'#ffffff',bold:true,bg:false,bgColor:'#000000',casing:'upper',x:0.5,y:0.74},
+  cinema:{mode:'full',font:'playfair',size:6,color:'#f4f4f6',bold:false,bg:true,bgColor:'#09090b',casing:'none',x:0.5,y:0.86}
+};
+
+/* ================= ENGINE AUTO-CORRECTION (TYPO + FUZZY MATCHING) ================= */
+const COMMON_FIXES={
+  'yg':'yang','dgn':'dengan','utk':'untuk','tdk':'tidak','sdh':'sudah','blm':'belum',
+  'bgt':'banget','skrg':'sekarang','kalo':'kalau','klu':'kalau','karna':'karena','krn':'karena',
+  'gak':'nggak','gk':'nggak','ga':'nggak','g':'nggak','udah':'sudah','udh':'sudah',
+  'bisa':'bisa','bs':'bisa','jg':'juga','tp':'tapi','tpi':'tapi','sm':'sama','sma':'sama',
+  'org':'orang','orng':'orang','bnyk':'banyak','byk':'banyak','dpt':'dapat','jd':'jadi','jdi':'jadi',
+  'trus':'terus','trs':'terus','bikin':'bikin','pake':'pakai','pke':'pakai','liat':'lihat',
+  'gimana':'bagaimana','gmn':'bagaimana','kenapa':'kenapa','knp':'kenapa','emang':'memang','emg':'memang',
+  'klo':'kalau','dr':'dari','dri':'dari','dlm':'dalam','pd':'pada','sbg':'sebagai',
+  'sy':'saya','aku':'aku','gw':'gue','lo':'lu','km':'kamu','kmu':'kamu',
+  'teh':'the','adn':'and','taht':'that','wiht':'with','becuase':'because','recieve':'receive',
+  'treding':'trading','triding':'trading','skalping':'scalping','fibonaci':'Fibonacci',
+  'yutub':'YouTube','youtub':'YouTube','tiktak':'TikTok','instgram':'Instagram','kapkat':'CapCut'
+};
+
+function levenshtein(a,b){
+  const m=a.length,n=b.length;
+  if(!m)return n;if(!n)return m;
+  let prev=new Array(n+1),curr=new Array(n+1);
+  for(let j=0;j<=n;j++)prev[j]=j;
+  for(let i=1;i<=m;i++){
+    curr[0]=i;
+    for(let j=1;j<=n;j++){
+      const cost=a[i-1]===b[j-1]?0:1;
+      curr[j]=Math.min(prev[j]+1,curr[j-1]+1,prev[j-1]+cost);
+    }
+    [prev,curr]=[curr,prev];
+  }
+  return prev[n];
+}
+
+function preserveCase(orig, target){
+  if(orig===orig.toUpperCase() && orig.length>1) return target.toUpperCase();
+  if(orig[0] && orig[0]===orig[0].toUpperCase() && target[0]===target[0].toLowerCase()){
+    return target[0].toUpperCase()+target.slice(1);
+  }
+  return target;
+}
+
+function autoCorrectText(text, glossaryStr){
+  if(!text)return text;
+  const customWords=String(glossaryStr||'').split(/[,\n;]+/).map(w=>w.trim()).filter(Boolean);
+  const lines=String(text).split('\n');
+  const fixedLines=lines.map(line=>{
+    const tokens=line.split(/\s+/).filter(Boolean);
+    const out=[];
+    let prevClean='';
+    for(const tok of tokens){
+      const m=tok.match(/^([^\p{L}\p{N}]*)([\p{L}\p{N}'-]+)([^\p{L}\p{N}]*)$/u);
+      if(!m){out.push(tok);continue}
+      const [,pre,core,post]=m;
+      const low=core.toLowerCase();
+      // Buang pengulangan kata yang sama persis berurutan (e.g. "yang yang")
+      if(low===prevClean && low.length>1) continue;
+      prevClean=low;
+
+      let res=core;
+      // 1. Cek kamus typo umum
+      if(COMMON_FIXES[low]){
+        res=preserveCase(core, COMMON_FIXES[low]);
+      } else if(customWords.length && low.length>=3){
+        // 2. Fuzzy match terhadap Kamus Kata Khusus milik user
+        const maxDist = low.length<=4 ? 1 : (low.length<=7 ? 2 : 3);
+        let best=null, bestD=maxDist+1;
+        for(const cw of customWords){
+          const cwLow=cw.toLowerCase();
+          if(Math.abs(cwLow.length-low.length)>maxDist) continue;
+          const d=levenshtein(low, cwLow);
+          if(d<bestD){bestD=d;best=cw}
+        }
+        if(best) res=best;
+      }
+      out.push(pre+res+post);
+    }
+    return out.join(' ')
+      .replace(/\s+([.,!?;:])/g,'$1')
+      .replace(/([.,!?;:])([^\s.,!?;:])/g,'$1 $2')
+      .trim();
+  });
+  return fixedLines.join('\n');
+}
 
 /* ================= IndexedDB (media bertahan saat refresh) ================= */
 const idb={db:null,
@@ -1105,10 +1235,9 @@ async function registerMedia(blob,name,id){
 }
 function loadPeaks(m){if(!m.hasAudio||m.peaks)return;computePeaks(m.blob).then(r=>{if(r){m.peaks=r;renderTL()}}).catch(()=>{})}
 
-// Buka media di Source Monitor untuk pratinjau & pilih scene sebelum masuk ke timeline
 function openMonitor(mid){
   const m=S.media.get(mid);if(!m)return;
-  pause(); // jeda timeline utama agar suara tidak tabrakan
+  pause();
   mon.mid=mid;
   mon.in=0;
   mon.out=Math.max(0.1, +(m.dur||1).toFixed(2));
@@ -1118,9 +1247,30 @@ function openMonitor(mid){
   const pp=$('pp');if(pp)pp.scrollTop=0;
 }
 
+function monSetIn(){
+  const mp=$('mon-player');if(!mp||!mon.mid)return;
+  mon.in=clamp(+mp.currentTime.toFixed(2), 0, Math.max(0, mon.out-0.1));
+  const rIn=$('mon-in'),li=$('mon-lbl-in'),ll=$('mon-lbl-len'),fl=$('mon-fill');
+  const md=S.media.get(mon.mid),d=Math.max(0.1,+(md?.dur||1));
+  if(rIn)rIn.value=mon.in;if(li)li.textContent=fmtT(mon.in);if(ll)ll.textContent=fmtT(mon.out-mon.in);
+  if(fl){fl.style.left=((mon.in/d)*100)+'%';fl.style.width=Math.max(1,(((mon.out-mon.in)/d)*100))+'%'}
+}
+function monSetOut(){
+  const mp=$('mon-player');if(!mp||!mon.mid)return;
+  const md=S.media.get(mon.mid),d=Math.max(0.1,+(md?.dur||1));
+  mon.out=clamp(+mp.currentTime.toFixed(2), mon.in+0.1, d);
+  const rOut=$('mon-out'),lo=$('mon-lbl-out'),ll=$('mon-lbl-len'),fl=$('mon-fill');
+  if(rOut)rOut.value=mon.out;if(lo)lo.textContent=fmtT(mon.out);if(ll)ll.textContent=fmtT(mon.out-mon.in);
+  if(fl){fl.style.left=((mon.in/d)*100)+'%';fl.style.width=Math.max(1,(((mon.out-mon.in)/d)*100))+'%'}
+}
+
 async function importFiles(files){
   let lastM=null;
   for(const f of files){
+    if(/\.(srt|vtt)$/i.test(f.name)){
+      try{await importSrtFile(f)}catch(e){toast(f.name+': '+(e.message||e),true)}
+      continue;
+    }
     try{
       const m=await registerMedia(f,f.name);
       lastM=m;
@@ -1131,6 +1281,27 @@ async function importFiles(files){
     toast('Pratinjau & pilih scene sebelum dimasukkan ke timeline');
   }
 }
+
+/* ================= GLOBAL DRAG & DROP ================= */
+let dragCnt=0;
+window.addEventListener('dragenter',e=>{
+  if(e.dataTransfer&&Array.from(e.dataTransfer.types||[]).includes('Files')){
+    e.preventDefault();dragCnt++;$('drop-ov').classList.add('show');
+  }
+});
+window.addEventListener('dragover',e=>{
+  if(e.dataTransfer&&Array.from(e.dataTransfer.types||[]).includes('Files'))e.preventDefault();
+});
+window.addEventListener('dragleave',e=>{
+  if(dragCnt>0){dragCnt--;if(dragCnt===0)$('drop-ov').classList.remove('show')}
+});
+window.addEventListener('drop',e=>{
+  dragCnt=0;$('drop-ov').classList.remove('show');
+  if(e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files.length){
+    e.preventDefault();
+    importFiles([...e.dataTransfer.files]);
+  }
+});
 
 function addVideo(mid, inPt, outPt){
   const m=S.media.get(mid);if(!m||!m.hasVideo)return;
@@ -1283,6 +1454,33 @@ function formatSampleText(mode, casing){
   if(casing==='lower') return s.toLowerCase();
   return s;
 }
+function drawSafeZone(ctx, W, H){
+  ctx.save();
+  const isVert = H > W * 1.1;
+  ctx.fillStyle='rgba(244,63,94,0.16)';
+  if(isVert){
+    // Top bar (11%), Bottom caption/nav (22%), Right social icons (15%)
+    const topH=H*0.11, botH=H*0.22, rightW=W*0.16;
+    ctx.fillRect(0,0,W,topH);
+    ctx.fillRect(0,H-botH,W,botH);
+    ctx.fillRect(W-rightW,topH,rightW,H-topH-botH);
+    ctx.strokeStyle='rgba(34,211,238,0.65)';
+    ctx.lineWidth=1.5;
+    ctx.setLineDash([6,4]);
+    ctx.strokeRect(W*0.04, topH, W-rightW-W*0.04, H-topH-botH);
+    ctx.fillStyle='rgba(255,255,255,0.75)';
+    ctx.font='600 '+Math.max(10,Math.round(W*0.025))+'px "Plus Jakarta Sans",sans-serif';
+    ctx.fillText('SAFE ZONE (REELS / TIKTOK / SHORTS)', W*0.06, topH+Math.max(14,W*0.04));
+  } else {
+    // 10% title-safe margin for landscape/square
+    const mx=W*0.08, my=H*0.10;
+    ctx.strokeStyle='rgba(34,211,238,0.65)';
+    ctx.lineWidth=1.5;
+    ctx.setLineDash([6,4]);
+    ctx.strokeRect(mx, my, W-mx*2, H-my*2);
+  }
+  ctx.restore();
+}
 function draw(){
   const sc=Math.min(1,960/Math.max(S.p.w,S.p.h)),W=Math.max(2,Math.round(S.p.w*sc)),H=Math.max(2,Math.round(S.p.h*sc));
   if(cv.width!==W||cv.height!==H){cv.width=W;cv.height=H}
@@ -1312,6 +1510,7 @@ function draw(){
     S.boxes.push({id:'__asr_prev',k:'asr',b});
     cx.save();cx.setLineDash([5,4]);cx.strokeStyle='#22d3ee';cx.lineWidth=1.5;cx.strokeRect(b.x-4,b.y-4,b.w+8,b.h+8);cx.restore();
   }
+  if(S.safeZone)drawSafeZone(cx,W,H);
   if(S.sel&&(S.sel.k==='t'||S.sel.k==='o')){
     const x=S.boxes.find(o=>o.id===S.sel.id);
     if(x){cx.save();cx.setLineDash([6,4]);cx.strokeStyle='#10b981';cx.lineWidth=2;cx.strokeRect(x.b.x,x.b.y,x.b.w,x.b.h);cx.restore()}
@@ -1353,7 +1552,6 @@ function select(k,id){S.sel=k?{k,id}:null;renderTL();if(k){S.tab='prop'}renderPa
 const RSTEPS=[1/30,1/15,.1,.2,.5,1,2,5,10,15,30,60,120,300,600,1800,3600];
 function rulerStep(){for(const s of RSTEPS)if(s*S.zoom>=64)return s;return 3600}
 const rulerT=(t,st)=>{if(st>=1)return fmtT(t).replace(/\.0$/,'');const m=Math.floor(t/60),sc=t-m*60;return m+':'+(sc<10?'0':'')+sc.toFixed(st<.1?2:1)};
-/* ---- zoom ---- */
 const z2s=z=>Math.round(Math.log(z/ZMIN)/Math.log(ZMAX/ZMIN)*1000);
 const s2z=v=>ZMIN*Math.pow(ZMAX/ZMIN,v/1000);
 function updZoomUI(){const a=$('zs'),b=$('zv');if(a)a.value=z2s(S.zoom);if(b)b.textContent=Math.round(S.zoom/60*100)+'%'}
@@ -1367,7 +1565,6 @@ function setZoom(z,ax){
   tl.scrollLeft=Math.max(0,26+tAt*z-a);
   updZoomUI();
 }
-/* ---- lane (baris) otomatis supaya klip yang tumpang tindih tidak menumpuk ---- */
 function computeLanes(){
   const map=new Map(),cnt={a:1,o:1,t:1},mw=14/S.zoom;
   const pack=(k,items,s0,e0)=>{
@@ -1424,7 +1621,6 @@ function paintWaves(){
     el.insertBefore(c,el.firstChild);
   });
 }
-/* ---- snapping ---- */
 function snapPts(ex,noV){
   const pts=[0,S.t];
   if(!noV)for(const x of videoLayout(S.p))pts.push(x.start,x.end);
@@ -1441,7 +1637,6 @@ function snapAt(t,ex,noV){
 }
 function showSnap(t){const el=$('snapline');el.style.display=t==null?'none':'block';if(t!=null)el.style.left=(26+t*S.zoom)+'px'}
 
-// seek dengan klik/geser di ruler / area kosong
 $('tlin').addEventListener('pointerdown',e=>{
   if(e.target.closest('.clip'))return;
   e.preventDefault();
@@ -1451,7 +1646,6 @@ $('tlin').addEventListener('pointerdown',e=>{
   const mv=ev=>set(ev),up=()=>{removeEventListener('pointermove',mv);showSnap(null)};
   addEventListener('pointermove',mv);addEventListener('pointerup',up,{once:true});
 });
-// drag / trim klip (dengan snapping)
 $('tlin').addEventListener('pointerdown',e=>{
   const el=e.target.closest('.clip');if(!el)return;
   e.preventDefault();
@@ -1509,6 +1703,27 @@ function splitAt(t){
   const order=sel?[sel.k,...['v','a','o','t'].filter(x=>x!==sel.k)]:['v','a','o','t'];
   for(const k of order)if(fns[k]()){afterEdit();return true}
   toast('Letakkan playhead di dalam klip untuk memotong',true);return false;
+}
+function dupSel(){
+  if(!S.sel)return toast('Pilih klip dulu untuk diduplikasi',true);
+  const it=findItem(S.sel);if(!it)return;
+  snap();
+  const k=S.sel.k, copy=JSON.parse(JSON.stringify(it));
+  copy.id=uid();
+  if(k==='v'){
+    const i=S.p.v.indexOf(it);
+    S.p.v.splice(i+1,0,copy);
+  }else if(k==='a'){
+    copy.start=it.start+clipLen(it);
+    S.p.a.push(copy);
+  }else{
+    const len=it.end-it.start;
+    copy.start=it.end;
+    copy.end=it.end+len;
+    listOf(k).push(copy);
+  }
+  afterEdit();select(k,copy.id);
+  toast('Klip diduplikasi');
 }
 function delSel(){
   if(!S.sel)return toast('Pilih klip dulu',true);
@@ -1631,12 +1846,12 @@ function renderMonitorCard(){
       <div class="row" style="margin-bottom:6px">
         <label style="width:68px;flex:0 0 68px">Mulai (In)</label>
         <input type="range" id="mon-in" min="0" max="${d}" step="0.05" value="${mon.in}">
-        <button class="btn sm" data-a="mon-setin" title="Ambil waktu saat ini di pemutar sebagai titik Mulai">[ Set In</button>
+        <button class="btn sm" data-a="mon-setin" title="Ambil waktu saat ini (Shortcut: I)">[ Set In (I)</button>
       </div>
       <div class="row" style="margin-bottom:4px">
         <label style="width:68px;flex:0 0 68px">Akhir (Out)</label>
         <input type="range" id="mon-out" min="0.1" max="${d}" step="0.05" value="${mon.out}">
-        <button class="btn sm" data-a="mon-setout" title="Ambil waktu saat ini di pemutar sebagai titik Akhir">Set Out ]</button>
+        <button class="btn sm" data-a="mon-setout" title="Ambil waktu saat ini (Shortcut: O)">Set Out (O) ]</button>
       </div>
     </div>
     <div class="bar" style="margin-bottom:0">
@@ -1702,7 +1917,7 @@ function panelMedia(pp){
       ${m.hasVideo?`<button class="btn sm" data-a="addv" data-m="${m.id}" title="Langsung tambah seluruh video">＋ Utuh</button>`:''}
       ${m.hasAudio&&!m.hasVideo?`<button class="btn sm" data-a="adda" data-m="${m.id}" title="Langsung tambah seluruh audio">＋ Utuh</button>`:''}
       <button class="btn sm" data-a="rm" data-m="${m.id}" title="Hapus dari bin">✕</button>
-    </div></div>`).join('')||'<p class="msg">Bin kosong. Klik <b>📁 Impor file</b> untuk memilih video/musik dari perangkat Anda, lalu pratinjau & pilih scene sebelum dimasukkan ke timeline.</p>';
+    </div></div>`).join('')||'<p class="msg">Bin kosong. Tarik file langsung ke layar atau klik <b>📁 Impor file</b> untuk memilih video/musik, lalu pratinjau & pilih scene sebelum masuk timeline.</p>';
   let body='';
   if(sub==='bin')body=monHtml+`<div class="bin">${bin}</div>`;
   else if(sub==='link')body=`<div class="row" style="margin-bottom:8px"><input class="in" id="link-u" type="url" placeholder="Tempel link video / musik…" value="${esc(S.linkUrl||'')}"></div>
@@ -1724,22 +1939,8 @@ $('pp').addEventListener('click',async e=>{
   else if(a==='file')$('file').click();
   else if(a==='mon-open'){openMonitor(m)}
   else if(a==='mon-close'){mon.mid=null;renderPanel()}
-  else if(a==='mon-setin'){
-    const mp=$('mon-player');if(!mp)return;
-    mon.in=clamp(+mp.currentTime.toFixed(2), 0, Math.max(0, mon.out-0.1));
-    const rIn=$('mon-in'),li=$('mon-lbl-in'),ll=$('mon-lbl-len'),fl=$('mon-fill');
-    const md=S.media.get(mon.mid),d=Math.max(0.1,+(md?.dur||1));
-    if(rIn)rIn.value=mon.in;if(li)li.textContent=fmtT(mon.in);if(ll)ll.textContent=fmtT(mon.out-mon.in);
-    if(fl){fl.style.left=((mon.in/d)*100)+'%';fl.style.width=Math.max(1,(((mon.out-mon.in)/d)*100))+'%'}
-  }
-  else if(a==='mon-setout'){
-    const mp=$('mon-player');if(!mp)return;
-    const md=S.media.get(mon.mid),d=Math.max(0.1,+(md?.dur||1));
-    mon.out=clamp(+mp.currentTime.toFixed(2), mon.in+0.1, d);
-    const rOut=$('mon-out'),lo=$('mon-lbl-out'),ll=$('mon-lbl-len'),fl=$('mon-fill');
-    if(rOut)rOut.value=mon.out;if(lo)lo.textContent=fmtT(mon.out);if(ll)ll.textContent=fmtT(mon.out-mon.in);
-    if(fl){fl.style.left=((mon.in/d)*100)+'%';fl.style.width=Math.max(1,(((mon.out-mon.in)/d)*100))+'%'}
-  }
+  else if(a==='mon-setin'){monSetIn()}
+  else if(a==='mon-setout'){monSetOut()}
   else if(a==='mon-playscene'){
     const mp=$('mon-player');if(!mp)return;
     mp.currentTime=mon.in;
@@ -1828,6 +2029,12 @@ function panelProp(pp){
   }else{
     pp.innerHTML=`<p class="msg"><b>${esc(m.name||'?')}</b><br>Durasi di timeline: ${fmtT(clipLen(it))} · sumber ${fmtT(it.in)}–${fmtT(it.out)}</p>
     <div class="row"><label>Volume</label><input type="range" id="p-vol" min="0" max="2" step=".05" value="${it.vol??1}"><span id="p-vv" class="val-badge">${Math.round((it.vol??1)*100)}%</span></div>
+    <div class="bar">
+      <button class="btn sm" data-vol="0.15" title="Cocok untuk musik latar (BGM)">🎵 15% BGM</button>
+      <button class="btn sm" data-vol="0.5">50%</button>
+      <button class="btn sm" data-vol="1">100%</button>
+      <button class="btn sm" data-vol="1.5">🔊 150% Boost</button>
+    </div>
     ${k==='v'&&m.hasAudio?`<div class="row"><label>Bisukan</label><input type="checkbox" id="p-mute" ${it.mute?'checked':''}><span class="hint" style="margin:0">Matikan suara asli video</span></div>`:''}
     <div class="row"><label>Kecepatan</label><select id="p-spd">${SPEEDS.map(v=>`<option value="${v}" ${(it.speed||1)===v?'selected':''}>${v}×</option>`).join('')}</select></div>
     ${k==='v'?`<div class="row"><label>Zoom</label><input type="range" id="p-zoom" min="1" max="4" step=".02" value="${it.zoom||1}"></div>
@@ -1860,6 +2067,14 @@ $('pp').addEventListener('change',propEdit((it,el)=>{
   else if(id==='p-as')it.start=Math.max(0,+el.value||0);
 }));
 $('pp').addEventListener('click',e=>{
+  const vb=e.target.closest('[data-vol]');
+  if(vb&&S.sel&&(S.sel.k==='v'||S.sel.k==='a')){
+    const it=findItem(S.sel);if(!it)return;
+    snap();it.vol=+vb.dataset.vol;
+    const el=$('p-vol'),vv=$('p-vv');
+    if(el)el.value=it.vol;if(vv)vv.textContent=Math.round(it.vol*100)+'%';
+    S.dirty=true;save();return;
+  }
   const b=e.target.closest('[data-p]');if(!b||!S.sel)return;
   const it=findItem(S.sel);if(!it)return;
   if(b.dataset.p==='vreset'&&S.sel.k==='v'){snap();it.zoom=1;it.ox=0;it.oy=0;renderPanel();S.dirty=true;save();return}
@@ -1888,6 +2103,8 @@ $('sel-asp').innerHTML=ASP_OPTS.map(([v,l])=>`<option value="${v}">${l}</option>
 $('sel-asp').addEventListener('change',e=>{snap();S.p.aspect=e.target.value;applyDims();save();S.dirty=true;if(S.tab==='exp')renderPanel()});
 $('sel-fit').addEventListener('change',e=>{snap();S.p.fit=e.target.value;save();S.dirty=true});
 $('snap').addEventListener('change',e=>{S.snap=e.target.checked});
+$('safez').addEventListener('change',e=>{S.safeZone=e.target.checked;S.dirty=true});
+
 function panelExp(pp){
   const [w,h]=dims();
   pp.innerHTML=`<div class="row"><label>Resolusi</label><select id="x-res">${[480,720,1080].map(r=>`<option value="${r}" ${S.p.res===r?'selected':''}>${r}p</option>`).join('')}</select></div>
@@ -1941,15 +2158,59 @@ async function newProject(){
   await idb.clear();save();renderTL();renderPanel();S.dirty=true;updBtns();
 }
 
-/* ================= SUBTITLE OTOMATIS (PER KATA, PRE-VISUALIZATION & SOCIAL FONTS) ================= */
+/* ================= IMPOR .SRT ================= */
+function parseSrtTime(s){
+  const m=String(s).trim().match(/(\d{1,2}):(\d{2}):(\d{2})[,.](\d{1,3})/);
+  if(!m)return 0;
+  return (+m[1])*3600+(+m[2])*60+(+m[3])+(+m[4].padEnd(3,'0'))/1000;
+}
+async function importSrtFile(file){
+  const raw=await file.text();
+  const blocks=raw.replace(/\r/g,'').replace(/^WEBVTT[^\n]*\n+/i,'').trim().split(/\n\s*\n/);
+  let n=0;
+  snap();
+  for(const b of blocks){
+    const lines=b.split('\n').map(l=>l.trim()).filter(Boolean);
+    const ti=lines.findIndex(l=>l.includes('-->'));
+    if(ti<0)continue;
+    const [a,c]=lines[ti].split('-->');
+    const st=parseSrtTime(a), en=Math.max(st+0.2, parseSrtTime(c));
+    let txt=lines.slice(ti+1).join('\n').replace(/<[^>]+>/g,'').trim();
+    if(!txt)continue;
+    if(asr.autoCorrect) txt=autoCorrectText(txt, asr.glossary);
+    txt=applyCasing(txt, asr.casing);
+    S.p.t.push({
+      id:uid(),text:txt,start:st,end:en,
+      x:asr.x,y:asr.y,size:asr.size,color:asr.color,
+      bg:asr.bg,bgColor:asr.bgColor||'#000000',bold:asr.bold,font:asr.font||'montserrat',sub:true
+    });
+    n++;
+  }
+  if(!n)return toast('Tidak ada baris subtitle yang valid di file tersebut',true);
+  S.p.t.sort((a,b)=>a.start-b.start);
+  afterEdit();
+  toast(`✓ ${n} subtitle diimpor dari ${file.name}`);
+}
+$('srt-file').addEventListener('change',e=>{
+  if(e.target.files&&e.target.files[0])importSrtFile(e.target.files[0]);
+  e.target.value='';
+});
+
+/* ================= SUBTITLE OTOMATIS (PER KATA, PRE-VISUALIZATION, PRESETS & AUTO-CORRECTION) ================= */
 const LANGS=[['auto','Otomatis (cocok untuk campur ID + EN)',null],['id','Indonesia','indonesian'],['en','English','english'],['ms','Melayu','malay'],['ar','Arab','arabic'],['ja','Jepang','japanese'],['ko','Korea','korean'],['zh','Mandarin','chinese'],['hi','Hindi','hindi'],['es','Spanyol','spanish'],['fr','Prancis','french'],['de','Jerman','german'],['pt','Portugis','portuguese'],['ru','Rusia','russian'],['tr','Turki','turkish'],['th','Thai','thai'],['vi','Vietnam','vietnamese']];
 
 function panelSub(pp){
   const subs=S.p.t.filter(t=>t.sub).length;
   pp.innerHTML=`
   <div class="sec-lbl">
-    <span>1. Atur Ukuran, Font & Posisi Dulu</span>
-    <label style="display:inline-flex;align-items:center;gap:4px;font-size:.64rem;color:var(--t1);cursor:pointer;text-transform:none"><input type="checkbox" id="a-prev" ${asr.preview?'checked':''} style="width:13px;height:13px;accent-color:var(--g)"> Pratinjau di Layar</label>
+    <span>1. Preset Cepat & Gaya Subtitle</span>
+    <label style="display:inline-flex;align-items:center;gap:4px;font-size:.64rem;color:var(--t1);cursor:pointer;text-transform:none"><input type="checkbox" id="a-prev" ${asr.preview?'checked':''} style="width:13px;height:13px;accent-color:var(--g)"> Pratinjau</label>
+  </div>
+  <div class="bar">
+    <button class="btn sm" data-apre="hormozi">🔥 Hormozi</button>
+    <button class="btn sm" data-apre="clean">✨ Minimalist</button>
+    <button class="btn sm" data-apre="viral">⚡ Viral Anton</button>
+    <button class="btn sm" data-apre="cinema">🎬 Cinema</button>
   </div>
   <div class="row"><label>Gaya Tampil</label><select id="a-mode">
     <option value="1">🔥 1 Kata (CapCut / Hormozi Punchy)</option>
@@ -1968,13 +2229,20 @@ function panelSub(pp){
   <div class="row"><label>Posisi X</label><input type="range" id="a-x" min="0.05" max="0.95" step=".005" value="${asr.x}"><span class="val-badge" id="a-vx">${Math.round(asr.x*100)}%</span></div>
   <div class="row"><label>Posisi Y</label><input type="range" id="a-y" min="0.05" max="0.95" step=".005" value="${asr.y}"><span class="val-badge" id="a-vy">${Math.round(asr.y*100)}%</span></div>
   <div class="bar">
-    <button class="btn sm" data-apos="top">⬆ Atas (14%)</button>
-    <button class="btn sm" data-apos="mid">⏺ Tengah (50%)</button>
-    <button class="btn sm" data-apos="reels">📱 Area Aman Reels (74%)</button>
-    <button class="btn sm" data-apos="bot">⬇ Bawah (84%)</button>
+    <button class="btn sm" data-apos="top">⬆ Atas</button>
+    <button class="btn sm" data-apos="mid">⏺ Tengah</button>
+    <button class="btn sm" data-apos="reels">📱 Aman Reels</button>
+    <button class="btn sm" data-apos="bot">⬇ Bawah</button>
   </div>
 
-  <div class="sec-lbl"><span>2. Mesin Transkripsi Suara (Whisper AI)</span></div>
+  <div class="sec-lbl"><span>2. Auto-Correction & Kamus Kata</span></div>
+  <div class="row"><label>Auto-Correct</label><label style="width:auto;flex:1;display:flex;gap:6px;align-items:center;text-transform:none"><input type="checkbox" id="a-corr" ${asr.autoCorrect?'checked':''}> Perbaiki typo, kata berulang &amp; cocokkan kamus</label></div>
+  <div class="row"><span class="l">Kamus Khusus</span><textarea id="a-gloss" style="min-height:46px" placeholder="Pisahkan dengan koma, misal: VaultDL, Fibonacci, Bitcoin, CapCut">${esc(asr.glossary)}</textarea></div>
+  <div class="bar">
+    <button class="btn sm" id="a-fixnow" ${subs?'':'disabled'} title="Jalankan Auto-Correct pada subtitle yang sudah ada di timeline">🪄 Koreksi Subtitle (${subs})</button>
+  </div>
+
+  <div class="sec-lbl"><span>3. Mesin Transkripsi Suara (Whisper AI)</span></div>
   <div class="row"><label>Sumber Audio</label><select id="a-src"><option value="all">Seluruh audio timeline</option><option value="sel">Klip yang dipilih</option></select></div>
   <div class="row"><label>Bahasa</label><select id="a-lang">${LANGS.map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select></div>
   <div class="row"><label>Model AI</label><select id="a-model"><option value="tiny">Tiny · ±40 MB · cepat, kurang akurat</option><option value="base">Base · ±75 MB · seimbang</option><option value="small">Small · ±250 MB · akurat (disarankan tanpa GPU)</option><option value="turbo">Large-v3-Turbo · ±0,8–1 GB · paling akurat (butuh WebGPU)</option></select></div>
@@ -1984,8 +2252,9 @@ function panelSub(pp){
   <div class="bar"><button class="btn g" id="a-go" ${asr.busy?'disabled':''}>✨ Mulai Transkripsi</button>${asr.busy?'<button class="btn" id="a-cancel">Batal</button>':''}</div>
   <div class="prog"><i id="a-bar" style="width:${Math.round(asr.pr*100)}%"></i></div><div class="st" id="a-st">${esc(asr.st)}</div>
   <div class="bar">
+    <button class="btn sm" id="a-impsrt">⬆ Impor .srt</button>
     <button class="btn sm" id="a-srt" ${subs?'':'disabled'}>⬇ Unduh .srt (${subs})</button>
-    <button class="btn sm" id="a-sty" ${subs?'':'disabled'}>🔄 Terapkan Gaya ke Subtitle (${subs})</button>
+    <button class="btn sm" id="a-sty" ${subs?'':'disabled'}>🔄 Terapkan Gaya</button>
     <button class="btn sm" id="a-clr" ${subs?'':'disabled'}>🗑 Hapus</button>
   </div>
   <p class="hint"><b>Tips:</b> Geser langsung kotak contoh di layar pratinjau untuk memosisikan teks sebelum transkrip. Bila sudah ada subtitle, mengubah ukuran/font/posisi di atas otomatis memperbarui seluruh subtitle.</p>`;
@@ -2125,7 +2394,6 @@ async function loadASR(model,onStat){
   throw new Error(model==='turbo'&&!navigator.gpu?'Model Turbo membutuhkan WebGPU (Chrome/Edge terbaru). Pilih model Small.':'Gagal memuat model: '+((lastErr&&lastErr.message)||'periksa koneksi untuk unduhan pertama'));
 }
 
-/* ---- pra-pemrosesan audio: high-pass 80 Hz + normalisasi volume ---- */
 function cleanPCM(pcm){
   const out=new Float32Array(pcm.length),a=Math.exp(-2*Math.PI*80/16000);let px=0,py=0;
   for(let i=0;i<pcm.length;i++){const x=pcm[i];py=a*(py+x-px);px=x;out[i]=py}
@@ -2134,7 +2402,6 @@ function cleanPCM(pcm){
   if(ref>0.003){const g=Math.min(8,0.85/ref);if(g>1.05)for(let i=0;i<out.length;i++)out[i]=Math.max(-1,Math.min(1,out[i]*g))}
   return out;
 }
-/* ---- VAD sederhana berbasis energi: potong di jeda, lewati senyap ---- */
 function speechRegions(pcm,sr=16000){
   const fr=Math.round(sr*0.03),n=Math.floor(pcm.length/fr),e=new Float32Array(n);
   for(let i=0;i<n;i++){let sum=0;for(let j=i*fr,k=j+fr;j<k;j++)sum+=pcm[j]*pcm[j];e[i]=Math.sqrt(sum/fr)}
@@ -2150,7 +2417,7 @@ function speechRegions(pcm,sr=16000){
   const out=[];
   for(let [a,b] of regs){
     a=Math.max(0,a-pad);b=Math.min(n,b+pad);
-    while(b-a>MAX){ // pecah di titik paling sunyi antara 15–28 dtk
+    while(b-a>MAX){
       let best=a+MAX,bv=1e9;for(let i=a+Math.round(15*fps);i<a+MAX;i++){if(e[i]<bv){bv=e[i];best=i}}
       out.push([a,best]);a=best;
     }
@@ -2160,7 +2427,7 @@ function speechRegions(pcm,sr=16000){
 }
 const HALLU=[/terima kasih (telah|sudah|atas) (menonton|menyaksikan|perhatian)/i,/jangan lupa (like|subscribe|berlangganan)/i,/thanks? (you )?for (watching|listening)/i,/please subscribe/i,/subtitles? (by|made by)/i,/amara\.org/i,/subtitle(s)? oleh/i,/^\W*(you|bye|hmm+|uh+|um+)\W*$/i,/^\W*(ya|oke|ok)\W*$/i];
 function isHallu(t){return HALLU.some(r=>r.test(t))}
-function dedupeWords(arr){ // buang pengulangan kata yang sama >3x berturut-turut (loop khas Whisper)
+function dedupeWords(arr){
   const out=[];let run=0,prev='';
   for(const w of arr){const k=w.text.toLowerCase().replace(/[^\p{L}\p{N}]/gu,'');if(k&&k===prev){run++}else{run=1;prev=k}if(run<=3)out.push(w)}
   return out;
@@ -2221,10 +2488,13 @@ async function runASR(){
     S.p.t=S.p.t.filter(x=>!(x.sub&&x.start>=c0-0.01&&x.start<c1));
     for(const ch of grouped){
       if(!ch.text||/^[\s.,!?…-]+$/.test(ch.text))continue;
+      let txt=ch.text;
+      if(asr.autoCorrect) txt=autoCorrectText(txt, asr.glossary);
+      txt=applyCasing(txt, asr.casing);
       const st=c0+ch.start,en=Math.min(c1,c0+Math.max(ch.end,ch.start+0.18));
       S.p.t.push({
         id:uid(),
-        text:applyCasing(ch.text, asr.casing),
+        text:txt,
         start:st,
         end:Math.max(en,st+0.18),
         x:asr.x,
@@ -2260,6 +2530,7 @@ $('pp').addEventListener('change',e=>{
   else if(id==='a-model'){asr.model=e.target.value;refreshOfflineState()}
   else if(id==='a-beam')asr.beam=e.target.checked;
   else if(id==='a-clean')asr.clean=e.target.checked;
+  else if(id==='a-corr')asr.autoCorrect=e.target.checked;
   else if(id==='a-mode'){asr.mode=e.target.value;S.dirty=true}
   else if(id==='a-font'){asr.font=e.target.value;syncLiveSubs()}
   else if(id==='a-case'){
@@ -2281,9 +2552,21 @@ $('pp').addEventListener('input',e=>{
   else if(id==='a-bgc'){asr.bgColor=e.target.value;syncLiveSubs()}
   else if(id==='a-x'){asr.x=+e.target.value;const vx=$('a-vx');if(vx)vx.textContent=Math.round(asr.x*100)+'%';syncLiveSubs()}
   else if(id==='a-y'){asr.y=+e.target.value;const vy=$('a-vy');if(vy)vy.textContent=Math.round(asr.y*100)+'%';syncLiveSubs()}
+  else if(id==='a-gloss'){asr.glossary=e.target.value;try{localStorage.setItem(GKEY,asr.glossary)}catch{}}
 });
 
 $('pp').addEventListener('click',e=>{
+  const preBtn=e.target.closest('[data-apre]');
+  if(preBtn){
+    const p=SUB_PRESETS[preBtn.dataset.apre];
+    if(p){
+      Object.assign(asr,p);
+      syncLiveSubs();
+      renderPanel();
+      toast('Preset gaya subtitle diterapkan');
+    }
+    return;
+  }
   const posBtn=e.target.closest('[data-apos]');
   if(posBtn){
     const p=posBtn.dataset.apos;
@@ -2298,6 +2581,20 @@ $('pp').addEventListener('click',e=>{
   const id=e.target.id;if(!id||id.slice(0,2)!=='a-')return;
   if(id==='a-go')runASR();
   else if(id==='a-cancel'&&asr.ac)asr.ac.abort();
+  else if(id==='a-impsrt')$('srt-file').click();
+  else if(id==='a-fixnow'){
+    snap();
+    let changed=0;
+    for(const t of S.p.t){
+      if(!t.sub)continue;
+      const before=t.text;
+      let fixed=autoCorrectText(before, asr.glossary);
+      fixed=applyCasing(fixed, asr.casing);
+      if(fixed!==before){t.text=fixed;changed++}
+    }
+    afterEdit();
+    toast(changed?`✓ ${changed} klip subtitle berhasil dikoreksi`:'Semua subtitle sudah rapi');
+  }
   else if(id==='a-srt'){
     const subs=S.p.t.filter(t=>t.sub);if(!subs.length)return;
     const url=URL.createObjectURL(new Blob([srtOf(subs)],{type:'text/plain;charset=utf-8'})),a=document.createElement('a');
@@ -2321,6 +2618,7 @@ $('pp').addEventListener('click',e=>{
 $('b-play').onclick=()=>S.playing?pause():play();
 $('b-start').onclick=()=>seek(0);
 $('b-split').onclick=()=>splitAt(S.t);
+$('b-dup').onclick=dupSel;
 $('b-del').onclick=delSel;
 $('b-text').onclick=addText;
 $('b-undo').onclick=undo;$('b-redo').onclick=redo;
@@ -2329,13 +2627,11 @@ $('b-zo').onclick=()=>setZoom(S.zoom/1.5);
 $('b-zf').onclick=()=>fitZoom();
 $('zs').addEventListener('input',e=>setZoom(s2z(+e.target.value)));
 $('b-th').onclick=()=>{$('tl').classList.toggle('tall');$('b-th').classList.toggle('on',$('tl').classList.contains('tall'));S.dirty=true};
-// Ctrl/Cmd + scroll (juga cubit di trackpad) = zoom di posisi kursor; scroll biasa = geser horizontal bila tidak ada scroll vertikal
 $('tl').addEventListener('wheel',e=>{
   const tl=$('tl');
   if(e.ctrlKey||e.metaKey){e.preventDefault();setZoom(S.zoom*Math.exp(-e.deltaY*(e.deltaMode===1?0.05:0.0025)),e.clientX)}
   else if(!e.shiftKey&&Math.abs(e.deltaY)>Math.abs(e.deltaX)&&tl.scrollHeight<=tl.clientHeight+1){e.preventDefault();tl.scrollLeft+=e.deltaY}
 },{passive:false});
-// cubit 2 jari di layar sentuh
 (()=>{
   const tl=$('tl');let pz=null;
   const dist=e=>Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
@@ -2350,6 +2646,9 @@ addEventListener('keydown',e=>{
   const k=e.key.toLowerCase();
   if(k===' '){e.preventDefault();S.playing?pause():play()}
   else if(k==='s'&&!e.ctrlKey&&!e.metaKey)splitAt(S.t);
+  else if((e.ctrlKey||e.metaKey)&&k==='d'){e.preventDefault();dupSel()}
+  else if(k==='i'&&!e.ctrlKey&&!e.metaKey&&S.tab==='media'&&sub==='bin'&&mon.mid){e.preventDefault();monSetIn()}
+  else if(k==='o'&&!e.ctrlKey&&!e.metaKey&&S.tab==='media'&&sub==='bin'&&mon.mid){e.preventDefault();monSetOut()}
   else if(k==='delete'||k==='backspace')delSel();
   else if(!e.ctrlKey&&!e.metaKey&&(k==='+'||k==='=')){setZoom(S.zoom*1.5)}
   else if(!e.ctrlKey&&!e.metaKey&&(k==='-'||k==='_')){setZoom(S.zoom/1.5)}
@@ -2382,7 +2681,7 @@ window.addEventListener('beforeunload',save);
   await processQueue();
 })();
 try{if('serviceWorker' in navigator)navigator.serviceWorker.register('/editor-offline-sw.js',{scope:'/'}).catch(()=>{})}catch{}
-window.__api={addVideo,addAudio,addOverlay,addText,splitAt,delSel,select,seek,play,pause,undo,redo,registerMedia,runExport,fitZoom,newProject,runASR,applyDims,snapAt,openMonitor};
+window.__api={addVideo,addAudio,addOverlay,addText,splitAt,dupSel,delSel,select,seek,play,pause,undo,redo,registerMedia,runExport,fitZoom,newProject,runASR,applyDims,snapAt,openMonitor};
 </script>
 </body>
 </html>
