@@ -1,5 +1,6 @@
 // editor-core.mjs — inti editor video VaultDL: model timeline, gambar teks/overlay, render/ekspor offline,
-// gelombang suara, split-screen streamer, dan penyiapan audio untuk transkripsi.
+// auto-reframe (Split-Screen Livestream & Podcast Tracking), ekstraksi audio streaming 30–60 menit untuk AI Auto-Clip,
+// gelombang suara, dan penyiapan audio transkripsi. Berjalan di browser (WebCodecs via Mediabunny, MPL-2.0).
 import {
   Input, Output, BlobSource, ALL_FORMATS, Mp4OutputFormat, WebMOutputFormat, BufferTarget,
   CanvasSink, AudioBufferSink, CanvasSource, AudioBufferSource,
@@ -15,9 +16,66 @@ export const FONTS = {
 };
 export const QUALITY = { low: QUALITY_LOW, medium: QUALITY_MEDIUM, high: QUALITY_HIGH, veryhigh: QUALITY_VERY_HIGH };
 const SR = 48000;
-const makeCanvas = (w, h) => typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(w, h) : Object.assign(document.createElement('canvas'), { width: w, height: h });
+const makeCanvas = (w, h) => typeof OffscreenCanvas !== 'undefined'
+  ? new OffscreenCanvas(w, h)
+  : Object.assign(document.createElement('canvas'), { width: w, height: h });
+
+/* ---------------- preset layout split-screen livestream ---------------- */
+// Semua koordinat crop menggunakan rasio normalisasi 0..1 terhadap bingkai video asli (16:9).
+export const SPLIT_PRESETS = {
+  'bottom-right': {
+    label: 'Kamera Kanan Bawah',
+    topRatio: 0.38,
+    swap: false,
+    cam: { x: 0.72, y: 0.62, w: 0.27, h: 0.35 },
+    game: { x: 0.14, y: 0.0, w: 0.72, h: 1.0 },
+  },
+  'bottom-left': {
+    label: 'Kamera Kiri Bawah',
+    topRatio: 0.38,
+    swap: false,
+    cam: { x: 0.01, y: 0.62, w: 0.27, h: 0.35 },
+    game: { x: 0.14, y: 0.0, w: 0.72, h: 1.0 },
+  },
+  'top-right': {
+    label: 'Kamera Kanan Atas',
+    topRatio: 0.38,
+    swap: false,
+    cam: { x: 0.72, y: 0.03, w: 0.27, h: 0.35 },
+    game: { x: 0.14, y: 0.0, w: 0.72, h: 1.0 },
+  },
+  'top-left': {
+    label: 'Kamera Kiri Atas',
+    topRatio: 0.38,
+    swap: false,
+    cam: { x: 0.01, y: 0.03, w: 0.27, h: 0.35 },
+    game: { x: 0.14, y: 0.0, w: 0.72, h: 1.0 },
+  },
+  'left-mid': {
+    label: 'Kamera Kiri Tengah',
+    topRatio: 0.38,
+    swap: false,
+    cam: { x: 0.01, y: 0.30, w: 0.27, h: 0.38 },
+    game: { x: 0.20, y: 0.0, w: 0.74, h: 1.0 },
+  },
+  'right-mid': {
+    label: 'Kamera Kanan Tengah',
+    topRatio: 0.38,
+    swap: false,
+    cam: { x: 0.72, y: 0.30, w: 0.27, h: 0.38 },
+    game: { x: 0.06, y: 0.0, w: 0.74, h: 1.0 },
+  },
+};
 
 /* ---------------- model ---------------- */
+// project = { w,h,fps,aspect,res,fit,
+//   v:[{id,mid,in,out,vol,mute,speed,zoom,ox,oy,
+//       layout:'normal'|'podcast'|'split',
+//       split:{topRatio,swap,divider,cam:{x,y,w,h},game:{x,y,w,h}},
+//       track:[{t,ox,oy,zoom}], trackSmooth:false}],
+//   a:[{id,mid,start,in,out,vol,speed}],
+//   t:[{id,text,start,end,x,y,size,color,bg,bgColor,bold,font,sub}],
+//   o:[{id,mid,start,end,x,y,w,op}] }
 export const srcLen = c => Math.max(0, c.out - c.in);
 export const clipLen = c => srcLen(c) / (c.speed || 1);
 export function videoLayout(p) {
@@ -30,13 +88,73 @@ export function projectDuration(p) {
   return v > 0 ? v : audioEnd(p);
 }
 
-/* ---------------- bingkai video: muat / isi / latar blur / split stream ---------------- */
+/* ---------------- bingkai video: normal / split-screen / podcast tracking ---------------- */
+const clampVal = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
 export function placeFrame(sw, sh, W, H, fit, zoom = 1, ox = 0, oy = 0) {
   let k = fit === 'fill' ? Math.max(W / sw, H / sh) : Math.min(W / sw, H / sh);
   k *= zoom || 1;
   const w = sw * k, h = sh * k;
   return { x: (W - w) / 2 + (ox || 0) * W, y: (H - h) / 2 + (oy || 0) * H, w, h };
 }
+
+// Crop area sumber (crop: {x,y,w,h} rasio 0..1) dan isi penuh kotak tujuan tanpa distorsi (anti-gepeng)
+export function drawCropCover(ctx, src, imgW, imgH, crop, dx, dy, dw, dh) {
+  if (!crop || dw <= 0 || dh <= 0) return;
+  const cx = clampVal(crop.x ?? 0, 0, 0.98);
+  const cy = clampVal(crop.y ?? 0, 0, 0.98);
+  const cw = clampVal(crop.w ?? 1, 0.02, 1 - cx);
+  const ch = clampVal(crop.h ?? 1, 0.02, 1 - cy);
+
+  const sx = cx * imgW, sy = cy * imgH;
+  const sw = Math.max(2, cw * imgW), sh = Math.max(2, ch * imgH);
+
+  const srcAsp = sw / sh, dstAsp = dw / dh;
+  let csx = sx, csy = sy, csw = sw, csh = sh;
+  if (srcAsp > dstAsp) {
+    csw = sh * dstAsp;
+    csx = sx + (sw - csw) / 2;
+  } else {
+    csh = sw / dstAsp;
+    csy = sy + (sh - csh) / 2;
+  }
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(dx, dy, dw, dh);
+  ctx.clip();
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(src, csx, csy, csw, csh, dx, dy, dw, dh);
+  ctx.restore();
+}
+
+export function samplePodcastTrack(track, srcTime, smooth = false) {
+  if (!Array.isArray(track) || !track.length) return { ox: 0, oy: 0, zoom: 1 };
+  if (track.length === 1 || srcTime <= track[0].t) return track[0];
+  const last = track[track.length - 1];
+  if (srcTime >= last.t) return last;
+
+  let idx = 0;
+  for (let i = 0; i < track.length - 1; i++) {
+    if (srcTime >= track[i].t && srcTime < track[i + 1].t) { idx = i; break; }
+  }
+  const a = track[idx], b = track[idx + 1];
+  if (!smooth) return a; // Hard-cut antar pembicara agar tidak pusing
+  const dt = Math.max(1e-4, b.t - a.t);
+  // Transisi hanya dalam 0.35 detik terakhir menjelang keyframe berikutnya
+  const win = Math.min(0.35, dt);
+  const rem = b.t - srcTime;
+  if (rem > win) return a;
+  const u = clampVal(1 - rem / win, 0, 1);
+  const e = u * u * (3 - 2 * u); // smoothstep
+  return {
+    ox: (a.ox || 0) + ((b.ox || 0) - (a.ox || 0)) * e,
+    oy: (a.oy || 0) + ((b.oy || 0) - (a.oy || 0)) * e,
+    zoom: (a.zoom || 1) + ((b.zoom || 1) - (a.zoom || 1)) * e,
+  };
+}
+
 let _bg = null;
 function blurBackdrop(ctx, src, sw, sh, W, H) {
   const bw = Math.max(8, Math.round(W / 14)), bh = Math.max(8, Math.round(H / 14));
@@ -47,40 +165,47 @@ function blurBackdrop(ctx, src, sw, sh, W, H) {
   ctx.drawImage(_bg, 0, 0, W, H);
   ctx.fillStyle = 'rgba(0,0,0,.3)'; ctx.fillRect(0, 0, W, H); ctx.restore();
 }
-function drawSplitFrame(ctx, src, sw, sh, W, H, clip) {
-  const ratio = Math.min(0.65, Math.max(0.2, clip?.spRatio ?? 0.38));
-  const topH = Math.round(H * ratio);
-  const botH = H - topH;
 
-  // 1. Layar Atas: Facecam Streamer (fokus ke koordinat camX, camY 0..1)
-  const camZoom = clip?.camZoom ?? 2.6;
-  const fx = clip?.camX ?? 0.85;
-  const fy = clip?.camY ?? 0.80;
-  ctx.save();
-  ctx.beginPath(); ctx.rect(0, 0, W, topH); ctx.clip();
-  const kTop = Math.max(W / sw, topH / sh) * camZoom;
-  const tw = sw * kTop, th = sh * kTop;
-  const tx = Math.min(0, Math.max(W - tw, W / 2 - fx * tw));
-  const ty = Math.min(0, Math.max(topH - th, topH / 2 - fy * th));
-  ctx.drawImage(src, tx, ty, tw, th);
-  ctx.restore();
-
-  // 2. Layar Bawah: Gameplay (menggunakan zoom, ox, oy utama klip)
-  ctx.save();
-  ctx.beginPath(); ctx.rect(0, topH, W, botH); ctx.clip();
-  const pb = placeFrame(sw, sh, W, botH, 'fill', clip?.zoom || 1, clip?.ox || 0, clip?.oy || 0);
-  ctx.drawImage(src, pb.x, topH + pb.y, pb.w, pb.h);
-  ctx.restore();
-
-  // Garis pemisah tipis
-  ctx.save();
-  ctx.fillStyle = 'rgba(255,255,255,0.18)';
-  ctx.fillRect(0, topH - 1, W, 2);
-  ctx.restore();
-}
-export function drawVideoFrame(ctx, src, sw, sh, W, H, clip, fit) {
+export function drawVideoFrame(ctx, src, sw, sh, W, H, clip, fit, srcTime = 0) {
   if (!sw || !sh) return;
-  if (fit === 'split') return drawSplitFrame(ctx, src, sw, sh, W, H, clip);
+
+  // Mode 1: Split-Screen Livestream (Atas Facecam, Bawah Gameplay)
+  if (clip && clip.layout === 'split' && clip.split) {
+    const sp = clip.split;
+    const ratio = clampVal(sp.topRatio ?? 0.38, 0.2, 0.7);
+    const topH = Math.round(H * ratio);
+    const botH = H - topH;
+    const topCrop = sp.swap ? sp.game : sp.cam;
+    const botCrop = sp.swap ? sp.cam : sp.game;
+
+    drawCropCover(ctx, src, sw, sh, topCrop, 0, 0, W, topH);
+    drawCropCover(ctx, src, sw, sh, botCrop, 0, topH, W, botH);
+
+    if (sp.divider !== false) {
+      const dh = Math.max(2, Math.round(H * 0.003));
+      ctx.fillStyle = typeof sp.divider === 'string' ? sp.divider : '#09090b';
+      ctx.fillRect(0, topH - Math.floor(dh / 2), W, dh);
+    }
+    return;
+  }
+
+  // Mode 2: Podcast Auto-Reframe (Fill Portrait + Keyframe Fokus Pembicara)
+  if (clip && clip.layout === 'podcast') {
+    const kf = samplePodcastTrack(clip.track, srcTime, !!clip.trackSmooth);
+    const zoom = Math.max(1, (kf.zoom || 1) * (clip.zoom || 1));
+    const baseK = Math.max(W / sw, H / sh) * zoom;
+    const dw = sw * baseK, dh = sh * baseK;
+    // Batasi pergeseran ox/oy agar tidak memunculkan pinggiran hitam
+    const maxOx = Math.max(0, (dw - W) / (2 * W));
+    const maxOy = Math.max(0, (dh - H) / (2 * H));
+    const ox = clampVal((kf.ox || 0) + (clip.ox || 0), -maxOx, maxOx);
+    const oy = clampVal((kf.oy || 0) + (clip.oy || 0), -maxOy, maxOy);
+    const p = placeFrame(sw, sh, W, H, 'fill', zoom, ox, oy);
+    ctx.drawImage(src, p.x, p.y, p.w, p.h);
+    return;
+  }
+
+  // Mode 3: Normal (Fit / Fill / Blur)
   if (fit === 'blur') blurBackdrop(ctx, src, sw, sh, W, H);
   const p = placeFrame(sw, sh, W, H, fit === 'fill' ? 'fill' : 'fit', clip && clip.zoom, clip && clip.ox, clip && clip.oy);
   ctx.drawImage(src, p.x, p.y, p.w, p.h);
@@ -153,7 +278,7 @@ export function createPool(media, W = 1280, H = 720) {
   };
 }
 
-/* ---------------- mixing audio (dipakai ekspor & transkripsi) ---------------- */
+/* ---------------- mixing audio (dipakai ekspor & transkripsi timeline) ---------------- */
 export function audioSources(p) {
   const out = [];
   for (const L of videoLayout(p)) {
@@ -196,12 +321,407 @@ export async function mixMono16k(sources, pool, c0, c1, onProgress, signal) {
   return out;
 }
 
+/* ---------------- AI AUTO-CLIP: EKSTRAKSI AUDIO STREAMING 30–60 MENIT ---------------- */
+// Encoder WAV 16-bit PCM mono murni JS (universal, 0 error lintas browser)
+export function encodeWavMono16(pcm, sampleRate = 16000) {
+  const len = pcm.length;
+  const buf = new ArrayBuffer(44 + len * 2);
+  const v = new DataView(buf);
+  const ws = (off, s) => { for (let i = 0; i < s.length; i++) v.setUint8(off + i, s.charCodeAt(i)); };
+  ws(0, 'RIFF'); v.setUint32(4, 36 + len * 2, true); ws(8, 'WAVE');
+  ws(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true);
+  v.setUint16(22, 1, true); v.setUint32(24, sampleRate, true);
+  v.setUint32(28, sampleRate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+  ws(36, 'data'); v.setUint32(40, len * 2, true);
+  let off = 44;
+  for (let i = 0; i < len; i++, off += 2) {
+    const s = Math.max(-1, Math.min(1, pcm[i]));
+    v.setInt16(off, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+  }
+  return new Blob([buf], { type: 'audio/wav' });
+}
+
+// Encoder WebM/Opus super ringan (~24–32 kbps -> 10 menit audio hanya ~2 MB, aman batas payload Vercel 4.5 MB)
+async function encodeOpusWebmChunk(pcm, sampleRate, codec) {
+  const output = new Output({ format: new WebMOutputFormat(), target: new BufferTarget() });
+  const asrc = new AudioBufferSource({ codec, quality: QUALITY_LOW });
+  output.addAudioTrack(asrc);
+  await output.start();
+  const step = sampleRate * 10;
+  for (let off = 0; off < pcm.length; off += step) {
+    const slice = pcm.subarray(off, Math.min(pcm.length, off + step));
+    const ab = new AudioBuffer({ length: slice.length, numberOfChannels: 1, sampleRate });
+    ab.copyToChannel(slice, 0);
+    await asrc.add(ab);
+  }
+  asrc.close();
+  await output.finalize();
+  return new Blob([output.target.buffer], { type: 'audio/webm' });
+}
+
+/**
+ * Mengekstrak audio dari file video 30–60 menit secara streaming hemat RAM (<25 MB),
+ * memecahnya ke chunk kecil (<3.8 MB/chunk) agar lolos limit upload serverless API,
+ * sekaligus mendeteksi skor energi/hype suara per detik (tawa, teriakan, klimaks).
+ */
+export async function extractAudioChunksForAI(blob, opts = {}, onProgress = () => {}, signal) {
+  const abort = () => { if (signal && signal.aborted) throw new DOMException('Dibatalkan', 'AbortError'); };
+  const targetSR = 16000;
+
+  // Cek apakah browser mendukung encode Opus mono 16kHz (jauh lebih kecil untuk video 60 menit)
+  let opusCodec = null;
+  if (opts.preferOpus !== false) {
+    try {
+      opusCodec = await getFirstEncodableAudioCodec(['opus'], { numberOfChannels: 1, sampleRate: targetSR });
+    } catch { opusCodec = null; }
+  }
+
+  // Jika Opus aktif: 1 chunk = 360 dtk (6 menit ≈ 1.4 MB). Jika WAV fallback: 1 chunk = 110 dtk (≈ 3.5 MB).
+  const chunkSec = opts.chunkSec || (opusCodec ? 360 : 110);
+  const chunkCap = Math.round(chunkSec * targetSR);
+
+  const input = new Input({ source: new BlobSource(blob), formats: ALL_FORMATS });
+  try {
+    const at = await input.getPrimaryAudioTrack();
+    if (!at) throw new Error('File video ini tidak memiliki track audio');
+    const duration = (await input.computeDuration()) || 0;
+
+    const maxSecBins = Math.max(1, Math.ceil(duration) + 10);
+    const secSq = new Float64Array(maxSecBins);
+    const secCnt = new Uint32Array(maxSecBins);
+
+    let buf = new Float32Array(chunkCap);
+    let pos = 0;
+    let chunkStart = 0;
+    let chunkIdx = 0;
+    const chunks = [];
+
+    const flushChunk = async (endTime) => {
+      if (pos < targetSR * 0.25) { pos = 0; return; }
+      const slice = buf.subarray(0, pos);
+      let outBlob, ext, mime;
+      if (opusCodec) {
+        try {
+          outBlob = await encodeOpusWebmChunk(slice, targetSR, opusCodec);
+          ext = 'webm'; mime = 'audio/webm';
+        } catch {
+          opusCodec = null;
+        }
+      }
+      if (!outBlob) {
+        // Jika fallback ke WAV dan slice terlalu besar (>3.8MB / >120 dtk), pecah otomatis per 110 dtk
+        const maxWavSamples = 110 * targetSR;
+        for (let off = 0; off < slice.length; off += maxWavSamples) {
+          const sub = slice.subarray(off, Math.min(slice.length, off + maxWavSamples));
+          const subStart = chunkStart + off / targetSR;
+          const subEnd = Math.min(endTime, subStart + sub.length / targetSR);
+          const wb = encodeWavMono16(sub, targetSR);
+          chunks.push({ index: chunkIdx++, start: subStart, end: subEnd, blob: wb, ext: 'wav', mime: 'audio/wav', size: wb.size });
+        }
+        pos = 0;
+        chunkStart = endTime;
+        return;
+      }
+      chunks.push({ index: chunkIdx++, start: chunkStart, end: endTime, blob: outBlob, ext, mime, size: outBlob.size });
+      pos = 0;
+      chunkStart = endTime;
+    };
+
+    let lastProg = 0;
+    for await (const wb of new AudioBufferSink(at).buffers()) {
+      abort();
+      const ab = wb.buffer;
+      const srcSR = ab.sampleRate;
+      const nCh = ab.numberOfChannels;
+      const inLen = ab.length;
+      const chData = [];
+      for (let c = 0; c < nCh; c++) chData.push(ab.getChannelData(c));
+
+      const ratio = srcSR / targetSR;
+      const outLen = Math.max(1, Math.floor(inLen / ratio));
+      const tBase = Math.max(0, wb.timestamp || 0);
+
+      for (let i = 0; i < outLen; i++) {
+        const srcIdx = Math.min(inLen - 1, Math.floor(i * ratio));
+        let v = 0;
+        for (let c = 0; c < nCh; c++) v += chData[c][srcIdx];
+        v /= nCh;
+
+        // Catat energi suara per detik untuk deteksi momen hype/viral
+        const secBin = Math.floor(tBase + i / targetSR);
+        if (secBin >= 0 && secBin < maxSecBins) {
+          secSq[secBin] += v * v;
+          secCnt[secBin] += 1;
+        }
+
+        buf[pos++] = v;
+        if (pos >= chunkCap) {
+          await flushChunk(chunkStart + pos / targetSR);
+        }
+      }
+
+      if (duration > 0) {
+        const p = Math.min(0.96, (tBase + ab.duration) / duration);
+        if (p - lastProg >= 0.02) {
+          lastProg = p;
+          onProgress(p, `Ekstrak audio & analisa energi (${Math.round(p * 100)}%)`);
+        }
+      }
+    }
+    await flushChunk(duration || (chunkStart + pos / targetSR));
+
+    // Normalisasi skor hype 0..100 per detik
+    const totalSecs = Math.max(1, Math.ceil(duration || chunkStart));
+    const rmsArr = new Float32Array(totalSecs);
+    for (let s = 0; s < totalSecs; s++) {
+      rmsArr[s] = secCnt[s] ? Math.sqrt(secSq[s] / secCnt[s]) : 0;
+    }
+    const sorted = Array.from(rmsArr).filter(v => v > 0.001).sort((a, b) => a - b);
+    const p50 = sorted[Math.floor(sorted.length * 0.5)] || 0.01;
+    const p95 = sorted[Math.floor(sorted.length * 0.95)] || Math.max(p50 * 2, 0.05);
+
+    const hype = [];
+    const topHypeTimes = [];
+    for (let s = 0; s < totalSecs; s++) {
+      const norm = clampVal((rmsArr[s] - p50 * 0.5) / Math.max(1e-4, p95 - p50 * 0.5), 0, 1);
+      const score = Math.round(norm * 100);
+      hype.push({ t: s, rms: rmsArr[s], score });
+      if (score >= 78) topHypeTimes.push({ t: s, score });
+    }
+
+    onProgress(1, 'Audio siap dianalisa AI');
+    return { duration: duration || chunkStart, chunks, hype, topHypeTimes };
+  } finally {
+    try { input.dispose?.(); } catch { /* abaikan */ }
+  }
+}
+
+/* ---------------- AI AUTO-REFRAME: SAMPLING FRAME & PELACAKAN WAJAH ---------------- */
+/**
+ * Mengambil snapshot frame pada daftar timestamp tertentu secara cepat lewat Mediabunny CanvasSink
+ * (dipakai untuk mendeteksi posisi kamera streamer atau melacak pembicara podcast).
+ */
+export async function sampleMediaFrames(blob, timestamps, maxWidth = 480, signal) {
+  const abort = () => { if (signal && signal.aborted) throw new DOMException('Dibatalkan', 'AbortError'); };
+  const input = new Input({ source: new BlobSource(blob), formats: ALL_FORMATS });
+  try {
+    const vt = await input.getPrimaryVideoTrack();
+    if (!vt) throw new Error('Video tidak ditemukan');
+    const srcW = vt.displayWidth, srcH = vt.displayHeight;
+    const w = Math.max(64, Math.min(srcW, maxWidth));
+    const sink = new CanvasSink(vt, { width: w });
+    const frames = [];
+    let i = 0;
+    for await (const wc of sink.canvasesAtTimestamps(timestamps)) {
+      abort();
+      if (wc && wc.canvas) {
+        const c = makeCanvas(wc.canvas.width, wc.canvas.height);
+        c.getContext('2d').drawImage(wc.canvas, 0, 0);
+        frames.push({ t: timestamps[i], canvas: c, w: c.width, h: c.height });
+      }
+      i++;
+    }
+    return { srcW, srcH, frames };
+  } finally {
+    try { input.dispose?.(); } catch { /* abaikan */ }
+  }
+}
+
+/**
+ * Menghitung kotak crop Facecam (atas) & Gameplay (bawah) secara otomatis dari deteksi wajah
+ * pada beberapa sampel frame livestream.
+ * @param {Array<{x:number,y:number,w:number,h:number}>} faces - Bounding box wajah normalisasi 0..1
+ */
+export function buildSplitLayoutFromFaces(faces, opts = {}) {
+  const topRatio = clampVal(opts.topRatio ?? 0.38, 0.22, 0.6);
+  const fallback = SPLIT_PRESETS[opts.fallback || 'bottom-right'] || SPLIT_PRESETS['bottom-right'];
+  if (!Array.isArray(faces) || !faces.length) {
+    return {
+      topRatio,
+      swap: false,
+      divider: '#09090b',
+      cam: { ...fallback.cam },
+      game: { ...fallback.game },
+      detected: false,
+    };
+  }
+
+  // Ambil median posisi wajah (tahan terhadap deteksi karakter game sesaat)
+  const med = arr => { const s = arr.slice().sort((a, b) => a - b); return s[Math.floor(s.length / 2)]; };
+  const fx = med(faces.map(f => f.x + f.w / 2));
+  const fy = med(faces.map(f => f.y + f.h / 2));
+  const fw = med(faces.map(f => f.w));
+  const fh = med(faces.map(f => f.h));
+
+  // Perluas area crop agar bahu & kepala streamer masuk nyaman (rasio mendekati 4:3 / 16:10)
+  const camW = clampVal(Math.max(fw * 2.8, 0.22), 0.18, 0.42);
+  const camH = clampVal(Math.max(fh * 2.6, 0.28), 0.22, 0.48);
+  const camX = clampVal(fx - camW / 2, 0, 1 - camW);
+  const camY = clampVal(fy - camH * 0.44, 0, 1 - camH);
+
+  // Tentukan area gameplay yang paling bersih (menghindari sisi facecam)
+  let gameX = 0.14, gameW = 0.72;
+  if (fx < 0.32) { gameX = 0.20; gameW = 0.78; }
+  else if (fx > 0.68) { gameX = 0.02; gameW = 0.78; }
+
+  return {
+    topRatio,
+    swap: false,
+    divider: '#09090b',
+    cam: { x: +camX.toFixed(4), y: +camY.toFixed(4), w: +camW.toFixed(4), h: +camH.toFixed(4) },
+    game: { x: gameX, y: 0, w: gameW, h: 1 },
+    detected: true,
+  };
+}
+
+/**
+ * Mengubah hasil deteksi wajah per timestamp pada klip podcast menjadi daftar keyframe `clip.track`
+ * dengan anti-jitter (menahan kamera minimal `minHoldSec` detik agar tidak goyang).
+ * @param {Array<{t:number, faces:Array<{x:number,y:number,w:number,h:number}>}>} samples
+ */
+export function buildPodcastTrack(samples, opts = {}) {
+  const srcAsp = opts.srcAsp || (16 / 9);
+  const dstAsp = opts.dstAsp || (9 / 16);
+  const zoom = opts.zoom || 1.05;
+  const minHoldSec = opts.minHoldSec ?? 1.4;
+  // Rumus offset X: jika wajah di posisi normalisasi cx (0..1), geser agar berada di tengah kanvas 9:16
+  // Lebar gambar setelah fill terhadap lebar kanvas W adalah (srcAsp / dstAsp) * zoom
+  const widthRatio = Math.max(1, (srcAsp / dstAsp) * zoom);
+  const maxOx = Math.max(0, (widthRatio - 1) / 2);
+
+  const cxToOx = cx => clampVal((0.5 - cx) * widthRatio, -maxOx, maxOx);
+
+  const raw = [];
+  let lastCx = 0.5;
+  for (const s of samples || []) {
+    const fs = s.faces || [];
+    let targetCx = lastCx;
+    if (fs.length === 1) {
+      targetCx = fs[0].x + fs[0].w / 2;
+    } else if (fs.length >= 2) {
+      // Pilih wajah paling besar/dominan (biasanya close-up pembicara aktif)
+      const best = fs.slice().sort((a, b) => (b.w * b.h) - (a.w * a.h))[0];
+      targetCx = best.x + best.w / 2;
+    }
+    // Kuantisasi zona kiri / tengah / kanan agar kamera terasa seperti switcher studio
+    let snappedCx = targetCx;
+    if (opts.zoneSnap !== false) {
+      if (targetCx < 0.36) snappedCx = Math.max(0.22, targetCx);
+      else if (targetCx > 0.64) snappedCx = Math.min(0.78, targetCx);
+      else snappedCx = 0.5;
+    }
+    lastCx = snappedCx;
+    raw.push({ t: s.t, ox: +cxToOx(snappedCx).toFixed(4), oy: 0, zoom });
+  }
+
+  if (!raw.length) return [{ t: 0, ox: 0, oy: 0, zoom: 1 }];
+
+  // Debounce / kompres keyframe agar hanya berpindah saat perubahan cukup signifikan dan melewati minHoldSec
+  const track = [raw[0]];
+  for (let i = 1; i < raw.length; i++) {
+    const prev = track[track.length - 1];
+    const cur = raw[i];
+    if (Math.abs(cur.ox - prev.ox) >= 0.14 && (cur.t - prev.t) >= minHoldSec) {
+      track.push(cur);
+    }
+  }
+  return track;
+}
+
+/* ---------------- AI AUTO-CLIP: SCORER LOKAL / FALLBACK TANPA API ---------------- */
+const HOOK_REGEX = /\b(rahasia|jangan pernah|ternyata|kesalahan|kenapa|fakta|parah|gila|gokil|sebenernya|sebenarnya|masalahnya|jujur|percaya|bongkar|bahaya|untung|rugi|cuan|loss|gagal|sukses|tips|cara|secret|mistake|never|truth|insane|crazy|wait|listen|honestly|reason|why)\b/i;
+
+/**
+ * Menilai transkrip ber-timestamp + data hype audio secara lokal (fallback jika API LLM belum diisi,
+ * atau sebagai pre-filter kandidat untuk video berdurasi panjang).
+ */
+export function findLocalViralCandidates(segments, hypeData = [], opts = {}) {
+  const minDur = opts.minDur || 35;
+  const maxDur = opts.maxDur || 65;
+  const maxClips = opts.maxClips || 5;
+  if (!Array.isArray(segments) || !segments.length) return [];
+
+  const hypeMap = new Map();
+  for (const h of hypeData) hypeMap.set(Math.floor(h.t), h.score || 0);
+
+  const cands = [];
+  for (let i = 0; i < segments.length; i++) {
+    const start = segments[i].start;
+    let text = '';
+    let hookText = '';
+    for (let j = i; j < segments.length; j++) {
+      const seg = segments[j];
+      const d = seg.end - start;
+      text += (text ? ' ' : '') + String(seg.text || '').trim();
+      if (seg.start - start <= 6) hookText += (hookText ? ' ' : '') + String(seg.text || '').trim();
+      if (d < minDur) continue;
+      if (d > maxDur) break;
+
+      const words = text.split(/\s+/).filter(Boolean);
+      const wps = words.length / Math.max(1, d);
+      const hasHook = HOOK_REGEX.test(hookText);
+      const hasQuestion = /\?/.test(hookText);
+      const cleanEnd = /[.!?]$/.test(String(seg.text || '').trim());
+
+      // Hitung rata-rata & puncak energi hype di dalam rentang klip ini
+      let hypePeak = 0, hypeSum = 0, hypeN = 0;
+      for (let s = Math.floor(start); s <= Math.ceil(seg.end); s++) {
+        const hs = hypeMap.get(s) || 0;
+        if (hs > hypePeak) hypePeak = hs;
+        hypeSum += hs; hypeN++;
+      }
+      const hypeAvg = hypeN ? hypeSum / hypeN : 0;
+
+      let score = 50;
+      if (hasHook) score += 16;
+      if (hasQuestion) score += 7;
+      if (cleanEnd) score += 6;
+      if (wps >= 1.8 && wps <= 3.8) score += 10; // tempo bicara padat & jelas
+      score += Math.round(hypePeak * 0.14 + hypeAvg * 0.08);
+      score = clampVal(score, 40, 98);
+
+      const titleRaw = hookText.replace(/\s+/g, ' ').trim().slice(0, 64);
+      const reasons = [];
+      if (hasHook) reasons.push('Hook kuat di 5 detik awal');
+      if (hypePeak >= 75) reasons.push('Ada puncak reaksi/energi audio tinggi');
+      if (wps >= 2.0) reasons.push('Tempo pembahasan padat tanpa jeda kosong');
+      if (!reasons.length) reasons.push('Segmen padat dengan alur kalimat utuh');
+
+      cands.push({
+        id: 'loc_' + i + '_' + j,
+        title: titleRaw + (titleRaw.length >= 64 ? '…' : ''),
+        start: +start.toFixed(2),
+        end: +seg.end.toFixed(2),
+        duration: +(seg.end - start).toFixed(1),
+        viral_score: score,
+        hook: hookText.slice(0, 120),
+        reason: reasons.join(' · '),
+        segments: segments.slice(i, j + 1),
+      });
+      // Ambil satu jendela optimal per titik awal (berhenti saat penutup kalimat bagus tercapai)
+      if (cleanEnd && d >= 45) break;
+    }
+  }
+
+  // Pilih top kandidat yang tidak saling tumpang tindih
+  cands.sort((a, b) => b.viral_score - a.viral_score);
+  const picked = [];
+  for (const c of cands) {
+    if (picked.length >= maxClips) break;
+    const overlap = picked.some(p => Math.min(p.end, c.end) - Math.max(p.start, c.start) > 8);
+    if (!overlap) picked.push(c);
+  }
+  return picked.sort((a, b) => a.start - b.start);
+}
+
 /* ---------------- gelombang suara ---------------- */
 export async function computePeaks(blob, bucket = 0.02) {
   const input = new Input({ source: new BlobSource(blob), formats: ALL_FORMATS });
   try {
     const at = await input.getPrimaryAudioTrack(); if (!at) return null;
     const dur = (await input.computeDuration()) || 0;
+    // Skala otomatis resolusi waveform untuk video 30–60 menit agar ringan di RAM
+    if (dur > 900 && bucket < 0.08) bucket = 0.08;
     const peaks = new Float32Array(Math.ceil(dur / bucket) + 4);
     for await (const wb of new AudioBufferSink(at).buffers()) {
       const b = wb.buffer, sr = b.sampleRate, step = Math.max(1, Math.floor(sr * bucket / 6));
@@ -256,11 +776,11 @@ export async function renderProject(p, media, opts = {}, onProgress = () => {}, 
 
   const totalFrames = Math.ceil(D * fps), dur = 1 / fps;
   let frame = 0;
-  const paint = async (i, wc, clip) => {
+  const paint = async (i, wc, clip, srcTime = 0) => {
     abort();
     const t = i / fps;
     ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
-    if (wc && wc.canvas) drawVideoFrame(ctx, wc.canvas, wc.canvas.width, wc.canvas.height, W, H, clip, fit);
+    if (wc && wc.canvas) drawVideoFrame(ctx, wc.canvas, wc.canvas.width, wc.canvas.height, W, H, clip, fit, srcTime);
     for (const o of ovs) if (t >= o.start && t < o.end) { const bm = bitmaps.get(o.mid); if (bm) drawOverlay(ctx, bm, bm.width, bm.height, o, W, H); }
     for (const tx of texts) if (t >= tx.start && t < tx.end) drawText(ctx, tx, W, H);
     await vsrc.add(t, dur);
@@ -274,12 +794,12 @@ export async function renderProject(p, media, opts = {}, onProgress = () => {}, 
     for (; i < iEnd; i++) { idx.push(i); ts.push(Math.min(L.clip.out, L.clip.in + Math.max(0, i / fps - L.start) * sp)); }
     if (!idx.length) continue;
     const sink = await pool.videoSink(L.clip.mid);
-    if (!sink) { for (const k of idx) await paint(k, null, L.clip); continue; }
+    if (!sink) { for (let k = 0; k < idx.length; k++) await paint(idx[k], null, L.clip, ts[k]); continue; }
     let n = 0;
-    for await (const wc of sink.canvasesAtTimestamps(ts)) { await paint(idx[n++], wc, L.clip); }
-    while (n < idx.length) await paint(idx[n++], null, L.clip);
+    for await (const wc of sink.canvasesAtTimestamps(ts)) { await paint(idx[n], wc, L.clip, ts[n]); n++; }
+    while (n < idx.length) { await paint(idx[n], null, L.clip, ts[n]); n++; }
   }
-  while (i < totalFrames) { await paint(i, null, null); i++; }
+  while (i < totalFrames) { await paint(i, null, null, 0); i++; }
   vsrc.close();
 
   if (audioOut) {
