@@ -2,7 +2,7 @@
 // Route otomatis: /api/autoclip
 // Env Vercel yang didukung (isi salah satu atau keduanya):
 //   - GROQ_API_KEY   (sangat disarankan untuk transkripsi 30–60 menit super cepat via whisper-large-v3-turbo)
-//   - GEMINI_API_KEY (sangat disarankan untuk analisa inti sari viral full 60 menit via gemini-2.5-flash)
+//   - GEMINI_API_KEY (sangat disarankan untuk analisa inti sari viral full 60 menit via gemini-3.8-flash)
 
 export const config = {
   maxDuration: 60,
@@ -223,7 +223,7 @@ ${lines.join('\n')}`;
 }
 
 async function analyzeWithGemini(prompt, apiKey) {
-  const model = 'gemini-2.5-flash';
+  const model = 'gemini-3.8-flash';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
 
   const r = await fetch(url, {
@@ -243,7 +243,7 @@ async function analyzeWithGemini(prompt, apiKey) {
     throw new Error(data?.error?.message || `Gemini Analyze gagal (HTTP ${r.status})`);
   }
   const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-  return { provider: 'gemini-2.5-flash', parsed: extractJson(raw) };
+  return { provider: 'gemini-3.8-flash', parsed: extractJson(raw) };
 }
 
 async function analyzeWithGroq(prompt, apiKey) {
