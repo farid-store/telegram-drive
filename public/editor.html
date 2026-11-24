@@ -780,6 +780,8 @@ try{savedKeys=Object.assign(savedKeys,JSON.parse(localStorage.getItem(AIKEY)||'{
 const ai={
   mid:'',
   contentType:'podcast',    // 'podcast' | 'stream'
+  transcribeMode:'offline', // 'offline' (hemat kuota, 0 API) | 'cloud' (Groq/Gemini)
+  offlineModel:(typeof navigator!=='undefined'&&navigator.gpu)?'turbo':'base',
   camPreset:'bottom-right',
   topRatio:0.38,
   autoFace:true,
@@ -797,7 +799,7 @@ const ai={
   ac:null,
   pr:0,
   st:'',
-  cache:new Map(),          // mid -> {duration, segments, words, hype, topHypeTimes}
+  cache:new Map(),
   clips:[],
   loadedId:null
 };
@@ -1805,6 +1807,8 @@ function panelAI(pp) {
   const curV = S.media.get(ai.mid);
   const hasCached = !!(ai.mid && ai.cache.has(ai.mid));
   const hasCloud = !!(ai.srvGroq || ai.srvGemini || ai.groqKey || ai.geminiKey);
+  const tMode = ai.transcribeMode || 'offline';
+  const oModel = ai.offlineModel || ((typeof navigator !== 'undefined' && navigator.gpu) ? 'turbo' : 'base');
 
   const vOpts = videos.length
     ? videos.map(v => `<option value="${v.id}" ${v.id === ai.mid ? 'selected' : ''}>${esc(v.name)} (${fmtT(v.dur || 0)})</option>`).join('')
@@ -1862,7 +1866,25 @@ function panelAI(pp) {
     <div class="row"><label>Auto-Face</label><label style="width:auto;flex:1;display:flex;gap:6px;align-items:center"><input type="checkbox" id="ai-face" ${ai.autoFace ? 'checked' : ''}> ${ai.contentType === 'stream' ? 'Deteksi otomatis kotak kamera muka streamer' : 'Lacak otomatis posisi wajah pembicara'}</label></div>
     <div class="row"><label>Subtitle</label><label style="width:auto;flex:1;display:flex;gap:6px;align-items:center"><input type="checkbox" id="ai-sub" ${ai.autoSub ? 'checked' : ''}> Pasang otomatis subtitle viral saat klip dimuat</label></div>
 
-    <div class="sec-lbl"><span>3. Parameter Seleksi Inti Sari Viral</span></div>
+    <div class="sec-lbl"><span>3. Mesin Transkripsi &amp; Seleksi Viral</span></div>
+    <div class="row">
+      <label>Transkripsi</label>
+      <select id="ai-tmode">
+        <option value="offline" ${tMode === 'offline' ? 'selected' : ''}>💻 Offline Whisper (0 Kuota API — Hemat)</option>
+        <option value="cloud" ${tMode === 'cloud' ? 'selected' : ''}>☁️ Cloud API (Groq / Gemini — Tercepat)</option>
+      </select>
+    </div>
+    ${tMode === 'offline' ? `
+      <div class="row">
+        <label>Model Lokal</label>
+        <select id="ai-omodel">
+          <option value="tiny" ${oModel === 'tiny' ? 'selected' : ''}>Tiny (±40 MB · Paling Cepat untuk CPU)</option>
+          <option value="base" ${oModel === 'base' ? 'selected' : ''}>Base (±75 MB · Seimbang, disarankan)</option>
+          <option value="small" ${oModel === 'small' ? 'selected' : ''}>Small (±250 MB · Akurat, agak berat di CPU)</option>
+          <option value="turbo" ${oModel === 'turbo' ? 'selected' : ''}>Large-v3-Turbo (Terbaik · butuh WebGPU)</option>
+        </select>
+      </div>
+    ` : ''}
     <div class="row">
       <label>Jumlah Klip</label>
       <select id="ai-cnt">${[3, 5, 7, 10].map(n => `<option value="${n}" ${ai.clipCount === n ? 'selected' : ''}>${n} klip terbaik</option>`).join('')}</select>
@@ -1877,10 +1899,10 @@ function panelAI(pp) {
     <div class="row"><span class="l">Fokus Topik</span><input type="text" id="ai-focus" placeholder="Opsional: misal tips trading, momen ngakak, debat panas…" value="${esc(ai.customFocus)}"></div>
 
     <details class="ai-cfg" ${!hasCloud ? 'open' : ''}>
-      <summary><span>⚙ Pengaturan API Cloud AI (${hasCloud ? '✓ Siap 30–60 Menit' : 'Mode Lokal / Isi Key'})</span><span>▾</span></summary>
-      <div class="hint" style="margin:0 0 8px">Untuk memproses video 30–60 menit dalam hitungan detik, pasang <b>GROQ_API_KEY</b> &amp; <b>GEMINI_API_KEY</b> di Vercel Env, atau tempel sementara di bawah (hanya tersimpan di browser ini).</div>
-      <div class="row"><label>Groq Key</label><input type="password" id="ai-gkey" placeholder="${ai.srvGroq ? '✓ Aktif dari server Vercel' : 'gsk_… (Transkripsi super cepat)'}" value="${esc(ai.groqKey)}"></div>
-      <div class="row" style="margin-bottom:2px"><label>Gemini Key</label><input type="password" id="ai-mkey" placeholder="${ai.srvGemini ? '✓ Aktif dari server Vercel' : 'AIza… (Analisa inti sari 60 mnt)'}" value="${esc(ai.geminiKey)}"></div>
+      <summary><span>⚙ Pengaturan AI Pemilih Klip (${hasCloud ? '✓ Cloud AI Aktif · 1× Request Teks' : 'Mode Lokal / Isi Key'})</span><span>▾</span></summary>
+      <div class="hint" style="margin:0 0 8px">Saat memakai <b>Offline Whisper</b>, API Key di bawah <b>hanya dipakai 1×</b> (mengirim teks transkrip saja) untuk memilih klip paling viral — sangat hemat kuota &amp; anti-503.</div>
+      <div class="row"><label>Gemini Key</label><input type="password" id="ai-mkey" placeholder="${ai.srvGemini ? '✓ Aktif dari server Vercel' : 'AIza… (Analisa teks full 60 mnt)'}" value="${esc(ai.geminiKey)}"></div>
+      <div class="row" style="margin-bottom:2px"><label>Groq Key</label><input type="password" id="ai-gkey" placeholder="${ai.srvGroq ? '✓ Aktif dari server Vercel' : 'gsk_… (Cadangan / Cloud Whisper)'}" value="${esc(ai.groqKey)}"></div>
     </details>
 
     <div class="bar">
@@ -1907,24 +1929,29 @@ async function runAIClip(reuseTranscript = false) {
   try {
     let cached = reuseTranscript ? ai.cache.get(m.id) : null;
     const hasCloud = !!(ai.srvGroq || ai.srvGemini || ai.groqKey || ai.geminiKey);
+    const useCloudTranscribe = ai.transcribeMode === 'cloud' && hasCloud;
 
     if (!cached) {
-      setAIStat('1/3 Mengekstrak audio & memetakan momen hype…', 0.03);
-      const extRes = await extractAudioChunksForAI(
-        m.blob,
-        { preferOpus: true },
-        (p, lbl) => setAIStat(`1/3 ${lbl}`, 0.03 + p * 0.25),
-        ai.ac.signal
-      );
+      let segments = [], words = [], hype = [], topHypeTimes = [];
+      let totalDur = m.dur || 0;
 
-      let segments = [], words = [];
+      if (useCloudTranscribe) {
+        setAIStat('1/3 Mengekstrak audio & memetakan momen hype…', 0.03);
+        const extRes = await extractAudioChunksForAI(
+          m.blob,
+          { preferOpus: true },
+          (p, lbl) => setAIStat(`1/3 ${lbl}`, 0.03 + p * 0.25),
+          ai.ac.signal
+        );
+        totalDur = extRes.duration || totalDur;
+        hype = extRes.hype || [];
+        topHypeTimes = extRes.topHypeTimes || [];
 
-      if (hasCloud) {
         const totalChunks = extRes.chunks.length;
         for (let i = 0; i < totalChunks; i++) {
           if (ai.ac.signal.aborted) throw new DOMException('Dibatalkan', 'AbortError');
           const ch = extRes.chunks[i];
-          setAIStat(`2/3 Transkripsi AI bagian ${i + 1}/${totalChunks} (${fmtT(ch.start)}–${fmtT(ch.end)})…`, 0.28 + (i / Math.max(1, totalChunks)) * 0.48);
+          setAIStat(`2/3 Transkripsi Cloud ${i + 1}/${totalChunks} (${fmtT(ch.start)}–${fmtT(ch.end)})…`, 0.28 + (i / Math.max(1, totalChunks)) * 0.48);
 
           const qs = new URLSearchParams({
             action: 'transcribe',
@@ -1945,41 +1972,77 @@ async function runAIClip(reuseTranscript = false) {
           if (Array.isArray(data.words)) words.push(...data.words);
         }
       } else {
-        // Fallback 100% lokal (jika user belum mengisi API key — ideal untuk video <15 menit atau tes cepat)
-        if ((m.dur || 0) > 900) {
-          toast('Tanpa API Key, video >15 menit butuh waktu lama di browser. Disarankan isi Groq/Gemini Key.', true);
-        }
-        setAIStat('2/3 Menyiapkan transkripsi lokal (Whisper browser)…', 0.30);
+        // MODE OFFLINE HEMAT KUOTA: Transkripsi lokal per jendela 3 menit (hemat RAM untuk video 30–60 menit)
+        if (!totalDur || totalDur <= 0) throw new Error('Durasi video tidak terbaca');
+        const totalSecs = Math.max(1, Math.ceil(totalDur));
+        const rmsArr = new Float32Array(totalSecs);
+        const WIN_SEC = 180; // 3 menit per iterasi (~11.5 MB RAM)
+        const srcSpec = [{ mid: m.id, tl: 0, in: 0, out: totalDur, vol: 1, sp: 1 }];
         const pool = createPool(S.media);
+
         try {
-          const pcm = await mixMono16k(
-            [{ mid: m.id, tl: 0, in: 0, out: m.dur || 60, vol: 1, sp: 1 }],
-            pool, 0, m.dur || 60,
-            p => setAIStat(`2/3 Menyiapkan audio lokal… ${Math.round(p * 100)}%`, 0.30 + p * 0.12),
-            ai.ac.signal
-          );
-          const raw = await transcribe(
-            pcm,
-            { lang: ai.lang, model: asr.model, mode: 'full', beam: false, clean: true },
-            (t, p) => setAIStat(`2/3 ${t}`, 0.42 + p * 0.34),
-            ai.ac.signal
-          );
-          segments = raw.map(x => ({ start: x.start, end: x.end, text: x.text }));
-        } finally { pool.dispose(); }
+          setAIStat(`1/2 Memuat model Whisper Offline (${ai.offlineModel})…`, 0.02);
+          await loadASR(ai.offlineModel, (txt) => setAIStat(`1/2 ${txt}`, 0.04));
+
+          for (let w0 = 0; w0 < totalDur - 0.1; w0 += WIN_SEC) {
+            if (ai.ac.signal.aborted) throw new DOMException('Dibatalkan', 'AbortError');
+            const w1 = Math.min(totalDur, w0 + WIN_SEC);
+            const baseProg = 0.06 + (w0 / totalDur) * 0.72;
+            const spanProg = ((w1 - w0) / totalDur) * 0.72;
+
+            setAIStat(`1/2 Ekstrak audio offline ${fmtT(w0)}–${fmtT(w1)}…`, baseProg);
+            const pcm = await mixMono16k(
+              srcSpec, pool, w0, w1,
+              (p) => setAIStat(`1/2 Baca audio ${fmtT(w0)}–${fmtT(w1)} (${Math.round(p * 100)}%)`, baseProg + p * spanProg * 0.2),
+              ai.ac.signal
+            );
+
+            // Hitung energi audio (hype/tawa/teriakan) per detik untuk jendela ini
+            const secCount = Math.ceil(pcm.length / 16000);
+            for (let s = 0; s < secCount; s++) {
+              const i0 = s * 16000, i1 = Math.min(pcm.length, i0 + 16000);
+              let sum = 0;
+              for (let i = i0; i < i1; i++) sum += pcm[i] * pcm[i];
+              const gSec = Math.floor(w0) + s;
+              if (gSec < totalSecs && i1 > i0) rmsArr[gSec] = Math.sqrt(sum / (i1 - i0));
+            }
+
+            // Transkripsi offline 3 menit ini (tanpa menggunakan kuota API sama sekali)
+            const raw = await transcribe(
+              pcm,
+              { lang: ai.lang, model: ai.offlineModel, mode: 'full', beam: false, clean: true },
+              (t, p) => setAIStat(`1/2 Transkrip offline ${fmtT(w0)}–${fmtT(w1)} · ${segments.length} baris`, baseProg + spanProg * (0.2 + p * 0.8)),
+              ai.ac.signal
+            );
+
+            for (const x of raw) {
+              const st = +(w0 + x.start).toFixed(2);
+              const en = +Math.min(totalDur, w0 + x.end).toFixed(2);
+              if (x.text && en > st) segments.push({ start: st, end: en, text: x.text });
+            }
+          }
+        } finally {
+          pool.dispose();
+        }
+
+        // Normalisasi skor hype audio 0–100 dari seluruh video
+        const sorted = Array.from(rmsArr).filter(v => v > 0.001).sort((a, b) => a - b);
+        const p50 = sorted[Math.floor(sorted.length * 0.5)] || 0.01;
+        const p95 = sorted[Math.floor(sorted.length * 0.95)] || Math.max(p50 * 2, 0.05);
+        for (let s = 0; s < totalSecs; s++) {
+          const score = Math.round(clamp((rmsArr[s] - p50 * 0.5) / Math.max(1e-4, p95 - p50 * 0.5), 0, 1) * 100);
+          hype.push({ t: s, rms: rmsArr[s], score });
+          if (score >= 78) topHypeTimes.push({ t: s, score });
+        }
       }
 
       if (!segments.length) throw new Error('Tidak ada ucapan yang terdeteksi pada video ini');
-      cached = {
-        duration: extRes.duration || m.dur || 0,
-        segments,
-        words,
-        hype: extRes.hype || [],
-        topHypeTimes: extRes.topHypeTimes || [],
-      };
+      cached = { duration: totalDur, segments, words, hype, topHypeTimes };
       ai.cache.set(m.id, cached);
     }
 
-    setAIStat('3/3 AI sedang memilih inti sari & momen paling viral…', 0.82);
+    // TAHAP AKHIR: AI HANYA BERTUGAS MEMILIH KLIP VIRAL (1× REQUEST TEKS SAJA!)
+    setAIStat('2/2 AI sedang membaca transkrip & memilih klip paling viral…', 0.84);
     let clips = [];
     if (hasCloud) {
       const r = await fetch('/api/autoclip?action=analyze', {
@@ -2013,9 +2076,9 @@ async function runAIClip(reuseTranscript = false) {
     ai.clips = clips;
     ai.loadedId = null;
     ai.busy = false;
-    setAIStat(`✓ Ditemukan ${clips.length} klip potensial viral! Klik "Muat 9:16 ke Timeline" untuk langsung edit/ekspor.`, 1);
+    setAIStat(`✓ Selesai (${cached.segments.length} baris transkrip offline → ${clips.length} klip viral dipilih).`, 1);
     renderPanel();
-    toast(`✓ ${clips.length} rekomendasi klip viral siap!`);
+    toast(`✓ ${clips.length} klip viral siap dimuat ke 9:16!`);
   } catch (err) {
     ai.busy = false;
     renderPanel();
@@ -2414,7 +2477,7 @@ window.__srtOf=srtOf;
 /* ================= EVENT DELEGATION TERPADU PANEL KANAN (#pp) ================= */
 $('pp').addEventListener('change',e=>{
   const id=e.target.id;if(!id)return;
-  // Panel Ekspor
+// Panel Ekspor
   if(id.startsWith('x-')){
     if(id==='x-res')S.p.res=+e.target.value;else if(id==='x-fps')exp.fps=+e.target.value;
     else if(id==='x-q')exp.quality=e.target.value;else if(id==='x-f')exp.format=e.target.value;
@@ -2423,12 +2486,17 @@ $('pp').addEventListener('change',e=>{
   // Panel AI Clip
   if(id.startsWith('ai-')){
     if(id==='ai-mid'){ai.mid=e.target.value;ai.clips=[];ai.loadedId=null;renderPanel()}
+    else if(id==='ai-tmode'){ai.transcribeMode=e.target.value;renderPanel()}
+    else if(id==='ai-omodel'){ai.offlineModel=e.target.value}
     else if(id==='ai-campre'){ai.camPreset=e.target.value}
     else if(id==='ai-face'){ai.autoFace=e.target.checked}
     else if(id==='ai-sub'){ai.autoSub=e.target.checked}
     else if(id==='ai-cnt'){ai.clipCount=+e.target.value||5}
     else if(id==='ai-lang'){ai.lang=e.target.value}
-    else if(id==='ai-min'){ai.minDur=clamp(+e.target.value||40,15,150)}
+    else if(id==='ai-min'){
+      ai.minDur=clamp(+e.target.value||40,15,150);
+      if(ai.maxDur<ai.minDur+5){ai.maxDur=Math.min(180,ai.minDur+5);const mx=$('ai-max');if(mx)mx.value=ai.maxDur}
+    }
     else if(id==='ai-max'){ai.maxDur=clamp(+e.target.value||65,ai.minDur+5,180)}
     return;
   }
