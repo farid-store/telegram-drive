@@ -101,7 +101,7 @@ async function transcribeWithGroq(buf, { apiKey, ext, mime, lang, offset }) {
   return { provider: 'groq-whisper', segments, words };
 }
 
-async function transcribeWithGemini(buf, { apiKey, mime, lang, offset, chunkDur }) {
+async function transcribeWith(buf, { apiKey, mime, lang, offset, chunkDur }) {
   const langHint = lang && lang !== 'auto'
     ? `Bahasa utama audio: ${lang}.`
     : 'Deteksi bahasa secara otomatis (pertahankan bahasa asli ucapan, misal Indonesia/Inggris).';
@@ -114,7 +114,7 @@ async function transcribeWithGemini(buf, { apiKey, mime, lang, offset, chunkDur 
     'Aturan: pecah per kalimat singkat (3–8 detik), jangan mengarang teks di bagian senyap, pastikan start dan end berupa angka detik.',
   ].join('\n');
 
-  const model = 'gemini-2.5-flash';
+  const model = 'gemini-3.8-flash';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
 
   const r = await fetch(url, {
